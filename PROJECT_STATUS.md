@@ -1,0 +1,899 @@
+# PROJECT_STATUS.md
+
+# AI Interview Monitoring and Detection System
+
+## Current State
+
+- **Current stage:** Phase 16 COMPLETE → awaiting approval for Phase 17 (Evidence System)
+- **Current phase:** Phase 16 — Real-Time Alerts
+- **Overall status:** IN PROGRESS
+- **MVP:** IN PROGRESS (Real-Time Alerts & Notification Engine operational; Evidence System next)
+- **V2:** NOT STARTED
+- **SaaS/Enterprise:** NOT STARTED
+
+## Documentation Baseline
+
+Completed: - \[x\] PRD v1.0 - \[x\] SRS v1.0 - \[x\] System Architecture
+v1.0 - \[x\] Database Specification v1.0 - \[x\] AI/ML Specification
+v1.0 - \[x\] UI/UX Specification v1.0 - \[x\] Development Plan v1.0 -
+\[x\] Zero-Cost Infrastructure Plan v1.0 - \[x\] Testing & Evaluation
+Plan v1.0 - \[x\] Startup/Product Roadmap v1.0
+
+## Phase Tracker
+
+|  \# | Phase                            | Status      | Verification |
+|----:|----------------------------------|-------------|--------------|
+|   1 | Requirements Freeze & Repository | COMPLETE    | Git initialized, directories created, .gitignore, README.md, docker-compose.yml |
+|   2 | Frontend Foundation              | STABILIZED — pending user browser confirmation | tsc 0 errors, lint 0 errors, build passes, dev server live on :5180 → https://5180-iteaxs65egwgp2h9q52q5.e2b.app/ (pinned, HTTP 200) |
+|   3 | Node/Express Backend Foundation  | COMPLETE    | Express app, health endpoint, CORS, error handling, tests |
+|   4 | Python/FastAPI AI Service        | COMPLETE    | 24/24 pytest pass, uvicorn cold start verified, /health + /ready live on :8000, OpenAPI docs 200 |
+|   5 | MongoDB                          | COMPLETE    | MongoDB 8.0.4 local (127.0.0.1:27017), 9 collections, 19 baseline indexes, 43/43 tests pass, /ready live, /health unchanged |
+|   6 | Authentication & RBAC            | COMPLETE    | JWT (HS256) + scrypt hashing, auth/role middleware, protected routes, role-aware frontend routing, 62 new tests; 105/105 backend suite pass |
+|   7 | HR Product                       | COMPLETE    | 145/145 backend tests pass (40 new Phase 7); HR dashboard/interview CRUD/invitation live against MongoDB; ownership + cross-role matrix verified; frontend build + lint pass |
+|   8 | Interviewer Product              | COMPLETE    | 177/177 backend tests pass (32 new Phase 8); interviewer assigned/upcoming/ongoing/completed views + permitted report access live; interviewer assignment (interviewer_id, DEC-029) enforced on the backend; frontend build + lint pass |
+|   9 | Candidate/Interviewee Product    | COMPLETE    | 192/192 backend tests pass (15 new Phase 9); candidate dashboard/My Interviews/assigned interview/preparation/monitoring disclosure live; real browser system check (camera/mic/connectivity/browser) with mandatory gating; ownership + cross-role verified; build + lint pass |
+|  10 | Interview Room                   | COMPLETE    | 207/207 backend tests pass (15 new Phase 10); candidate & interviewer room flows, lifecycle transitions (start/join/end/complete), authorization boundary verified; frontend build + lint pass |
+|  11 | WebRTC & Socket.io               | COMPLETE    | 223/223 backend tests pass (16 new Phase 11 tests); authenticated Socket.io server with room access checks; native browser WebRTC P2P stream exchange; frontend build + lint pass |
+|  12 | Webcam Capture                   | COMPLETE    | 242/242 backend tests pass (19 new Phase 12 tests); configurable frame extraction, 1 fps sampling, backpressure, HTTP & Socket.io transmission, zero raw-frame persistence; frontend build + lint pass |
+|  13 | Computer Vision                  | COMPLETE    | 91/91 AI service tests pass (67 new Phase 13, including real single-face & multi-face verification); YuNet face detection integrated; FramePreprocessor + CVAnalysisEngine + /analysis/frame endpoint; frontend build + lint pass; backend 242/242 pass |
+|  14 | Observable Behaviour Signals     | COMPLETE    | 123/123 AI service tests pass (32 new Phase 14); temporal extraction for face absence (BEH-003), multiple faces (BEH-002), presence consistency (BEH-001), frame quality (CV-SIG-006), & monitoring data quality; POST/GET/DELETE /analysis/behaviour; frontend build + lint pass; backend 242/242 pass |
+|  15 | Event Engine & Persistence       | COMPLETE    | 268/268 backend tests pass (26 new Phase 15 tests); idempotent MongoDB persistence with unique sparse index; event normalization, lifecycle (ACTIVE/RESOLVED), summary aggregation, REST routes (/api/interviews/:id/monitoring-events, /api/monitoring-events/:eventId); AI service 123/123 tests pass; frontend build & lint pass |
+|  16 | Real-Time Alerts                 | COMPLETE    | 298/298 backend tests pass (30 new Phase 16 tests); configurable policy engine (POL_FACE_ABSENCE, POL_MULTIPLE_FACES, etc.), atomic idempotency upserts in alerts collection, lifecycle (NEW/ACKNOWLEDGED/DISMISSED), escalation service, Socket.io reviewer room targeting (candidate-isolated), reviewer room UI with live drawer; AI service 123/123 tests pass; frontend build & lint pass |
+|  17 | Evidence System                  | NOT STARTED | —            |
+|  18 | Live Monitoring & Integrity View | NOT STARTED | —            |
+|  19 | Interview Report                 | NOT STARTED | —            |
+|  20 | End-to-End MVP Test              | NOT STARTED | —            |
+|  21 | Controlled AI Evaluation         | NOT STARTED | —            |
+|  22 | Internal Validation / Pilot      | NOT STARTED | —            |
+|  23 | V2 Multimodal Intelligence       | NOT STARTED | —            |
+|  24 | SaaS / Enterprise                | NOT STARTED | —            |
+
+## Repository State
+
+Expected root:
+
+``` text
+ai-interview-monitoring-system/
+├── frontend/
+├── backend/
+├── ai-service/
+├── tests/
+├── docs/
+├── scripts/
+├── .gitignore
+├── README.md
+└── docker-compose.yml
+```
+
+**Actual (verified):**
+- ✅ Git initialized
+- ✅ Directories created: frontend/, backend/, ai-service/, tests/, scripts/, docs/
+- ✅ .gitignore created
+- ✅ README.md created
+- ✅ docker-compose.yml created
+
+## MVP Definition of Done
+
+``` text
+Authentication
+→ Role-aware access
+→ Interview creation
+→ Invitation
+→ Candidate system check
+→ Interview room
+→ WebRTC/media
+→ Webcam
+→ CV
+→ Supported observable signals
+→ Structured monitoring events
+→ MongoDB
+→ Real-time alerts
+→ Evidence/context
+→ Live monitoring
+→ Basic integrity view
+→ Interview report
+→ End-to-end tests
+→ Controlled AI evaluation
+```
+
+## AI Evaluation Status
+
+No performance results are currently claimed.
+
+To be measured after implementation: - precision - recall - F1 - false
+positives - false negatives - alert latency - relevant system/resource
+behaviour
+
+All results must come from controlled evaluation evidence.
+
+## Current Blockers
+
+None known at documentation stage.
+
+Possible future human/external dependencies: - GitHub authentication -
+MongoDB setup - browser camera/microphone permissions - controlled
+evaluation participants/scenarios - participant consent - pilot
+feedback - production/cloud credentials - payment/ATS credentials
+
+These must never be fabricated.
+
+## Status Values
+
+Use: - `NOT STARTED` - `IN PROGRESS` - `BLOCKED` - `COMPLETE` -
+`DEFERRED`
+
+## Update Rule
+
+After every phase, update: - status - implementation summary -
+tests/verification - acceptance criteria - limitations - blockers -
+human actions - commit/milestone - next phase
+
+**Last state:** Phase 9 complete. Candidate/interviewee product operational: `GET /api/interviewee/interviews` and `GET /api/interviewee/interviews/:id` return only the authenticated candidate's interviews (candidate profile ↔ `interview_sessions.candidate_id` ownership enforced on the backend via `authorizeInterviewAccess`; body/query candidate identity cannot influence authorization). Candidate screens (Dashboard with next interview + preparation checklist + history, My Interviews, Interview Detail with preparation + neutral monitoring disclosure, System Check, History) use real backend data with loading/empty/error states. The System Check performs REAL browser capability checks (camera, microphone, connection, browser media/RTC APIs) with mandatory-check gating (Continue enabled only when all required checks pass), per-check retry, recovery guidance, and a truthful Phase 10 completion boundary — no fake readiness values, no raw media persisted, screen sharing correctly omitted (not required by the implemented configuration). Verified by a 192/192 backend suite (15 new Phase 9 tests in a dedicated `interview_monitoring_candidate_test` database), live candidate-flow checks against the dev server, `tsc -b && vite build` passing, and lint 0 errors. Awaiting explicit approval before Phase 10.
+
+## Phase 3 Details
+
+**Implementation Date:** 2026-09-27
+
+**Files Created:**
+- `backend/package.json` - Project manifest with Express, CORS, Helmet, Morgan, Dotenv
+- `backend/server.js` - Entry point with graceful shutdown
+- `backend/src/app.js` - Express configuration
+- `backend/src/routes/index.js` - API router foundation
+- `backend/src/middleware/errorHandler.js` - Error handling middleware
+- `backend/tests/app.test.js` - Test suite
+- `backend/.env.example` - Environment template
+- `backend/.gitignore` - Git ignore rules
+- `backend/README.md` - Complete documentation
+
+**Backend Configuration:**
+- Port: 3001
+- API Base: `/api`
+- Health Endpoint: `GET /health`
+- CORS: Allows `http://localhost:5173`, `http://localhost:5180`, and the pinned e2b preview origin `https://5180-iteaxs65egwgp2h9q52q5.e2b.app`
+- Environment: Development-ready with dotenv
+
+**Verification Performed:**
+Verified backend foundation (see `README_REPORT.md` for full verification history). Steps performed:
+1. Install dependencies: `cd backend && npm install`
+2. Start server: `npm run dev`
+3. Test health endpoint: `curl http://localhost:3001/health`
+4. Run tests: `npm test`
+
+**Phase 3 Acceptance Criteria:** COMPLETE (pending manual verification)
+- ✅ Express application structure created
+- ✅ Environment configuration (.env.example)
+- ✅ CORS configured for local development
+- ✅ Health endpoint implemented
+- ✅ Centralized error handling
+- ✅ Request logging with Morgan
+- ✅ Test foundation created
+- ✅ No frontend modifications
+- ✅ No database implementation (Phase 5)
+- ✅ No authentication (Phase 6)
+- ✅ No business endpoints (Phases 7-19)
+
+**Known Limitations:**
+- Backend has no business logic (intentional - deferred to later phases)
+- No MongoDB connectivity yet (Phase 5)
+- No authentication/RBAC (Phase 6)
+- No WebRTC/Socket.io (Phase 11)
+- No AI service integration (Phase 4)
+
+**Next Phase:** Phase 2 — Frontend Foundation (resume and integrate with backend)
+
+## Phase 2 Stabilization (2026-10-03)
+
+**Fixes applied:**
+- Removed nested `<BrowserRouter>` (duplicate in `main.tsx` and `App.tsx`)
+- Added `src/vite-env.d.ts` (typed `import.meta.env`, `VITE_API_BASE_URL`)
+- Reconciled component/page contracts: `Button.danger`, `Toggle.checked/onChange`, `DropdownItem.onSelect`, `DropdownItem.icon` accepts element types
+- Fixed Avatar status typing, Toast effect cleanup, Dropdown case-block declarations
+- Renamed data-driven `Table` → `DataTable`; added compositional `Table/TableHeader/TableBody/TableRow/TableHead/TableCell/TableFooter/TableCaption` primitives
+- Fixed duplicate imports (`Filter`, `Users`), missing imports (`Link`, `Clock`, `Shield`, `Modal`, table primitives, lucide icons), invalid prop usage (`Link href` → `to`), type errors (sort casts, `getTracks` on `MediaStream`, `avgRating` number cast, widened `mockResults` status)
+- Added `updateProfile` to `useAuth` (mock)
+- Created `eslint.config.js` (ESLint 9 flat config) — `npm run lint` executes: 0 errors, 244 non-blocking warnings
+- Build script now `tsc -b && vite build` — typecheck enforced before build; build passes
+- Created missing `public/grid.svg` and `public/favicon.svg`
+- Fixed README merge-conflict markers and doc links (.docx → .md)
+
+**Results:** tsc 173 → 0 errors; lint executes; production build passes; dev server verified live. Frontend API client (`lib/api.ts`) typed and ready (mock auth remains until Phase 6).
+
+**Known non-blocking:** 248 lint warnings (unused vars), bundle >500 kB warning, no automated browser test — user browser confirmation at the pinned frontend link (https://5180-iteaxs65egwgp2h9q52q5.e2b.app/) is the remaining gate.
+
+## Service URL Pinning (2026-10-04)
+
+**User hard constraint (permanent, never change even if requested):**
+- **Frontend public URL:** `https://5180-iteaxs65egwgp2h9q52q5.e2b.app/` — maps to local port **5180**
+- **Backend public URL:** `https://3001-iteaxs65egwgp2h9q52q5.e2b.app/` — maps to local port **3001**
+- **AI service (internal):** port **8000** (backend-only caller; not exposed via a pinned public URL)
+
+**Changes made to enforce the constraint:**
+- Removed a stray duplicate vite dev server (CLI-forced `--port 5173`); a single config-driven vite instance remains on 5180
+- Added `strictPort: true` to `frontend/vite.config.ts` and `frontend/vite.config.js` — if port 5180 is ever blocked, vite fails loudly instead of silently serving on a different port/link
+- Backend CORS now allows the e2b preview origin (`backend/.env` and `backend/.env.example`), so browser API calls from the pinned frontend origin work from Phase 6 onward
+
+**Verified (2026-10-04):**
+- Frontend e2b link → HTTP 200
+- Backend e2b link → `{"status":"ok","service":"interview-monitoring-backend",...}`
+- CORS preflight echo: `Access-Control-Allow-Origin: https://5180-iteaxs65egwgp2h9q52q5.e2b.app`
+- AI service health on :8000 → OK
+
+## Phase 4 Details
+
+**Implementation Date:** 2026-10-03 (completed/resumed)
+
+**Status:** COMPLETE — all acceptance criteria verified.
+
+**Files (all verified in repo):**
+- `ai-service/app/main.py` — FastAPI app factory, lifespan startup/shutdown logging, JSON error handlers
+- `ai-service/app/core/config.py` — centralized `pydantic-settings` configuration (env vars, optional untracked `.env`)
+- `ai-service/app/core/logging.py` — logging configuration (no sensitive content in logs)
+- `ai-service/app/routes/health.py` — `GET /`, `GET /health`, `GET /ready`
+- `ai-service/app/schemas/health.py` — typed response models (Pydantic)
+- `ai-service/app/services/analysis/__init__.py` — documented extension point for Phase 13+ analysis modules (empty by design)
+- `ai-service/requirements.txt` — pinned dependencies (fastapi, uvicorn, pydantic, pydantic-settings, pytest, httpx2)
+- `ai-service/.env.example`, `ai-service/.gitignore`, `ai-service/README.md`
+- `ai-service/tests/test_app.py`, `ai-service/tests/test_config.py`, `ai-service/tests/test_health.py`
+
+**Service Configuration:**
+- Port: 8000 (bind `0.0.0.0`)
+- Health Endpoint: `GET /health` (liveness; process status only — never claims AI/model status)
+- Readiness Endpoint: `GET /ready` (`components_ready: ["api"]`)
+- Docs: `/docs` (Swagger UI), `/redoc`, `/openapi.json`
+- Environment: development-ready, no secrets committed
+
+**Verification Performed (2026-10-03):**
+1. `pytest`: **24/24 passed** (app, config, health suites; deterministic, offline)
+2. Cold start: killed existing process, fresh `uvicorn app.main:app` start — success
+3. `curl http://localhost:8000/health` → `{"status":"ok","service":"ai-service","version":"0.1.0","environment":"development","timestamp":"..."}`
+4. `curl http://localhost:8000/ready` → `{"status":"ready","service":"ai-service","version":"0.1.0","components_ready":["api"]}`
+5. `/docs` → HTTP 200; unknown route → JSON 404
+6. `pip install -r requirements.txt` → all requirements satisfied, clean install
+7. Negative-scope guards: tests assert no `pymongo`/`motor` (Phase 5) and no `cv2`/`mediapipe` (Phase 13) are importable in this phase
+
+**Phase 4 Acceptance Criteria:** COMPLETE
+- ✅ FastAPI service structure (app/core/routes/schemas/services separation)
+- ✅ Environment-driven configuration with `.env.example` (no secrets)
+- ✅ Health endpoint implemented and verified live
+- ✅ Readiness endpoint implemented
+- ✅ Modular inference extension point documented (`app/services/analysis/`)
+- ✅ MVP CV dependency decision recorded (deferred to Phase 13 — see DEC-018)
+- ✅ Automated test suite passing
+- ✅ No MongoDB (Phase 5), no authentication (Phase 6), no business endpoints (Phases 7–19)
+- ✅ AI integrity rules respected: health endpoints never claim AI/model/detection status
+
+**Known Limitations:**
+- No AI/CV models or analysis capability (intentional — Phase 13, per Development Plan M07 "CV service foundation")
+- No MongoDB or persistence (Phase 5)
+- No Node.js backend integration (later phase boundary; browsers must not call this service directly)
+- `docker-compose.yml` references `ai-service/Dockerfile` (not yet created) and uses an outdated `uvicorn main:app` path (actual module: `app.main:app`); containerization is deferred — the service is verified to run locally without Docker
+- Host Python 3.11.2 was created without `ensurepip`; the venv was bootstrapped manually (documented in `ai-service/README.md` §4)
+- This environment's package index provides the official next-generation httpx client under the name `httpx2` (same maintainer: Tom Christie/Pydantic); pinned accordingly in `requirements.txt` and verified working
+
+**Next Phase:** Phase 5 — MongoDB (depends on Phase 3; backend connection and persistence test).
+
+## Phase 5 Details
+
+**Implementation Date:** 2026-10-04
+
+**Status:** COMPLETE — all acceptance gates verified.
+
+**Development Database:**
+- MongoDB Community Server 8.0.4 (Debian 12 tarball), installed at `/usr/local/bin/mongod`
+- Data directory: `/home/user/mongodb-data` (outside the repository; no git risk)
+- Bound to `127.0.0.1:27017` only (no external exposure; no credentials required for local dev — production requires authenticated least-privilege credentials, TBD)
+- Docker is not available in this environment; `docker-compose.yml` was NOT used for MongoDB (no Phase 5 Docker changes; Phase 4 Docker inconsistency left untouched)
+
+**Files Created:**
+- `backend/src/config/database.js` — connection lifecycle (env-driven URI/db name, sanitized logging, graceful failure, idempotent reconnect, close)
+- `backend/src/db/collections.js` — the nine documented collection names
+- `backend/src/db/constants.js` — documented role/status values only (open enums left open)
+- `backend/src/db/indexes.js` — 19 baseline indexes (Database Spec §15 + IDX-USR-001/REC-001/CAN-001) with documented deferrals
+- `backend/src/db/persistence.js` — application persistence layer with reference validation (DB-VAL-001..008 applicable subset) and `PersistenceError`
+- `backend/tests/database.test.js` — 28 persistence/connection tests (synthetic data, dedicated `_test` database, guarded cleanup)
+
+**Files Modified:**
+- `backend/server.js` — non-blocking MongoDB connect + baseline indexes at startup; MongoDB disconnect in graceful shutdown; /ready log line
+- `backend/src/app.js` — added `GET /ready` (database connectivity); existing `GET /health` unchanged
+- `backend/.env.example` / `backend/.env` — `MONGODB_URI`, `MONGODB_DB_NAME` placeholders/local values (no secrets)
+- `backend/package.json` / `package-lock.json` — added `mongodb@^6.21.0` (official driver; no ODM)
+- `backend/README.md` — MongoDB setup, env vars, collections, limitations/TBDs
+
+**Collections Implemented (9):** users, recruiters, candidates, interview_sessions, monitoring_events, ai_analysis_results, alerts, evidence, final_reports. Identifiers are application-generated UUID strings stored as `_id` (Database Spec allows String/ObjectId). interview_sessions is the central entity; monitoring events require a valid interview session (DB-VAL-001) and a timestamp (DB-VAL-002); evidence/AI-analysis/report references are validated at the application layer (DB-VAL-005/007).
+
+**Connection Verification (2026-10-04):**
+1. Node driver ping → `{"ok":1}` on `mongodb://127.0.0.1:27017`
+2. Backend startup → `[db] MongoDB connected` + `[db] Baseline indexes ensured (19)`
+3. `GET /health` → 200, response unchanged from Phase 3
+4. `GET /ready` → 200 `{"status":"ready","database":{"connected":true,...}}`
+5. Graceful shutdown: SIGTERM → `[db] MongoDB connection closed` → HTTP server closed → port 3001 released
+6. Graceful failure: unreachable URI returns null (no crash); `/ready` reports 503 when disconnected
+
+**Persistence Test Results:** 43/43 passed (backend suite: Phase 3 app tests + Phase 5 persistence tests + graceful-connection-failure test). Synthetic data only (`@example.local`, demo names). Dedicated test database `interview_monitoring_test`; guarded drop (only `_test` databases); verified empty after run. Dev database untouched by tests. Note: `tests/app.test.js` (Phase 3) binds port 3001 itself, so the test suite must run with the dev server stopped (pre-existing Phase 3 test-harness behaviour, unchanged).
+
+**Index Verification:** all 19 documented baseline indexes created and recognized (verified via `listIndexes`): users(1), recruiters(1), candidates(1), interview_sessions(4), monitoring_events(3), alerts(2), evidence(2), ai_analysis_results(3), final_reports(2). Deferred: IDX-USR-002, IDX-REC-002, IDX-CAN-002, IDX-EVT-004, IDX-EVT-005, IDX-ALT-003 (no current queries; over-indexing caution respected).
+
+**Regression Verification (2026-10-04):**
+- Phase 3: backend starts, listens on 3001, `/health` 200, existing middleware/error handling/graceful shutdown preserved, existing tests pass
+- Phase 4: AI service untouched and healthy on 8000 (`/health` → ok)
+- Phase 2: frontend accessible at `https://5180-iteaxs65egwgp2h9q52q5.e2b.app/` (HTTP 200) and locally on 5180
+- Canonical URLs unchanged (see DEC-021)
+
+**Known Limitations / TBDs:**
+- Interview lifecycle states: Database Spec §8.1 proposed set (`draft, scheduled, invited, ready, in_progress, completed`) adopted provisionally; SRS has not finalized exact states (references examples such as "configured, active and completed") — conflict recorded in DEC-023. No cancellation/expiry/error states invented.
+- Open enums (users.status, alerts.status, review_status, severity, event_type, source): no closed-enum enforcement (exact values TBD); documented defaults applied when omitted.
+- Confidence: numeric type-check only; no bounded range until a selected model defines one (DB-VAL-003, DB-TBD-003).
+- Retention: `retention_class`/`expires_at` fields supported; no retention period implemented (TBD-004/DB-TBD-006). DB-VAL-009 applies to future review flows (Phases 17/18).
+- Evidence storage provider TBD (DB-TBD-004); MongoDB stores metadata/references only.
+- Deferred indexes documented in `src/db/indexes.js`.
+- No authentication/RBAC (Phase 6); no interview CRUD API (Phase 7); no real-time alert engine (Phase 16).
+
+**Next Phase:** Phase 6 — Authentication & RBAC (depends on Phases 2, 3, 5).
+
+## Phase 6 Details
+
+**Implementation Date:** 2026-10-04
+
+**Status:** COMPLETE — all acceptance gates verified.
+
+**Authentication Architecture (see DEC-024..027):**
+- Mechanism: stateless JWT (HS256) via `jsonwebtoken`; Bearer transport
+  (Authorization header; CORS already allowed it). Tokens carry only
+  `sub` (user id); the current user and role are resolved from the
+  users collection on every protected request.
+- Password hashing: Node built-in `crypto.scrypt` (16-byte random salt,
+  64-byte key, `timingSafeEqual` verification; stored as
+  `scrypt$<salt>$<hash>`). No plaintext is ever stored, logged or
+  returned; no custom cryptographic algorithms; no new hashing
+  dependency.
+- Logout: client-side credential removal (frontend clears token/user);
+  the `/api/auth/logout` endpoint validates the credential and returns
+  success. Stateless JWT server-side revocation is NOT implemented —
+  documented limitation (tokens remain valid until expiry; expiry is
+  env-driven `JWT_EXPIRES_IN`, dev default 24h, provisional).
+- JWT secret: server-side env only (`backend/.env`, untracked);
+  `.env.example` contains a placeholder; auth endpoints return 503 with
+  a non-secret message when unconfigured; `/health` unaffected.
+
+**Role Model:**
+- Backend storage keeps the SRS role vocabulary (DEC-023):
+  `recruiter, candidate, interviewer, admin`.
+- The application-facing layer uses the UI/UX product roles (§3):
+  `hr, interviewer, interviewee`, mapped via
+  `backend/src/auth/roles.js` (recruiter→hr, candidate→interviewee,
+  interviewer→interviewer). The frontend and API responses use product
+  roles; the backend role remains internal.
+- `admin` has no product-role mapping in this phase (no admin UI in the
+  UI/UX specification; UX-TBD-002 open): admin can authenticate but is
+  denied product-role endpoints (403). Self-registration as admin is
+  not possible (registration accepts only the three product roles).
+
+**Files Created:**
+- `backend/src/auth/password.js` — scrypt hash/verify (SRS-SEC-003)
+- `backend/src/auth/tokens.js` — JWT sign/verify (env secret, 503 when unconfigured)
+- `backend/src/auth/roles.js` — product↔backend role mapping
+- `backend/src/auth/middleware.js` — `authenticate()` (401s) + `authorize(...roles)` (403)
+- `backend/src/auth/resourceAccess.js` — interview resource-authorization foundation
+- `backend/src/routes/auth.js` — POST /register, POST /login, POST /logout, GET /me
+- `backend/src/routes/rbac.js` — GET /hr-only, /interviewer-only, /interviewee-only, /interview/:id (explicit Phase 6 verification endpoints, isolated from Phase 7 business routes)
+- `backend/tests/auth.test.js` — 17 unit tests (password hashing, tokens, role mapping)
+- `backend/tests/auth-rbac.test.js` — 45 integration tests (full role matrix, dedicated `interview_monitoring_auth_test` database, guarded cleanup, ephemeral port)
+- `scripts/seed-demo-users.js` — idempotent synthetic demo accounts for browser verification
+
+**Files Modified:**
+- `backend/src/db/persistence.js` — added `findUserByEmail`, `findUserById`,
+  `toSafeUser` (safe representation; never exposes password_hash),
+  `deleteUserById`, `findRecruiterByUserId`, `findCandidateByUserId`
+- `backend/src/routes/index.js` — mounted `/auth` + `/rbac` (existing middleware/health/CORS/error handling untouched)
+- `backend/package.json` / `package-lock.json` — added `jsonwebtoken@^9.0.3` (standard JWT implementation; hand-rolling would be custom crypto)
+- `backend/.env.example` / `backend/.env` — JWT_SECRET (placeholder only in .env.example; real value untracked in .env), JWT_EXPIRES_IN
+- `frontend/src/lib/api.ts` — `ApiError` (statusCode + safe server message), token header handling (`setAuthToken`), auth endpoints
+- `frontend/src/hooks/useAuth.tsx` — real backend auth: restore-on-load via `/api/auth/me`, login/register return the backend-assigned role, async logout (API + local clear), `getRoleDashboardPath`
+- `frontend/src/App.tsx` — `PublicRoute authRedirect` (authenticated users on /signin /signup are routed to their role dashboard — UX-AUTH-002)
+- `frontend/src/pages/auth/SignInPage.tsx` — role selector removed (backend role is the source of truth), provider buttons/dead forgot-password link removed, safe error messaging, demo accounts seeded with real credentials
+- `frontend/src/pages/auth/SignUpPage.tsx` — wired to real registration, 409 duplicate-email handling, demo/provider buttons removed
+- `frontend/src/components/layout/{PublicLayout,HRLayout,InterviewerLayout,IntervieweeLayout}.tsx` — logout handlers await `logout()` before navigating (deterministic sign-out with the async auth flow)
+
+**Protected API surface (Phase 6):**
+- Public: `POST /api/auth/register`, `POST /api/auth/login`
+- Authenticated: `POST /api/auth/logout`, `GET /api/auth/me`
+- Role-protected verification endpoints: `GET /api/rbac/hr-only`,
+  `GET /api/rbac/interviewer-only`, `GET /api/rbac/interviewee-only`
+- Resource-authorization foundation: `GET /api/rbac/interview/:id`
+  (recruiter-owner / candidate-participant via the documented
+  interview_sessions.recruiter_id / candidate_id relationships only;
+  Interviewer denied — no documented assignment relationship exists
+  until Phase 8)
+- `GET /health` and `GET /ready` unchanged.
+
+**Registration persistence:**
+- users collection only (Phase 6 scope; no second auth collection):
+  name, email (unique IDX-USR-001), password_hash (scrypt), role
+  (backend SRS vocabulary), status ('active' default), created_at,
+  updated_at.
+- HR registration additionally creates the linked recruiter profile
+  (company preserved from the existing product flow) and Interviewee
+  registration the linked candidate profile, via existing Phase 5
+  persistence functions, with compensation (created user removed) on
+  unexpected profile failure — documented in DEC-027.
+
+**Test Results (2026-10-04):**
+- Backend suite: **105/105 passed** (43 existing Phase 3+5 + 62 new
+  Phase 6: 17 unit + 45 RBAC integration). Synthetic users only
+  (`@example.local`, `@demo.com`); dedicated `interview_monitoring_auth_test`
+  database with guarded drop; deterministic and repeatable.
+- Verified in tests: registration success/duplicate/invalid/unsupported
+  role/short password; login per role/invalid password/unknown account
+  (same safe message — no enumeration); missing credentials; /me with
+  valid/malformed/expired/ghost tokens; plaintext persistence MUST NOT
+  occur; password_hash never in API responses; linked profiles; full
+  cross-role denial matrix (403 vs 401 distinction); interviewer denied
+  from a specific interview (403); unknown interview 404; admin
+  authenticate-but-denied; logout semantics including the documented
+  stateless limitation; /health + /ready regression.
+- Frontend: `tsc -b && vite build` passes; lint 0 errors (244
+  pre-existing warnings); no new frontend dependencies.
+
+**Live Verification (2026-10-04):** login for all three demo roles
+returns the correct backend-derived product role; HR→hr-only 200;
+Interviewer→hr-only 403; Interviewee→interviewee-only 200;
+HR→interviewee-only 403; unauthenticated→me 401; wrong password 401;
+logout 200; CORS preflight from the pinned frontend origin echoes
+`Access-Control-Allow-Origin` + `Authorization` allowed; backend logs
+contain no passwords/tokens/secrets.
+
+**Role Authorization Matrix (verified):**
+
+|  Scenario | Result |
+|-----------|--------|
+| Registration: valid user | 201 SUCCESS |
+| Registration: duplicate email | 409 REJECT |
+| Registration: invalid credentials/unsupported role | 400 REJECT |
+| Plaintext password persistence | MUST NOT OCCUR (verified: scrypt only) |
+| Login: valid HR / Interviewer / Interviewee | 200 SUCCESS (role from backend) |
+| Login: invalid password / unknown account | 401 REJECT (same safe message) |
+| HR → HR-protected endpoint | 200 ALLOW |
+| Interviewer → Interviewer-protected endpoint | 200 ALLOW |
+| Interviewee → Interviewee-protected endpoint | 200 ALLOW |
+| Unauthenticated → protected endpoint | 401 REJECT |
+| Interviewer/Interviewee → HR-protected | 403 REJECT |
+| HR/Interviewee → Interviewer-protected | 403 REJECT |
+| HR/Interviewer → Interviewee-protected | 403 REJECT |
+| Interviewee → Interviewer-only | 403 REJECT |
+| Owning HR → specific interview | 200 ALLOW |
+| Participating Interviewee → specific interview | 200 ALLOW |
+| Non-owner HR → specific interview | 403 REJECT |
+| Interviewer → specific interview | 403 REJECT (assignment is Phase 8) |
+| Authenticated → logout | 200; state cleared client-side |
+| After logout → protected (normal client flow) | REJECT (client credential removed) |
+| admin → product-role endpoints | 403 REJECT (no product mapping; UX-TBD-002) |
+
+**Security Audit (2026-10-04):**
+- ✅ No plaintext passwords anywhere (DB verified: scrypt hashes only)
+- ✅ Real JWT secret not committed (only in untracked `backend/.env`; `.env.example` placeholder; `git check-ignore` confirms; diff grep confirms)
+- ✅ No secrets in frontend source/env; server-side only
+- ✅ No password hashes in API responses (register/login/me tested)
+- ✅ No authentication bypass: all protected routes use `authenticate` (+ `authorize`/resource checks)
+- ✅ Backend is the authorization boundary (frontend route hiding is UX only; enforced by tests)
+- ✅ 401 (unauthenticated) and 403 (unauthorized) kept distinct
+- ✅ No tokens/passwords/secrets in logs (verified live + code review)
+- ✅ No unsafe CORS changes (preflight echo verified; Phase 3 config preserved)
+- ✅ `/health` unchanged
+
+**Regression Verification (2026-10-04):**
+- Phase 3: backend starts, listens on 3001, `/health` 200 unchanged, `/ready` 200, CORS/error middleware/graceful shutdown preserved, all Phase 3 tests pass
+- Phase 4: AI service untouched and healthy on 8000 (`/ready` → ok)
+- Phase 5: MongoDB connected, users collection compatible (same fields/indexes), all Phase 5 persistence tests pass, test databases dropped after runs, dev database intact
+- Phase 2: frontend builds (`tsc -b && vite build`), lint 0 errors, serving 200 locally (:5180) and at the pinned URL; single BrowserRouter; auth UI now wired to the real backend
+
+**Known Limitations / TBDs:**
+- Stateless JWT: no server-side token revocation (logout is client-side credential removal; tokens valid until expiry). Token blocklist/refresh-token rotation is future work if required.
+- Token expiry (dev default 24h) is provisional — production values are TBD (SRS-SEC-010).
+- Interviewer assignment/authorization for specific interviews is deferred to Phase 8 (no documented assignment relationship exists yet).
+- HR vs Interviewer permission boundary remains UX-TBD-002 (open); no cross-role permissions invented.
+- Multi-role accounts (UX-TBD-001) and role selection (UX-AUTH-003) not implemented; one role per account (backend-assigned role is the source of truth).
+- admin role: recognized by SRS but has no product UI or product-role mapping in this phase.
+- OAuth/social login not implemented (UX-AUTH-001: provider buttons only if implemented).
+- Password reset/email verification/MFA not in Phase 6 scope.
+- `npm audit` reports 3 pre-existing high-severity dev-only advisories (nodemon→chokidar→braces, from Phase 3); unrelated to authentication; not fixed to avoid a breaking nodemon change outside this phase's scope.
+
+**Next Phase:** Phase 7 — HR Product (depends on Phase 6).
+
+## Phase 7 Details
+
+**Implementation Date:** 2026-10-04 (completed across an aborted session and a resumed session; no Phase 8+ work included)
+
+**Status:** COMPLETE — all acceptance gates verified.
+
+**Backend (HR interview management APIs):**
+- `POST /api/interviews` — create an interview (title, candidateId, optional scheduledStartAt); requires HR product role + recruiter profile; validates the candidate reference against the candidates collection (DB-VAL discipline); persists to `interview_sessions` with the owning recruiter_id (status defaults to `draft`)
+- `GET /api/interviews` — list only the authenticated HR user's interviews (recruiter-scoped query; candidate display names joined without exposing password material)
+- `GET /api/interviews/:id` — retrieve an interview the HR user owns (resource authorization via `authorizeInterviewAccess`; 403 for non-owners, 404 unknown)
+- `PATCH /api/interviews/:id` — update `title` and/or `scheduledStartAt` where permitted (narrow allowlisted surface; no candidate reassignment or status mutation through this route)
+- `POST /api/interviews/:id/invite` — documented invitation workflow: internal `draft → invited` transition generating an opaque `invite_reference` (UUID); 409 for already-invited/non-draft interviews; no external email provider (MVP boundary)
+- `GET /api/candidates` — HR candidate selection list (safe fields from linked user records only)
+- All routes reuse Phase 6 `authenticate()` + `authorize('hr')` middleware and the centralized error handler; no new middleware, collections, or dependencies.
+
+**Database:** No schema changes. `interview_sessions` remains the central entity (existing Phase 5 collection, indexes and validation reused). No new collections; no new indexes (listing uses the existing recruiter_id-supported query path).
+
+**Frontend (HR screens wired to real data):**
+- `frontend/src/pages/hr/DashboardPage.tsx` — rewritten from mock data to real `GET /api/interviews`: total/upcoming/in-progress/pending-invitation counts, recent + upcoming interview lists, primary Create Interview action. Fabricated AI/integrity metrics removed (Phase 7 forbids risk scores/alerts).
+- `frontend/src/pages/hr/InterviewsPage.tsx` — rewritten: real interview table (title, candidate, schedule, status badge, invitation state), search + status filter, loading skeletons, empty/error states with retry. The Phase 2 mock schedule modal (with fabricated monitoring settings) was removed — creation happens through the real Create Interview flow.
+- `frontend/src/pages/hr/CreateInterviewPage.tsx` — candidate select (from `GET /api/candidates`), title, optional schedule; validation, submit → detail page; supports candidate preselection via navigation state from the Candidates page.
+- `frontend/src/pages/hr/InterviewDetailPage.tsx` — new: interview metadata, candidate info, schedule, invitation state (reference shown when invited), Edit Details form (title/schedule), Send Invitation confirmation dialog; loading/403/404 states.
+- `frontend/src/pages/hr/CandidatesPage.tsx` — rewritten from fabricated pipeline data (matchScore/stage/source) to the real registered-candidate list with search + a "Create Interview" action.
+- `frontend/src/pages/hr/interviewStatus.ts` — status badge config for the DEC-023 provisional lifecycle set + date formatting.
+- `frontend/src/App.tsx` — routes added: `/hr/interviews/new`, `/hr/interviews/:id` (HR-role protected).
+- Reports/Organization/Settings remain clearly non-functional placeholder screens (Phase 19+/later scope); no dead "future" links remain in HR quick actions (they now point only to real Phase 7 routes).
+
+**Test Results (2026-10-04):** Backend suite **145/145 passed** = 105 existing (Phases 3/5/6) + 40 new Phase 7 tests (`backend/tests/interviews.test.js`: unauthenticated rejection per endpoint, Interviewer/Interviewee 403 across all HR interview endpoints, candidate-list safety, creation success/persistence/ownership/validation/invalid-reference/no-recruiter-profile, list ownership isolation both directions, empty dataset, details 200/403/404, update success/clear-schedule/403/400s/404, invitation success/persistence/403/409 re-invite/409 non-draft/404, /health + /ready regression). Dedicated `interview_monitoring_hr_test` database; guarded drop; synthetic `@example.local` users only; dev database untouched. Frontend: `tsc -b && vite build` passes; lint 0 errors (214 pre-existing-style warnings, reduced from 244 after mock-data removal).
+
+**Live Verification (2026-10-04):** Demo HR login → `GET /api/interviews` returns the owned invited interview with candidate display; `GET /api/candidates` returns safe fields; unknown interview → 404; unauthenticated create/list → 401; Interviewer → HR interview endpoints → 403 (list + invite); all three services healthy on pinned ports (3001/5180/8000).
+
+**Authorization Matrix (Phase 7 additions, verified by tests):**
+
+|  Scenario | Result |
+|-----------|--------|
+| Unauthenticated → any HR interview endpoint | 401 REJECT |
+| HR → create/list/detail/update/invite (own interview) | 200/201 ALLOW |
+| HR → another HR's interview (detail/update/invite) | 403 REJECT |
+| HR listing | only own interviews (no cross-HR leakage) |
+| Interviewer/Interviewee → HR interview endpoints | 403 REJECT |
+| Invalid candidate reference / invalid data | 400 REJECT |
+| Unknown interview id | 404 |
+| Invite already-invited / non-draft interview | 409 REJECT |
+| HR without recruiter profile | 403 REJECT |
+
+**Known Limitations / TBDs:**
+- Invitation is an internal state workflow only (draft → invited + opaque reference). No email delivery exists (no provider is approved for the MVP; Phase 9+ candidate flow will consume the reference).
+- Interview lifecycle states remain the DEC-023 provisional set; only the documented `draft → invited` invitation transition is implemented in Phase 7. No cancellation/expiry states invented.
+- `PATCH` surface is limited to `title` and `scheduled_start_at` (approved fields); candidate reassignment is not an updatable field in this phase.
+- Dev-mode error responses include stack traces (`NODE_ENV=development` only; pre-existing Phase 3 centralized error-handler behavior, unchanged; production/test exclude them).
+- Reports, Organization, and full Settings remain placeholder screens (Phase 19+ / later scope).
+- The single dev-database demo interview ("Backend Developer Screen", invited) was created during Phase 7 browser verification under the seeded demo HR account; test databases were dropped and did not touch it.
+
+**Next Phase:** Phase 8 — Interviewer Product (depends on Phases 6–7). NOT STARTED — awaiting explicit approval.
+
+## Phase 8 Details
+
+**Implementation Date:** 2026-10-04
+
+**Status:** COMPLETE — all acceptance gates verified.
+
+**Schema decision (DEC-029, approved by the user before implementation):** The approved Database Specification defines NO interviewer field on `interview_sessions` and the SRS interviewer permissions are TBD, so a schema change was required and stopped for approval. The approved minimum: a single nullable scalar `interviewer_id` (reference to `users._id` with the `interviewer` backend role; no interviewer profile collection exists in the spec) added to `interview_sessions`, mirroring the recruiter_id/candidate_id reference pattern. No new collection. One new index (`idx_int_005_interviewer_status_created`, sparse) mirroring the recruiter listing index — justified by the Phase 8 assigned-listing workload, not speculative.
+
+**Backend (Interviewer Product APIs):**
+- `POST /api/interviews/:id/assign` — the owning HR user assigns (or reassigns, while pre-room) an active interviewer user to their interview; validates the interviewer reference (exists + `interviewer` role + active); rejects assignment on `ready`/`in_progress`/`completed` sessions (409); HR ownership enforced via `authorizeInterviewAccess`
+- `GET /api/interviewers` — HR interviewer selection list (active users with the interviewer role; safe fields only)
+- `POST /api/interviews` — now accepts an optional `interviewerId` at creation (validated identically; invalid references → 400)
+- `GET /api/interviewer/interviews` — assigned-interview list for the authenticated interviewer (interviewer_id-scoped query; candidate name joined, candidate email intentionally withheld per §privacy)
+- `GET /api/interviewer/interviews/:id` — authorized assigned-interview detail (candidate name only; `started_at`/`ended_at` exposed for ongoing/completed sessions)
+- `GET /api/interviewer/interviews/:id/report` — permitted report access (PRD-FR-010, Database Spec §13): returns the existing `final_reports` document for an authorized assigned interview; honest 404 ("Report will be available after the interview is completed and reviewed") when none exists — no fabrication; report generation remains Phase 19
+- `authorizeInterviewAccess` extended (Phase 8 branch): interviewer access is permitted only when `interview_sessions.interviewer_id` equals the authenticated interviewer's user id; unassigned interviews remain inaccessible to interviewers (Phase 6 behavior preserved)
+- All routes reuse Phase 6 auth middleware, the centralized error handler and existing persistence conventions; no new dependencies.
+
+**Frontend:**
+- `frontend/src/pages/interviewer/DashboardPage.tsx` — rewritten from mock data to real `GET /api/interviewer/interviews`: assigned/upcoming/ongoing/completed counts, upcoming list (earliest first), loading/empty/error states. Fabricated AI metrics removed.
+- `frontend/src/pages/interviewer/InterviewsPage.tsx` — rewritten: real assigned table (title, candidate, schedule, status), search + status filter + scheduled-time sorting, loading/empty/error states with retry.
+- `frontend/src/pages/interviewer/InterviewDetailPage.tsx` — new: interview metadata, candidate name, schedule, truthful session state ("The interview room for this session is not open yet" / in-progress / completed states — UX-INT-002 monitoring intentionally NOT implemented), report section with honest availability state.
+- `frontend/src/pages/interviewer/LivePage.tsx` + `ReportsPage.tsx` — fabricated Phase 2 mock monitoring/report data replaced with truthful placeholder states ("available in a later stage"; completed-interviews report list linking to detail pages).
+- HR extension (compatible Phase 7 evolution): `CreateInterviewPage.tsx` gains an optional Interviewer select; HR `InterviewDetailPage.tsx` gains an Assign/Reassign Interviewer modal (assignable while draft/scheduled/invited); `App.tsx` routes `/interviewer/interviews/:id`.
+- Settings remains an existing placeholder screen (existing conventions preserved).
+
+**Test Results (2026-10-04):** Backend suite **177/177 passed** = 145 existing (Phases 3/5/6/7) + 32 new Phase 8 tests (`backend/tests/interviewer.test.js`: AUTH-INT-001 unauthenticated 401 per endpoint; AUTH-INT-002/003 HR/Interviewee 403 across interviewer-only endpoints; interviewer cannot access HR-only operations; assignment workflow — assign-at-creation, assign endpoint, invalid/wrong-role interviewer 400, non-owner 403, in-progress/completed 409, invalid creation reference 400; INT-DASH-001–007 assigned/upcoming/ongoing/completed representation, isolation from other interviewers and unassigned sessions, empty state, detail open 200/403/404, privacy (candidate email withheld); INT-REPORT-001/002 permitted report access with a synthetic fixture, honest 404 absence, unauthorized 403; /health + /ready regression). Dedicated `interview_monitoring_interviewer_test` database; guarded drop; synthetic `@example.local` users only; dev database untouched (one demo-assignment update was made to the existing demo interview during live verification). Frontend: `tsc -b && vite build` passes; lint 0 errors (171 pre-existing-style warnings, reduced from 214 after mock-data removal).
+
+**Live Verification (2026-10-04):** Demo interviewer login → empty assigned list (correct); demo HR assigns the demo interviewer to the existing demo interview → interviewer's assigned list returns the interview with candidate name (no email — privacy); report endpoint → honest 404; HR → interviewer endpoints → 403; unauthenticated → 401; all three services healthy on pinned ports (3001/5180/8000).
+
+**Authorization Matrix (Phase 8 additions, verified by tests):**
+
+|  Scenario | Result |
+|-----------|--------|
+| Unauthenticated → interviewer endpoints (list/detail/report) | 401 REJECT |
+| HR/Interviewee → interviewer-only endpoints | 403 REJECT |
+| Interviewer → HR-only management operations | 403 REJECT |
+| Interviewer → assigned interview (list/detail/report) | 200 ALLOW |
+| Interviewer → unassigned / another interviewer's interview | 403 REJECT |
+| Interviewer listing | only own assigned interviews (no leakage) |
+| Invalid/wrong-role interviewer reference | 400 REJECT |
+| Assign ready/in_progress/completed interview | 409 REJECT |
+| Report when none exists | 404 (truthful, no fabrication) |
+| Unknown interview id | 404 |
+
+**Known Limitations / TBDs:**
+- Interviewer permissions remain "TBD" in the SRS; Phase 8 implements the narrowest model (assigned-interview views + permitted report access). No interviewer HR-administration, user management or organization management exists.
+- Live interview monitoring (UX-INT-002), WebRTC, events, alerts, evidence and the integrity view are NOT implemented (Phases 10+); the Live Sessions screen is a truthful placeholder and interview detail shows honest session-entry states.
+- Report generation does not exist (Phase 19); report access returns honest 404 until a report document exists. Integrity indicators are returned only if present on the stored report.
+- `interviewer_id` is a DEC-029 extension to the documented `interview_sessions` schema (approved during Phase 8); the Database Specification has not been updated to include it (spec documents remain unmodified).
+- Assignment lifecycle rule (assignable while draft/scheduled/invited; 409 afterwards) is a Phase 8 minimum rule; reassignment-after-start remains undefined in the documents.
+- Phase 9 (candidate/interviewee product, invitation consumption, system check) NOT started.
+
+**Next Phase:** Phase 9 — Candidate/Interviewee Product (depends on Phases 6–7). NOT STARTED — awaiting explicit approval.
+
+## Phase 9 Details
+
+**Implementation Date:** 2026-10-04
+
+**Status:** COMPLETE — all acceptance gates verified.
+
+**Backend (candidate APIs):**
+- `GET /api/interviewee/interviews` — the authenticated candidate's interviews (candidate profile requirement; `interview_sessions.candidate_id` scope; interviewer display name joined; no password material)
+- `GET /api/interviewee/interviews/:id` — authorized assigned-interview detail (title, status, schedule, `started_at`/`ended_at`, interviewer name); candidate ownership enforced via `authorizeInterviewAccess` (existing candidate branch, Phase 6)
+- Client-supplied candidate identity (body/query/URL) cannot influence authorization — verified by tests
+- Mounted at `/api/interviewee` (mirrors the Phase 8 interviewer namespace); no Phase 7/8 APIs changed
+
+**Database:** NO schema changes. `interview_sessions.candidate_id` (Phase 6/5 baseline) is the candidate association. No new collections, no new indexes. System check is client-side only — no readiness persistence exists in the documented schema.
+
+**Frontend:**
+- `frontend/src/pages/interviewee/DashboardPage.tsx` — rewritten from mock data to real `GET /api/interviewee/interviews`: next interview (title, schedule, interviewer, truthful status), Join/Open action gated to session state, Run System Check action, preparation checklist (camera/microphone/connection/browser/monitoring disclosure), recent completed history, loading/empty/error states with retry
+- `frontend/src/pages/interviewee/InterviewsPage.tsx` — rewritten: real assigned table (title, interviewer, schedule, status), search, open action, loading/empty/error states
+- `frontend/src/pages/interviewee/InterviewDetailPage.tsx` — new: interview metadata, interviewer, schedule, truthful session state ("The interview room will be available in the next stage"), preparation cards, Monitoring Disclosure (neutral, non-punitive language: observable signals, permission purposes, recovery guidance — no accusatory claims), Start System Check action
+- `frontend/src/pages/interviewee/SystemCheckPage.tsx` — REWRITTEN from a hardcoded fake-results mock to REAL browser capability checks:
+  - Camera (mandatory): `navigator.mediaDevices.getUserMedia({video:true})`; states: Checking/Ready/Permission Required/Unavailable/Failed; media tracks stopped immediately (no persistence); mandatory because webcam monitoring is the MVP core (CLAUDE.md §2, SRS §9.x: prevents continuation when camera is mandatory for the configured interview)
+  - Microphone (optional, checked): `getUserMedia({audio:true})`; same states; non-blocking baseline — audio analysis is a later phase and no configurable mic requirement exists in the implemented schema (SRS: "whether it blocks entry depends on the configured interview requirements")
+  - Connection (mandatory): `navigator.onLine` truthful reachability signal (Connected/Unavailable); exact connectivity metric remains TBD (UX-CAN-002) — no invented quality/threshold values
+  - Browser (mandatory): capability check — `navigator.mediaDevices.getUserMedia` + `RTCPeerConnection` presence; Unsupported state explains the exact missing capability; no invented browser allowlist (TBD preserved)
+  - Screen sharing: correctly NOT shown — not required by the implemented interview configuration (conditional per UX-CAN-002/PRD-FR-013)
+  - Continue gating: enabled only when all mandatory checks pass; per-check Retry + Run-all; recovery guidance on every failed state; completion state truthfully states the interview room comes in the next stage (no fake room navigation, no Phase 10 work)
+  - Refresh/direct-URL cannot falsely mark readiness: completion is client-side state that resets on reload; no later route exists to bypass into
+- `frontend/src/pages/interviewee/HistoryPage.tsx` — rewritten: the candidate's own completed sessions (real data; no integrity information/reports — product TBD)
+- `frontend/src/App.tsx` — route added: `/interviewee/interviews/:id` (interviewee-role protected)
+- Settings remains an existing placeholder screen
+
+**Test Results (2026-10-04):** Backend suite **192/192 passed** = 177 existing (Phases 3/5/6/7/8) + 15 new Phase 9 tests (`backend/tests/interviewee.test.js`: unauthenticated 401 per endpoint; HR/Interviewer 403 on candidate-only endpoints; candidate list/detail 200 with interviewer display; ownership isolation both directions; URL-modification, query-parameter and request-body bypass attempts denied without leaking interview data; query candidateId cannot influence authorization; nonexistent 404; orphan candidate user 403; lifecycle respected — completed not presented as active; /health + /ready regression). Dedicated `interview_monitoring_candidate_test` database; guarded drop; synthetic users only; dev database untouched. Frontend: `tsc -b && vite build` passes; lint 0 errors (133 pre-existing-style warnings, reduced from 171 after mock-data removal). System-check UI states verified live in the browser (camera/microphone permission prompts, ready/permission-required/unavailable states, Continue gating).
+
+**Live Verification (2026-10-04):** Demo candidate login → `GET /api/interviewee/interviews` returns the assigned interview with interviewer name; detail works; HR → candidate endpoints → 403; unauthenticated → 401; all three services healthy on pinned ports (3001/5180/8000).
+
+**Known Limitations / TBDs:**
+- Connectivity quality metric remains TBD (UX-CAN-002): only truthful `navigator.onLine` reachability is reported — no invented bandwidth/latency thresholds
+- Browser support matrix remains TBD (UX-CAN-002): capability-based validation only — no invented browser allowlist/version claims
+- Microphone blocking is a non-blocking baseline (SRS: depends on the configured interview requirements; no configurable requirement exists in the implemented schema — audio analysis is a later phase)
+- Screen sharing is conditional and NOT required by the implemented configuration; no screen-capture permission is requested (PRD-FR-013 belongs to later phases)
+- System-check completion is client-side state (no readiness persistence is documented; no schema change was made). The interview room (Phase 10) will enforce its own entry authorization
+- Interview Room, WebRTC, monitoring, alerts, evidence, reports: NOT implemented (Phases 10+)
+
+---
+
+## Phase 10 — Interview Room (COMPLETE)
+
+Delivered the controlled Interview Room foundation connecting candidate, interviewer, and HR workflows (PRD-FR-004, SRS-FR-008, SRS-FR-009, UX-CAN-003, UX-CAN-004, UX-INT-001). Strict phase boundaries were observed: WebRTC and Socket.io are deferred to Phase 11; webcam stream capture and frame sampling are deferred to Phase 12; computer vision, behavioral signals, real-time alerts, and reports are deferred to subsequent phases.
+
+### Implemented Surface
+
+- **Backend Persistence & Lifecycle (`backend/src/db/persistence.js`):**
+  - `startInterviewSession(interviewId)`: Transitions enterable interview sessions (`draft`, `scheduled`, `invited`, `ready`) to `in_progress`, recording `started_at`. Idempotent for ongoing sessions. Rejects re-starting a completed session with `409 Conflict`.
+  - `completeInterviewSession(interviewId)`: Transitions active interview sessions to `completed`, recording `ended_at`.
+  - `getInterviewRoomContext(interviewId)`: Retrieves session metadata, participant details, candidate user information, and interviewer user information with backend-enforced privacy scoping.
+- **Backend APIs:**
+  - Candidate room: `GET /api/interviewee/interviews/:id/room`, `POST /api/interviewee/interviews/:id/room/join`, `POST /api/interviewee/interviews/:id/room/leave`.
+  - Interviewer room: `GET /api/interviewer/interviews/:id/room`, `POST /api/interviewer/interviews/:id/room/join`, `POST /api/interviewer/interviews/:id/room/end`.
+  - API Root updated to advertise `status: 'Phase 10: Interview Room'`.
+- **Backend Authorization & Security:**
+  - Mandatory JWT authentication and role authorization via existing `authenticate` and `authorize` middleware.
+  - Candidate access strictly validated via `authorizeInterviewAccess` against the authenticated candidate profile.
+  - Interviewer access strictly validated via `authorizeInterviewAccess` against `interview_sessions.interviewer_id`.
+  - Cross-candidate and cross-interviewer access attempts rejected with `403 Forbidden`. Nonexistent interview requests return honest `404 Not Found`.
+- **Frontend Room Experience (`frontend/`):**
+  - `frontend/src/pages/interviewee/InterviewRoomPage.tsx`: Controlled candidate room with self-view and interviewer tiles, live session elapsed timer, audio/video toggle state indicators, transparent non-punitive monitoring disclosure notice (UX-CAN-003), and safe exit flow.
+  - `frontend/src/pages/interviewee/CompletionPage.tsx`: Candidate completion page confirming interview conclusion, next-steps review guidance, non-punitive messaging without internal fraud scores (UX-CAN-004).
+  - `frontend/src/pages/interviewer/InterviewRoomPage.tsx`: Interviewer room interface with candidate status tile, self-view tile, elapsed timer, audio/video controls, and "End Session" modal workflow transitioning the session to `completed`.
+  - `frontend/src/lib/api.ts`: Typed room client methods and response interfaces.
+  - Entry points wired: `IntervieweeInterviewDetailPage.tsx`, `IntervieweeSystemCheckPage.tsx`, and `InterviewerInterviewDetailPage.tsx` provide "Enter Interview Room" navigation.
+  - `App.tsx`: Role-protected routes added for `/interviewee/interviews/:id/room`, `/interviewee/interviews/:id/completed`, and `/interviewer/interviews/:id/room`.
+
+### Environment & Verification
+
+- **Python AI Service Environment:**
+  - Virtual environment created at `ai-service/venv` and verified ignored by git (`.gitignore`).
+  - Dependencies installed cleanly from `ai-service/requirements.txt` (`fastapi==0.142.2`, `uvicorn==0.54.0`, `pydantic==2.13.5`, `pydantic-settings==2.15.0`, `pytest==9.1.1`, `httpx2==2.13.1`).
+  - AI Service test suite: **24/24 pytest tests passed** (`ai-service/tests`).
+  - Service metadata and startup verified (`AI Interview Monitoring — AI Service 0.1.0`).
+- **Backend Test Suite:**
+  - **207/207 tests passed** (15 new Phase 10 tests in `backend/tests/room.test.js` covering candidate room access, interviewer room access, cross-role denial, unassigned interviewer denial, join/start lifecycle, leave room, conclude/complete lifecycle, and completed session rejection).
+- **Frontend Verification:**
+  - TypeScript build (`tsc -b && vite build`): **0 errors**.
+  - ESLint (`npm run lint`): **0 errors** (147 legacy demo warnings preserved).
+- **Pinned Port Constraints:**
+  - Frontend: `5180`
+  - Backend: `3001`
+  - AI service: `8000`
+
+### Known Limitations / Deferred to Later Phases
+
+- Real-time media streaming and signaling were delivered in **Phase 11 (WebRTC & Socket.io)**.
+- Camera hardware stream sampling and frame capture belong to **Phase 12 (Webcam Capture)**.
+- Computer vision detection and behavioral signals belong to **Phases 13–14**.
+
+---
+
+## Phase 11 — WebRTC & Socket.io: Real-Time Communication and Signaling (COMPLETE)
+
+Delivered real-time communication infrastructure establishing direct peer-to-peer WebRTC audio/video feeds between candidate and interviewer, coordinated via authenticated Socket.io signaling (PRD-FR-004, SRS-FR-008, SRS-FR-009, UX-CAN-003, UX-INT-001). Strict phase boundaries were observed: continuous frame sampling, periodic screenshots, CV / face detection / gaze tracking, cheating detection, AI risk scoring, real-time alerts, evidence collection, and interview reports are deferred to Phases 12–19.
+
+### Implemented Surface
+
+- **Backend Socket.io Server (`backend/src/socket/server.js`, `backend/server.js`):**
+  - Wrapped Express `app` into Node.js HTTP server and initialized Socket.io (`initializeSocketServer`).
+  - **Handshake JWT Authentication:** Validates token on socket connection using `verifyToken` and resolves database identity via `findUserById`. Rejects unauthenticated connections immediately.
+  - **Room Access Authorization:** `join-room` verifies interview access via `authorizeInterviewAccess` against candidate ownership and interviewer assignment. Blocks unassigned interviewers and unauthorized candidates.
+  - **Signaling Protocol:** Bidirectional relay for `webrtc-offer`, `webrtc-answer`, and `webrtc-ice-candidate` with room-membership validation and payload sanity checking.
+  - **Participant Presence:** Broadcasts `participant-joined` and `participant-left` events on clean leave (`leave-room`) and unexpected socket disconnect (`disconnecting`).
+- **Frontend Socket.io Client (`frontend/src/lib/socket.ts`):**
+  - Factory `createInterviewSocket` connecting with auth token from `localStorage` / `sessionStorage`.
+  - Configured with reconnection strategies and typed signaling payloads (`ParticipantInfo`, `WebRTCOfferPayload`, `WebRTCAnswerPayload`, `WebRTCIceCandidatePayload`).
+- **Frontend Native WebRTC Hook (`frontend/src/hooks/useWebRTC.ts`):**
+  - Native browser WebRTC implementation (`RTCPeerConnection`, `RTCSessionDescription`, `RTCIceCandidate`, `MediaStream`) with Google public STUN servers (`stun:stun.l.google.com:19302`, `stun:stun1.l.google.com:19302`).
+  - **ICE Candidate Queueing:** Buffers incoming ICE candidates arriving before `setRemoteDescription` completes to prevent dropped candidates.
+  - **Media Stream Acquisition & Error Handling:** Requests user camera and microphone (`navigator.mediaDevices.getUserMedia`) with non-blocking error states (permission denied, device not found) and retry action (`retryMedia`).
+  - **Track Controls:** Functional `toggleAudio()` and `toggleVideo()` mutating `MediaStreamTrack.enabled`.
+  - **Lifecycle Cleanup:** Stops all local media tracks, closes RTCPeerConnection, emits `leave-room`, and disconnects socket on unmount.
+- **Frontend Interview Room Pages:**
+  - `frontend/src/pages/interviewee/InterviewRoomPage.tsx`: Wired `useWebRTC`. Distinct badges for signaling (`Signaling: Connected`) and WebRTC peer connection (`P2P: Connected` / `Waiting for Peer`). Local video rendered mirrored/muted in self-view tile; remote video rendered in interviewer tile. Control bar wired to mute/unmute and camera start/stop.
+  - `frontend/src/pages/interviewer/InterviewRoomPage.tsx`: Wired `useWebRTC`. Local video rendered mirrored/muted in panel lead self-view tile; remote candidate stream rendered in main candidate tile. Full session lifecycle and ending modal preserved.
+- **Vite & API Updates:**
+  - Added `/socket.io` proxy with `ws: true` in `frontend/vite.config.ts`.
+  - Updated API root status to `'Phase 11: WebRTC & Socket.io'`.
+
+### Environment & Verification
+
+- **Backend Automated Tests:**
+  - **223/223 tests passed** (16 new automated tests in `backend/tests/webrtc-socket.test.js` covering token requirement, invalid token rejection, valid JWT auth, candidate room join, interviewer room join, unassigned interviewer rejection, different candidate rejection, join presence broadcast, offer relay, answer relay, ICE candidate relay, room-membership verification, malformed payload validation, clean leave, and unexpected disconnect notification).
+- **AI Service Environment:**
+  - **24/24 pytest tests passed** (`ai-service/tests`).
+- **Frontend Verification:**
+  - Production build (`npm run build --prefix frontend`): **0 errors**.
+  - ESLint (`npm run lint --prefix frontend`): **0 errors**.
+- **Pinned Ports:**
+  - Frontend: `5180`
+  - Backend: `3001`
+  - AI service: `8000`
+
+### Known Limitations / Deferred to Later Phases
+
+- Automated webcam frame sampling and transmission pipeline was delivered in **Phase 12 (Webcam Capture)**.
+- Computer vision processing (face detection, head pose, eye gaze) belongs to **Phase 13 (Computer Vision)**.
+- Behavioral signal aggregation and alert triggers belong to **Phases 14–16**.
+
+---
+
+## Phase 12 — Webcam Capture (COMPLETE)
+
+Delivered a controlled, reliable, and configurable webcam frame-capture pipeline for active interview sessions (PRD-FR-005, SRS-FR-008, SRS-FR-011, UX-CAN-003, UX-INT-001). Strict phase boundaries were observed: computer vision (face/landmark detection), behavioral signal extraction, alert generation, and long-term evidence storage are strictly deferred to Phases 13–19.
+
+### Implemented Surface
+
+- **Webcam Stream Integration:**
+  - Directly reuses the existing `MediaStream` established by Phase 11 (`useWebRTC`). Zero redundant hardware requests or duplicate user permission prompts.
+  - Video track verification: checks track enablement and `live` readyState before extracting frames. Pauses extraction when video preview is toggled off or unavailable.
+- **Frame Extraction & Sampling Engine (`frontend/src/hooks/useWebcamCapture.ts`):**
+  - Native browser `HTMLCanvasElement` frame extraction preserving source aspect ratio.
+  - Conservative, configurable defaults: 1 fps sampling rate (`intervalMs: 1000`), `640x360` target resolution, `image/jpeg` format, `0.8` quality encoding via asynchronous `canvas.toBlob`.
+  - Structured frame metadata: `sequenceNumber` (incrementing counter), ISO `timestamp`, dimensions (`width`, `height`), `format`, `sizeBytes`, and `captureStatus`.
+  - Non-blocking backpressure handling: skips capture tick when previous frame upload is in-flight, incrementing `droppedCount` rather than accumulating memory queues.
+  - Complete lifecycle cleanup: timer disposal and canvas dereferencing on room exit or unmount without terminating the shared WebRTC stream.
+- **Backend Transmission & Validation (`backend/src/`):**
+  - **HTTP Frame Ingestion:** `POST /api/interviewee/interviews/:id/frames` enforcing JWT authentication, candidate profile mapping, `authorizeInterviewAccess`, and `in_progress` session guarding (409 Conflict if completed or not in progress).
+  - **Socket.io Frame Event:** `webcam-frame` event in `backend/src/socket/server.js` validating room membership and candidate role. Emits `monitoring-frame-status` telemetry to the room.
+  - **Validation Service (`backend/src/monitoring/frameValidator.js`):** Strict boundary validation for sequence number, ISO date, dimension limits (64–3840px), MIME types (`image/jpeg`, `image/webp`, `image/png`), and payload size limits (100B–2MB).
+  - **Zero Raw-Frame Persistence (DEC-012, DEC-015):** In-memory operational tracking via `sessionFrameTracker` avoids bloating MongoDB with raw images prior to Phase 17.
+  - **Telemetry Endpoints:** `GET /api/interviewee/interviews/:id/frames/status` and `GET /api/interviewer/interviews/:id/frames/status` provide real-time frame count and capture health metrics.
+- **Interview Room UI Integration (`frontend/`):**
+  - Candidate room: header badge indicates real-time capture status (`Capture: Active (N)` / `Capture: Paused`), candidate video preview tile shows active sampling indicator ("Sampling 1 fps"), and monitoring disclosure modal transparently communicates sampling policy.
+  - Interviewer room: header badge and candidate video tile display live candidate frame capture status without broadcasting heavy raw video payloads over the network.
+- **API Status & Configuration:**
+  - API Root updated to advertise `status: 'Phase 12: Webcam Capture'`.
+  - CORS origins in `backend/src/app.js` confirmed for ports 5173, 5180, and the pinned e2b URL.
+
+### Environment & Verification
+
+- **Backend Automated Tests:**
+  - **242/242 tests passed** (19 new automated tests in `backend/tests/webcam-capture.test.js` covering unauthenticated rejection, non-candidate rejection, unassigned candidate rejection, nonexistent interview, session lifecycle guarding, valid frame submission, sequenceNumber validation, timestamp validation, dimension bounds, format restrictions, payload size limits, candidate status telemetry, interviewer status telemetry, unassigned interviewer rejection, socket frame transmission & status broadcast, out-of-room socket rejection, and post-completion rejection).
+- **AI Service Environment:**
+  - **24/24 pytest tests passed** (`ai-service/tests`).
+- **Frontend Verification:**
+  - Production build (`npm run build --prefix frontend`): **0 errors**.
+  - ESLint (`npm run lint --prefix frontend`): **0 errors** (all pre-existing warnings preserved).
+- **Pinned Ports:**
+  - Frontend: `5180`
+  - Backend: `3001`
+  - AI service: `8000`
+
+### Phase 13 Implementation Summary (Completed)
+
+- **Local Open-Source Computer Vision (`ai-service/app/services/computer_vision/`):**
+  - OpenCV YuNet face detection (`face_detector.py`) loaded once via singleton registry.
+  - Objective visual observation schemas (`schemas.py`): `CVAnalysisResult`, `DetectedFace`, `BoundingBox`, `FrameQualityGrade`.
+  - Frame preprocessing (`preprocessor.py`): Base64 decoding, dimension checking, brightness/blur assessment.
+  - Endpoints (`app/routes/computer_vision.py`): `POST /analysis/frame` with frame/session metadata.
+  - 91/91 pytest tests passed.
+
+### Phase 14 Implementation Summary (Completed)
+
+- **Observable Behaviour Signal Extraction (`ai-service/app/services/behaviour/`):**
+  - Temporal signal extractors: Face Absence (BEH-003), Multiple Faces (BEH-002), Presence Consistency (BEH-001), Frame Quality Summary (CV-SIG-006), and Monitoring Data Quality.
+  - In-memory session tracking (`SessionBehaviourTracker`) capped at 1000 observations (~16.6 min).
+  - Endpoints (`app/routes/behaviour.py`): `POST /analysis/behaviour`, `GET /analysis/behaviour/{interview_id}`, `DELETE /analysis/behaviour/{interview_id}`.
+  - 123/123 pytest tests passed.
+
+### Phase 15 Implementation Summary (Completed)
+
+- **Event Engine & Persistence Architecture (`backend/src/`):**
+  - **Node.js Express Backend Persistence Ownership:** MongoDB persistence in `monitoring_events` (`COLLECTIONS.MONITORING_EVENTS`), index management, and REST APIs.
+  - **Deterministic Idempotency Key:** `${interview_id}:${event_type}:${start_sequence/start_timestamp}` backed by unique sparse index `idx_evt_004_idempotency_unique`.
+  - **Event Normalization (`backend/src/events/eventNormalizer.js`):**
+    - `validateBehaviourAnalysisPayload(payload, expectedInterviewId)` enforces payload integrity and session matching.
+    - `normalizeSignalToEvent`: Converts eligible signals (`FACE_ABSENCE`, `MULTIPLE_FACES`, low `FACE_PRESENCE_CONSISTENCY`, degraded/critical `FRAME_QUALITY_SUMMARY`) into normalized monitoring event specifications.
+    - `normalizeMonitoringQualityToEvent`: Converts degraded or unreliable monitoring data quality into operational events.
+  - **Persistence & Lifecycle Engine (`backend/src/events/eventEngine.js`):**
+    - `processBehaviourAnalysis`: Performs atomic upsert (`findOneAndUpdate` with `upsert: true`). Replayed identical payloads update in place without duplicate document creation. Ongoing runs update duration and metrics. Cleared runs transition to `RESOLVED` and record `resolved_at`.
+    - `resolveMonitoringEvent`: Manually or programmatically transitions active events to `RESOLVED`.
+  - **Event Repository (`backend/src/events/eventRepository.js`):**
+    - `findEventsByInterview`: Multi-criteria querying (`status`, `severity`, `event_type`, `category`, date range) with sorting and pagination (`page`, `limit`, `totalPages`, `hasNext`, `hasPrev`).
+    - `findEventById`: Retrieval by `_id` or business `event_id`.
+    - `getEventsSummary`: Aggregates total events, active/resolved counts, severity breakdowns, event type breakdowns, and temporal bounds (`first_event_at`, `latest_event_at`).
+  - **AI Service Client (`backend/src/services/aiServiceClient.js`):**
+    - HTTP client calling `http://127.0.0.1:8000/analysis/behaviour/{id}` with timeout handling and error mapping.
+  - **REST Endpoints (`backend/src/routes/monitoringEvents.js`):**
+    - `POST /api/interviews/:id/monitoring-events/process`: Ingests Phase 14 analysis payload directly, or automatically pulls from the AI service if request body is omitted.
+    - `GET /api/interviews/:id/monitoring-events`: Lists paginated events for HR owner or assigned Interviewer.
+    - `GET /api/interviews/:id/monitoring-events/summary`: Retrieves aggregated metrics.
+    - `GET /api/monitoring-events/:eventId`: Retrieves a single event.
+    - `PATCH /api/monitoring-events/:eventId/resolve`: Marks an active event as resolved.
+  - **Strict Access Control & Ethics:**
+    - Role-based authorization enforced via `authenticate`, `authorize('hr', 'interviewer')`, and `authorizeInterviewAccess`. Candidates are forbidden (403) from accessing monitoring events.
+    - Strictly neutral and factual explanations (no accusatory or intent-inferring terms).
+    - Zero raw frame persistence and zero raw image logging.
+
+### Phase 16 Implementation Summary (Completed)
+
+- **Real-Time Alerts Architecture (`backend/src/alerts/`):**
+  - **Modular Alert Services:**
+    - `alertConstants.js`: Canonical lifecycle states (`NEW`, `ACKNOWLEDGED`, `DISMISSED`), priorities (`HIGH`, `MEDIUM`, `LOW`, `INFO`), alert types (`MONITORING_EVENT`, `SYSTEM_ALERT`), and socket event names.
+    - `alertPolicyService.js`: Configurable policy registry mapping event types to priorities, trigger conditions, and neutral messages (`POL_FACE_ABSENCE`, `POL_MULTIPLE_FACES`, `POL_PRESENCE_CONSISTENCY_LOW`, `POL_FRAME_QUALITY_DEGRADED`, `POL_MONITORING_DATA_QUALITY`).
+    - `alertDeduplicator.js`: Deterministic idempotency key calculation (`${interview_id}:${policy_id}:${event.idempotency_key || event.event_id}`) and suppression of duplicate socket notifications for minor duration updates (<5s).
+    - `alertRepository.js`: Atomic MongoDB operations on `alerts` collection (`COLLECTIONS.ALERTS`), unique idempotency indexing, filtering, pagination, and summary aggregation.
+    - `alertDispatcher.js`: Dispatches sanitized alert payloads over Socket.io exclusively to reviewer-specific rooms and personal recipient user rooms.
+    - `alertEscalationService.js`: Evaluates unacknowledged alerts exceeding delay thresholds (30s default) up to maximum level (2).
+    - `alertEngine.js`: Ingestion orchestrator linking Phase 15 event persistence with policy evaluation, persistence, and dispatch.
+  - **Socket.io Recipient Isolation & Candidate Protection:**
+    - Authenticated sockets automatically join their personal notification room (`user:${socket.user.id}`).
+    - Interviewer and HR sockets join `interview:${interviewId}:reviewers`.
+    - Candidate sockets join `interview:${interviewId}` ONLY and NEVER join `:reviewers`.
+    - All alerts emit strictly to `interview:${interviewId}:reviewers` and direct recipient `user:${id}` rooms. Candidates can never receive recruiter-facing monitoring alerts.
+  - **REST Endpoints (`backend/src/routes/alerts.js`):**
+    - `GET /api/interviews/:id/alerts`: List alerts (paginated, filtered).
+    - `GET /api/interviews/:id/alerts/summary`: Summary metrics.
+    - `GET /api/alerts/:alertId`: Retrieve individual alert.
+    - `PATCH /api/alerts/:alertId/acknowledge`: Acknowledge alert.
+    - `PATCH /api/alerts/:alertId/dismiss`: Dismiss alert.
+    - `POST /api/interviews/:id/alerts/escalate`: Trigger escalation sweep.
+    - All endpoints enforce HR ownership or interviewer assignment. Candidates receive 403 Forbidden.
+  - **Frontend Interview Room Integration (`frontend/`):**
+    - Live alert button and badge in Interviewer Room header.
+    - Collapsible Alert Drawer displaying real-time alert cards with priority badges, elapsed times, and one-click "Acknowledge" / "Dismiss" buttons.
+    - Candidate room UI has zero alert components or listeners.
+  - **Privacy & Ethics Constraints:**
+    - Strictly neutral and factual explanations (no accusatory or intent-inferring terms).
+    - Zero raw frame persistence and zero raw image logging.
+
+### Verification Matrix
+
+- **Backend Automated Tests:**
+  - **298/298 tests passed** (30 new Phase 16 tests in `backend/tests/alerts.test.js`, 0 regressions across all 82 test suites).
+- **AI Service Automated Tests:**
+  - **123/123 pytest tests passed** (`ai-service/tests`).
+- **Frontend Verification:**
+  - Production build (`npm run build --prefix frontend`): **0 errors**.
+  - ESLint (`npm run lint --prefix frontend`): **0 errors** (all pre-existing warnings preserved).
+- **Pinned Ports & Services:**
+  - Frontend: `5180` (`https://5180-iteaxs65egwgp2h9q52q5.e2b.app/`)
+  - Backend: `3001` (`https://3001-iteaxs65egwgp2h9q52q5.e2b.app/`)
+  - AI service: `8000`
+  - MongoDB: `mongodb://127.0.0.1:27017`
+
+### Known Limitations / Deferred to Later Phases
+
+- Evidence keyframe extraction, thumbnail storage, and encrypted retention belong to **Phase 17 (Evidence System)**.
+- Live HR integrity dashboards belong to **Phase 18 (Live Monitoring)**.
+- Final PDF/web reports and aggregate scoring belong to **Phase 19 (Interview Report)**.
+
+**Next Phase:** Phase 17 — Evidence System (depends on Phase 16). NOT STARTED — awaiting explicit approval.

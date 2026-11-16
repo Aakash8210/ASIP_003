@@ -1,0 +1,13 @@
+# AI-service local ignores (complements repository root .gitignore)
+venv/
+.venv/
+__pycache__/
+*.pyc
+.env
+.pytest_cache/
+.coverage
+htmlcov/
+# Phase 13 — downloaded model files (re-downloadable, not committed)
+# models/*.onnx
+# models/*.caffemodel
+# models/*.prototxt

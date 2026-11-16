@@ -1,0 +1,526 @@
+// API configuration and client for the frontend
+// Backend integration: same-origin relative paths by default — the vite dev
+// server proxies /api to the backend, which works for localhost and the
+// public e2b URL alike. Override with VITE_API_BASE_URL only for a
+// same-origin-reachable backend.
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || ''
+const API_PATH = '/api'
+
+export const apiConfig = {
+  baseURL: API_BASE_URL,
+  apiPath: API_PATH,
+  healthEndpoint: '/health',
+}
+
+export interface ApiResponse<T> {
+  status: 'ok' | 'error'
+  data?: T
+  message?: string
+  timestamp?: string
+  statusCode?: number
+}
+
+// Carries the HTTP status and the server-provided (safe) message so
+// authentication flows can distinguish 400/401/403/409 handling.
+export class ApiError extends Error {
+  statusCode: number
+
+  constructor(message: string, statusCode: number) {
+    super(message)
+    this.name = 'ApiError'
+    this.statusCode = statusCode
+  }
+}
+
+export class ApiClient {
+  private baseURL: string
+  private authToken: string | null = null
+
+  constructor(baseURL: string = API_BASE_URL) {
+    this.baseURL = baseURL
+  }
+
+  setAuthToken(token: string | null) {
+    this.authToken = token
+  }
+
+  private async request<T>(
+    path: string,
+    options: RequestInit = {}
+  ): Promise<T> {
+    const url = `${this.baseURL}${path}`
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      ...((options.headers as Record<string, string>) || {}),
+    }
+    if (this.authToken) {
+      headers['Authorization'] = `Bearer ${this.authToken}`
+    }
+
+    try {
+      const response = await fetch(url, {
+        ...options,
+        headers,
+      })
+
+      const body = await response.json().catch(() => null)
+
+      if (!response.ok) {
+        throw new ApiError(
+          body?.message || `HTTP ${response.status}: ${response.statusText}`,
+          response.status
+        )
+      }
+
+      return body as T
+    } catch (error) {
+      if (error instanceof ApiError) {
+        throw error
+      }
+      console.error(`API request failed: ${path}`, error)
+      throw new ApiError('Unable to reach the server. Please try again.', 0)
+    }
+  }
+
+  async get<T>(path: string): Promise<T> {
+    return this.request<T>(path, { method: 'GET' })
+  }
+
+  async post<T>(path: string, data?: unknown): Promise<T> {
+    return this.request<T>(path, {
+      method: 'POST',
+      body: data ? JSON.stringify(data) : undefined,
+    })
+  }
+
+  async put<T>(path: string, data?: unknown): Promise<T> {
+    return this.request<T>(path, {
+      method: 'PUT',
+      body: data ? JSON.stringify(data) : undefined,
+    })
+  }
+
+  async patch<T>(path: string, data?: unknown): Promise<T> {
+    return this.request<T>(path, {
+      method: 'PATCH',
+      body: data ? JSON.stringify(data) : undefined,
+    })
+  }
+
+  async delete<T>(path: string): Promise<T> {
+    return this.request<T>(path, { method: 'DELETE' })
+  }
+
+  // Health check endpoint
+  async health(): Promise<ApiResponse<{ status: string }>> {
+    return this.get(`${apiConfig.healthEndpoint}`)
+  }
+
+  // Authentication (Phase 6)
+  async register(data: {
+    name: string
+    email: string
+    password: string
+    role: string
+    company?: string
+  }): Promise<AuthResponse> {
+    return this.post('/api/auth/register', data)
+  }
+
+  async login(data: { email: string; password: string }): Promise<AuthResponse> {
+    return this.post('/api/auth/login', data)
+  }
+
+  async logout(): Promise<ApiResponse<{ message: string }>> {
+    return this.post('/api/auth/logout')
+  }
+
+  async me(): Promise<MeResponse> {
+    return this.get('/api/auth/me')
+  }
+
+  // HR interview management (Phase 7)
+  async listCandidates(): Promise<CandidateListResponse> {
+    return this.get('/api/candidates')
+  }
+
+  async createInterview(data: {
+    title: string
+    candidateId: string
+    scheduledStartAt?: string | null
+    interviewerId?: string | null
+  }): Promise<InterviewResponse> {
+    return this.post('/api/interviews', data)
+  }
+
+  async listInterviews(): Promise<InterviewListResponse> {
+    return this.get('/api/interviews')
+  }
+
+  async getInterview(id: string): Promise<InterviewResponse> {
+    return this.get(`/api/interviews/${encodeURIComponent(id)}`)
+  }
+
+  async updateInterview(
+    id: string,
+    data: { title?: string; scheduledStartAt?: string | null }
+  ): Promise<InterviewResponse> {
+    return this.patch(`/api/interviews/${encodeURIComponent(id)}`, data)
+  }
+
+  async inviteInterview(id: string): Promise<InterviewResponse> {
+    return this.post(`/api/interviews/${encodeURIComponent(id)}/invite`)
+  }
+
+  // Interviewer assignment + Interviewer product (Phase 8)
+  async listInterviewers(): Promise<InterviewerListResponse> {
+    return this.get('/api/interviewers')
+  }
+
+  async assignInterview(id: string, interviewerId: string): Promise<InterviewResponse> {
+    return this.post(`/api/interviews/${encodeURIComponent(id)}/assign`, { interviewerId })
+  }
+
+  async listAssignedInterviews(): Promise<AssignedInterviewListResponse> {
+    return this.get('/api/interviewer/interviews')
+  }
+
+  async getAssignedInterview(id: string): Promise<AssignedInterviewResponse> {
+    return this.get(`/api/interviewer/interviews/${encodeURIComponent(id)}`)
+  }
+
+  async getAssignedInterviewReport(id: string): Promise<InterviewReportResponse> {
+    return this.get(`/api/interviewer/interviews/${encodeURIComponent(id)}/report`)
+  }
+
+  // Candidate/Interviewee product (Phase 9)
+  async listMyInterviews(): Promise<CandidateInterviewListResponse> {
+    return this.get('/api/interviewee/interviews')
+  }
+
+  async getMyInterview(id: string): Promise<CandidateInterviewResponse> {
+    return this.get(`/api/interviewee/interviews/${encodeURIComponent(id)}`)
+  }
+
+  // Interview Room (Phase 10)
+  async getIntervieweeRoom(id: string): Promise<RoomResponse> {
+    return this.get(`/api/interviewee/interviews/${encodeURIComponent(id)}/room`)
+  }
+
+  async joinIntervieweeRoom(id: string): Promise<RoomResponse> {
+    return this.post(`/api/interviewee/interviews/${encodeURIComponent(id)}/room/join`)
+  }
+
+  async leaveIntervieweeRoom(id: string): Promise<{ status: 'ok'; message: string }> {
+    return this.post(`/api/interviewee/interviews/${encodeURIComponent(id)}/room/leave`)
+  }
+
+  async getInterviewerRoom(id: string): Promise<RoomResponse> {
+    return this.get(`/api/interviewer/interviews/${encodeURIComponent(id)}/room`)
+  }
+
+  async joinInterviewerRoom(id: string): Promise<RoomResponse> {
+    return this.post(`/api/interviewer/interviews/${encodeURIComponent(id)}/room/join`)
+  }
+
+  async endInterviewerRoom(id: string): Promise<InterviewResponse> {
+    return this.post(`/api/interviewer/interviews/${encodeURIComponent(id)}/room/end`)
+  }
+
+  // Webcam Capture (Phase 12)
+  async submitInterviewFrame(id: string, frame: FrameSubmissionPayload): Promise<FrameSubmissionResponse> {
+    return this.post(`/api/interviewee/interviews/${encodeURIComponent(id)}/frames`, frame)
+  }
+
+  async getInterviewFrameStatus(id: string, role: 'interviewee' | 'interviewer' = 'interviewee'): Promise<FrameCaptureStatusResponse> {
+    const prefix = role === 'interviewer' ? 'interviewer' : 'interviewee'
+    return this.get(`/api/${prefix}/interviews/${encodeURIComponent(id)}/frames/status`)
+  }
+
+  // Real-Time Alerts (Phase 16)
+  async getInterviewAlerts(id: string, params?: Record<string, string | number>): Promise<AlertListResponse> {
+    const query = params ? `?${new URLSearchParams(Object.entries(params).map(([k, v]) => [k, String(v)]))}` : ''
+    return this.get(`/api/interviews/${encodeURIComponent(id)}/alerts${query}`)
+  }
+
+  async getInterviewAlertsSummary(id: string): Promise<AlertsSummaryResponse> {
+    return this.get(`/api/interviews/${encodeURIComponent(id)}/alerts/summary`)
+  }
+
+  async getAlert(alertId: string): Promise<SingleAlertResponse> {
+    return this.get(`/api/alerts/${encodeURIComponent(alertId)}`)
+  }
+
+  async acknowledgeAlert(alertId: string): Promise<SingleAlertResponse> {
+    return this.patch(`/api/alerts/${encodeURIComponent(alertId)}/acknowledge`)
+  }
+
+  async dismissAlert(alertId: string): Promise<SingleAlertResponse> {
+    return this.patch(`/api/alerts/${encodeURIComponent(alertId)}/dismiss`)
+  }
+}
+
+export interface AuthUserShape {
+  id: string
+  name: string
+  email: string
+  role: string
+  status?: string
+  created_at?: string
+  updated_at?: string
+}
+
+export interface AuthResponse {
+  status: 'ok'
+  token: string
+  user: AuthUserShape
+}
+
+export interface MeResponse {
+  status: 'ok'
+  user: AuthUserShape
+}
+
+export interface InterviewCandidateSummary {
+  id: string
+  name: string | null
+  email: string | null
+}
+
+export interface InterviewInterviewerSummary {
+  id: string
+  name: string | null
+}
+
+export interface InterviewSession {
+  id: string
+  title: string
+  status: string
+  scheduled_start_at: string | null
+  invite_reference: string | null
+  candidate: InterviewCandidateSummary | null
+  interviewer: InterviewInterviewerSummary | null
+  created_at: string
+  updated_at: string
+}
+
+export interface InterviewResponse {
+  status: 'ok'
+  interview: InterviewSession
+}
+
+export interface InterviewListResponse {
+  status: 'ok'
+  interviews: InterviewSession[]
+}
+
+export interface CandidateProfileSummary {
+  id: string
+  user_id: string
+  name: string | null
+  email: string | null
+  status: string | null
+  created_at: string
+}
+
+export interface CandidateListResponse {
+  status: 'ok'
+  candidates: CandidateProfileSummary[]
+}
+
+export interface InterviewerUserSummary {
+  id: string
+  name: string | null
+  email: string | null
+  status: string | null
+  created_at: string
+}
+
+export interface InterviewerListResponse {
+  status: 'ok'
+  interviewers: InterviewerUserSummary[]
+}
+
+export interface AssignedInterview {
+  id: string
+  title: string
+  status: string
+  scheduled_start_at: string | null
+  started_at: string | null
+  ended_at: string | null
+  candidate: InterviewInterviewerSummary | null
+  created_at: string
+  updated_at: string
+}
+
+export interface AssignedInterviewResponse {
+  status: 'ok'
+  interview: AssignedInterview
+}
+
+export interface AssignedInterviewListResponse {
+  status: 'ok'
+  interviews: AssignedInterview[]
+}
+
+export interface InterviewReport {
+  id: string
+  interview_id: string
+  summary: string | null
+  integrity_indicators: Record<string, unknown> | null
+  generated_at: string | null
+  created_at: string | null
+}
+
+export interface InterviewReportResponse {
+  status: 'ok'
+  report: InterviewReport
+}
+
+export interface CandidateInterview {
+  id: string
+  title: string
+  status: string
+  scheduled_start_at: string | null
+  started_at: string | null
+  ended_at: string | null
+  interviewer: InterviewInterviewerSummary | null
+  created_at: string
+  updated_at: string
+}
+
+export interface CandidateInterviewResponse {
+  status: 'ok'
+  interview: CandidateInterview
+}
+
+export interface CandidateInterviewListResponse {
+  status: 'ok'
+  interviews: CandidateInterview[]
+}
+
+// Interview Room (Phase 10)
+export interface RoomParticipantSummary {
+  id: string
+  name: string
+}
+
+export interface InterviewRoomContext {
+  interview: {
+    id: string
+    title: string
+    status: string
+    scheduled_start_at: string | null
+    started_at: string | null
+    ended_at: string | null
+  }
+  candidate: RoomParticipantSummary | null
+  interviewer: RoomParticipantSummary | null
+}
+
+export interface RoomResponse {
+  status: 'ok'
+  room: InterviewRoomContext
+}
+
+// Webcam Capture (Phase 12)
+export interface FrameMetadata {
+  sequenceNumber: number
+  timestamp: string
+  width: number
+  height: number
+  format: 'image/jpeg' | 'image/webp' | 'image/png'
+  sizeBytes: number
+  captureStatus?: 'captured' | 'degraded'
+}
+
+export interface FrameSubmissionPayload extends FrameMetadata {
+  frameData: string
+}
+
+export interface FrameSubmissionResponse {
+  status: 'ok'
+  frameId: string
+  sequenceNumber: number
+  receivedAt: string
+  captureStatus: string
+}
+
+export interface FrameCaptureStatusResponse {
+  status: 'ok'
+  interviewId: string
+  captureActive: boolean
+  totalFramesReceived: number
+  lastCapturedAt: string | null
+  lastReceivedAt?: string | null
+  lastSequenceNumber: number
+  lastWidth?: number
+  lastHeight?: number
+  lastFormat?: string
+  lastSizeBytes?: number
+  lastCaptureStatus?: string
+}
+
+// Real-Time Alerts (Phase 16)
+export interface MonitoringAlert {
+  alert_id: string
+  interview_id: string
+  candidate_id?: string | null
+  event_id?: string | null
+  event_type: string
+  alert_type: string
+  policy_id?: string
+  priority: 'HIGH' | 'MEDIUM' | 'LOW' | 'INFO'
+  status: 'NEW' | 'ACKNOWLEDGED' | 'DISMISSED'
+  title: string
+  message: string
+  metrics?: Record<string, unknown>
+  escalation_level?: number
+  created_at: string
+  updated_at?: string
+  acknowledged_at?: string | null
+  acknowledged_by?: string | null
+  dismissed_at?: string | null
+  dismissed_by?: string | null
+}
+
+export interface AlertListResponse {
+  status: 'ok'
+  interview_id: string
+  alerts: MonitoringAlert[]
+  pagination: {
+    total: number
+    page: number
+    limit: number
+    totalPages: number
+    hasNext: boolean
+    hasPrev: boolean
+  }
+}
+
+export interface AlertsSummaryResponse {
+  status: 'ok'
+  summary: {
+    interview_id: string
+    total_alerts: number
+    new_alerts: number
+    acknowledged_alerts: number
+    dismissed_alerts: number
+    by_status: Record<string, number>
+    by_priority: Record<string, number>
+    by_event_type: Record<string, number>
+    first_alert_at: string | null
+    latest_alert_at: string | null
+  }
+}
+
+export interface SingleAlertResponse {
+  status: 'ok'
+  alert: MonitoringAlert
+}
+
+export const apiClient = new ApiClient()
+
+// Export for use in components
+export default apiClient
