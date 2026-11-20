@@ -1,6 +1,8 @@
 import { io, Socket } from 'socket.io-client'
 import { apiConfig } from './api'
 
+export type { Socket }
+
 export interface ParticipantInfo {
   socketId: string
   userId: string

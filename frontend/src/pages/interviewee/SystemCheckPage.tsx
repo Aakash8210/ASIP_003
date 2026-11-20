@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import {
   ArrowLeft,
   Camera,
   CheckCircle,
+  Clock,
   Mic,
   Monitor,
   RefreshCw,
@@ -14,194 +15,436 @@ import {
   AlertTriangle,
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card'
+import { Card, CardContent } from '@/components/ui/Card'
+import { Badge } from '@/components/ui/Badge'
 import { cn } from '@/lib/utils'
 
 // Pre-interview system check (Phase 9, UX-CAN-002, PRD-FR-003, SRS-FR-006/007).
-// All checks run locally in the browser using native capability APIs — no raw
-// media is persisted or uploaded, and no monitoring event is generated here.
-// Screen sharing is not part of the implemented interview configuration and is
-// therefore not a required check (conditional per UX-CAN-002).
+// All checks run locally in the browser using native capability APIs.
+// CAMERA, MICROPHONE, CONNECTION, and BROWSER checks are ALL MANDATORY.
 
-type CheckState = 'idle' | 'checking' | 'ready' | 'permission_required' | 'unavailable' | 'failed'
+export type CheckState =
+  | 'idle'
+  | 'checking'
+  | 'passed'
+  | 'permission_denied'
+  | 'unavailable'
+  | 'timed_out'
+  | 'failed'
 
-interface CheckResult {
+export interface CheckItemState {
   state: CheckState
   message: string | null
+  details?: string | null
 }
 
-const MANDATORY_CHECKS = ['browser', 'camera', 'connection'] as const
-const OPTIONAL_CHECKS = ['microphone'] as const
+const MANDATORY_CHECKS = ['browser', 'camera', 'microphone', 'connection'] as const
+type CheckId = (typeof MANDATORY_CHECKS)[number]
 
-const idleResult = (): CheckResult => ({ state: 'idle', message: null })
-const checkingResult = (): CheckResult => ({ state: 'checking', message: null })
+const idleItem = (): CheckItemState => ({ state: 'idle', message: null })
+const checkingItem = (): CheckItemState => ({ state: 'checking', message: null })
 
-async function stopStream(stream: MediaStream | null) {
-  stream?.getTracks().forEach((track) => track.stop())
+const DEVICE_TIMEOUT_MS = 8000
+const NETWORK_TIMEOUT_MS = 5000
+
+function stopStream(stream: MediaStream | null) {
+  if (!stream) return
+  try {
+    stream.getTracks().forEach((track) => {
+      try {
+        track.stop()
+      } catch {
+        // Ignore track stop error
+      }
+    })
+  } catch {
+    // Ignore stream error
+  }
 }
 
-async function runBrowserCheck(): Promise<CheckResult> {
-  if (typeof navigator === 'undefined' || !navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== 'function') {
-    return { state: 'unavailable', message: 'This browser does not expose the media capture APIs required for the interview.' }
+async function runBrowserCheck(): Promise<CheckItemState> {
+  if (
+    typeof navigator === 'undefined' ||
+    !navigator.mediaDevices ||
+    typeof navigator.mediaDevices.getUserMedia !== 'function'
+  ) {
+    return {
+      state: 'unavailable',
+      message: 'Media capture APIs are not supported in this browser.',
+      details: 'Please use a modern version of Chrome, Firefox, Edge, or Safari.',
+    }
   }
   if (typeof RTCPeerConnection === 'undefined') {
-    return { state: 'unavailable', message: 'This browser does not support the real-time communication capabilities required for the interview.' }
+    return {
+      state: 'unavailable',
+      message: 'WebRTC real-time communication is not supported.',
+      details: 'A WebRTC-compliant browser is required to conduct the interview.',
+    }
   }
-  return { state: 'ready', message: null }
+  return {
+    state: 'passed',
+    message: 'Browser supports all required WebRTC and media capture capabilities.',
+  }
 }
 
-async function runCameraCheck(): Promise<CheckResult> {
-  if (!navigator.mediaDevices?.getUserMedia) {
-    return { state: 'unavailable', message: 'Camera access is not available in this browser.' }
+async function runCameraCheck(): Promise<CheckItemState> {
+  if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
+    return {
+      state: 'unavailable',
+      message: 'Camera access is not available in this browser.',
+      details: 'Check your browser security settings or use an updated browser.',
+    }
   }
-  let stream: MediaStream | null = null
+
+  let lateStream: MediaStream | null = null
+
   try {
-    stream = await navigator.mediaDevices.getUserMedia({ video: true })
-    return { state: 'ready', message: null }
-  } catch (error) {
-    const name = error instanceof DOMException ? error.name : ''
-    if (name === 'NotAllowedError' || name === 'SecurityError') {
-      return { state: 'permission_required', message: 'Camera access was denied. Allow camera access in your browser, then retry the check.' }
+    const userMediaPromise = navigator.mediaDevices
+      .getUserMedia({
+        video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' },
+      })
+      .then((s) => {
+        lateStream = s
+        return s
+      })
+
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      const timer = setTimeout(() => {
+        reject(new Error('CAMERA_TIMEOUT'))
+      }, DEVICE_TIMEOUT_MS)
+      // Clear timeout if promise settles
+      userMediaPromise.finally(() => clearTimeout(timer))
+    })
+
+    const stream = await Promise.race([userMediaPromise, timeoutPromise])
+    stopStream(stream)
+    lateStream = null
+
+    return {
+      state: 'passed',
+      message: 'Camera is connected and operational.',
     }
-    if (name === 'NotFoundError' || name === 'OverconstrainedError' || name === 'NotReadableError') {
-      return { state: 'unavailable', message: 'No usable camera was found. Connect a camera and retry the check.' }
+  } catch (error: unknown) {
+    // Clean up if stream arrived after timeout
+    if (lateStream) {
+      stopStream(lateStream)
+      lateStream = null
     }
-    return { state: 'failed', message: 'The camera check failed. Please retry.' }
-  } finally {
-    await stopStream(stream)
+
+    const err = error as { message?: string; name?: string }
+    if (err?.message === 'CAMERA_TIMEOUT') {
+      return {
+        state: 'timed_out',
+        message: 'Camera check timed out after 8 seconds.',
+        details: 'Ensure no other application (Zoom, Teams, etc.) is using your webcam, then retry.',
+      }
+    }
+
+    const name = error instanceof DOMException ? error.name : err?.name || ''
+    if (name === 'NotAllowedError' || name === 'PermissionDeniedError' || name === 'SecurityError') {
+      return {
+        state: 'permission_denied',
+        message: 'Camera access was denied.',
+        details: 'Click the camera/lock icon in your browser address bar, set Camera to "Allow", and retry.',
+      }
+    }
+    if (name === 'NotFoundError' || name === 'DevicesNotFoundError') {
+      return {
+        state: 'unavailable',
+        message: 'No camera hardware detected.',
+        details: 'Please connect a working webcam or check your hardware connections.',
+      }
+    }
+    if (name === 'NotReadableError' || name === 'TrackStartError') {
+      return {
+        state: 'failed',
+        message: 'Camera is currently busy or cannot be opened.',
+        details: 'Another program may be using the camera. Close other video apps and retry.',
+      }
+    }
+    return {
+      state: 'failed',
+      message: err?.message || 'Camera check encountered an unexpected error.',
+      details: 'Please reconnect your camera and click retry.',
+    }
   }
 }
 
-async function runMicrophoneCheck(): Promise<CheckResult> {
-  if (!navigator.mediaDevices?.getUserMedia) {
-    return { state: 'unavailable', message: 'Microphone access is not available in this browser.' }
+async function runMicrophoneCheck(): Promise<CheckItemState> {
+  if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
+    return {
+      state: 'unavailable',
+      message: 'Microphone access is not available in this browser.',
+      details: 'Check your browser security settings or use an updated browser.',
+    }
   }
-  let stream: MediaStream | null = null
+
+  let lateStream: MediaStream | null = null
+
   try {
-    stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-    return { state: 'ready', message: null }
-  } catch (error) {
-    const name = error instanceof DOMException ? error.name : ''
-    if (name === 'NotAllowedError' || name === 'SecurityError') {
-      return { state: 'permission_required', message: 'Microphone access was denied. Allow microphone access in your browser, then retry the check.' }
+    const userMediaPromise = navigator.mediaDevices
+      .getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true },
+      })
+      .then((s) => {
+        lateStream = s
+        return s
+      })
+
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      const timer = setTimeout(() => {
+        reject(new Error('MIC_TIMEOUT'))
+      }, DEVICE_TIMEOUT_MS)
+      userMediaPromise.finally(() => clearTimeout(timer))
+    })
+
+    const stream = await Promise.race([userMediaPromise, timeoutPromise])
+    stopStream(stream)
+    lateStream = null
+
+    return {
+      state: 'passed',
+      message: 'Microphone is connected and capturing audio.',
     }
-    if (name === 'NotFoundError' || name === 'NotReadableError') {
-      return { state: 'unavailable', message: 'No usable microphone was found. Connect a microphone and retry the check.' }
+  } catch (error: unknown) {
+    if (lateStream) {
+      stopStream(lateStream)
+      lateStream = null
     }
-    return { state: 'failed', message: 'The microphone check failed. Please retry.' }
-  } finally {
-    await stopStream(stream)
+
+    const err = error as { message?: string; name?: string }
+    if (err?.message === 'MIC_TIMEOUT') {
+      return {
+        state: 'timed_out',
+        message: 'Microphone check timed out after 8 seconds.',
+        details: 'Check that your microphone is plugged in and not exclusively captured by another app.',
+      }
+    }
+
+    const name = error instanceof DOMException ? error.name : err?.name || ''
+    if (name === 'NotAllowedError' || name === 'PermissionDeniedError' || name === 'SecurityError') {
+      return {
+        state: 'permission_denied',
+        message: 'Microphone access was denied.',
+        details: 'Microphone access is mandatory. Click the lock icon in the address bar to allow microphone access.',
+      }
+    }
+    if (name === 'NotFoundError' || name === 'DevicesNotFoundError') {
+      return {
+        state: 'unavailable',
+        message: 'No microphone hardware detected.',
+        details: 'Please connect a working microphone or headset to proceed with the interview.',
+      }
+    }
+    if (name === 'NotReadableError' || name === 'TrackStartError') {
+      return {
+        state: 'failed',
+        message: 'Microphone is currently in use by another application.',
+        details: 'Close any communication apps using your microphone and retry.',
+      }
+    }
+    return {
+      state: 'failed',
+      message: err?.message || 'Microphone check failed.',
+      details: 'Please verify your audio settings and retry.',
+    }
   }
 }
 
-function runConnectionCheck(): CheckResult {
-  if (typeof navigator === 'undefined') {
-    return { state: 'failed', message: 'Connection status could not be determined. Please retry.' }
+async function runConnectionCheck(): Promise<CheckItemState> {
+  if (typeof navigator !== 'undefined' && !navigator.onLine) {
+    return {
+      state: 'unavailable',
+      message: 'No internet connection detected.',
+      details: 'Check your Wi-Fi or Ethernet connection and retry.',
+    }
   }
-  if (navigator.onLine) {
-    // The exact connectivity quality metric is TBD (UX-CAN-002) — only a
-    // truthful reachability signal is reported, no invented quality score.
-    return { state: 'ready', message: null }
+
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), NETWORK_TIMEOUT_MS)
+
+  try {
+    const response = await fetch('/health', {
+      method: 'GET',
+      headers: { Accept: 'application/json' },
+      signal: controller.signal,
+    })
+    clearTimeout(timeoutId)
+
+    if (response.ok) {
+      return {
+        state: 'passed',
+        message: 'Connected to interview platform server.',
+      }
+    }
+    return {
+      state: 'failed',
+      message: `Interview server returned status code ${response.status}.`,
+      details: 'The platform backend may be temporarily experiencing issues.',
+    }
+  } catch (error: unknown) {
+    clearTimeout(timeoutId)
+    const err = error as { name?: string }
+    if (err?.name === 'AbortError') {
+      return {
+        state: 'timed_out',
+        message: 'Connection check timed out reaching the server.',
+        details: 'The server did not respond within 5 seconds. Check your internet connection.',
+      }
+    }
+    return {
+      state: 'failed',
+      message: 'Unable to reach the interview platform server.',
+      details: 'Verify your network connection and proxy settings, then retry.',
+    }
   }
-  return { state: 'unavailable', message: 'No internet connection was detected. Check your connection and retry.' }
 }
 
 export function IntervieweeSystemCheckPage() {
-  const [browserCheck, setBrowserCheck] = useState<CheckResult>(idleResult())
-  const [cameraCheck, setCameraCheck] = useState<CheckResult>(idleResult())
-  const [microphoneCheck, setMicrophoneCheck] = useState<CheckResult>(idleResult())
-  const [connectionCheck, setConnectionCheck] = useState<CheckResult>(idleResult())
-  const [completed, setCompleted] = useState(false)
+  const [searchParams] = useSearchParams()
+  const interviewId = searchParams.get('interviewId')
 
-  const checkMap: Record<string, [CheckResult, (r: CheckResult) => void]> = {
-    browser: [browserCheck, setBrowserCheck],
-    camera: [cameraCheck, setCameraCheck],
-    microphone: [microphoneCheck, setMicrophoneCheck],
-    connection: [connectionCheck, setConnectionCheck],
-  }
+  const [checks, setChecks] = useState<Record<CheckId, CheckItemState>>({
+    browser: idleItem(),
+    camera: idleItem(),
+    microphone: idleItem(),
+    connection: idleItem(),
+  })
 
-  const runCheck = useCallback(async (id: string) => {
-    const setter = checkMap[id]?.[1]
-    if (!setter) return
-    setter(checkingResult())
-    let result: CheckResult
-    if (id === 'browser') result = await runBrowserCheck()
-    else if (id === 'camera') result = await runCameraCheck()
-    else if (id === 'microphone') result = await runMicrophoneCheck()
-    else result = runConnectionCheck()
-    setter(result)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [browserCheck, cameraCheck, microphoneCheck, connectionCheck])
+  const [isCompleted, setIsCompleted] = useState(false)
+  const isRunningRef = useRef(false)
+  const hasMountedRef = useRef(false)
 
-  const runAllChecks = useCallback(async () => {
-    setCompleted(false)
-    for (const id of [...MANDATORY_CHECKS, ...OPTIONAL_CHECKS]) {
-      await runCheck(id)
+  // Single check runner with independent state updates
+  const executeCheck = useCallback(async (id: CheckId) => {
+    setChecks((prev) => ({ ...prev, [id]: checkingItem() }))
+
+    let result: CheckItemState
+    if (id === 'browser') {
+      result = await runBrowserCheck()
+    } else if (id === 'camera') {
+      result = await runCameraCheck()
+    } else if (id === 'microphone') {
+      result = await runMicrophoneCheck()
+    } else {
+      result = await runConnectionCheck()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [runCheck])
 
+    setChecks((prev) => ({ ...prev, [id]: result }))
+    return result
+  }, [])
+
+  // Sequential runner for all mandatory checks
+  const runAllChecks = useCallback(async () => {
+    if (isRunningRef.current) return
+    isRunningRef.current = true
+    setIsCompleted(false)
+
+    try {
+      for (const id of MANDATORY_CHECKS) {
+        await executeCheck(id)
+      }
+    } finally {
+      isRunningRef.current = false
+    }
+  }, [executeCheck])
+
+  // Mount effect: run checks once without re-triggering loop
   useEffect(() => {
-    runAllChecks()
+    if (!hasMountedRef.current) {
+      hasMountedRef.current = true
+      runAllChecks()
+    }
   }, [runAllChecks])
 
-  const mandatoryPassed = MANDATORY_CHECKS.every((id) => checkMap[id]?.[0].state === 'ready')
-  const canContinue = mandatoryPassed && !completed
-  const isRunning = [...MANDATORY_CHECKS, ...OPTIONAL_CHECKS].some((id) => checkMap[id]?.[0].state === 'checking')
+  const mandatoryPassed = MANDATORY_CHECKS.every((id) => checks[id].state === 'passed')
+  const isRunning = MANDATORY_CHECKS.some((id) => checks[id].state === 'checking')
+  const canContinue = mandatoryPassed && !isCompleted && !isRunning
 
-  const stateDisplay = (id: string) => {
-    const result = checkMap[id]?.[0] ?? idleResult()
-    const isMandatory = (MANDATORY_CHECKS as readonly string[]).includes(id)
-    switch (result.state) {
+  const stateBadge = (state: CheckState) => {
+    switch (state) {
       case 'checking':
-        return {
-          icon: <RefreshCw className="h-5 w-5 animate-spin text-surface-400" aria-hidden="true" />,
-          label: 'Checking…',
-          className: 'text-surface-500 dark:text-surface-400',
-        }
-      case 'ready':
-        return {
-          icon: <CheckCircle className="h-5 w-5 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />,
-          label: 'Ready',
-          className: 'text-emerald-700 dark:text-emerald-300',
-        }
-      case 'permission_required':
-        return {
-          icon: <AlertTriangle className="h-5 w-5 text-warning-600 dark:text-warning-400" aria-hidden="true" />,
-          label: 'Permission required',
-          className: 'text-warning-700 dark:text-warning-300',
-        }
+        return (
+          <Badge variant="neutral" className="bg-surface-100 text-surface-600 dark:bg-surface-800 dark:text-surface-300 gap-1.5">
+            <RefreshCw className="h-3.5 w-3.5 animate-spin text-brand-600 dark:text-brand-400" aria-hidden="true" />
+            <span>Checking...</span>
+          </Badge>
+        )
+      case 'passed':
+        return (
+          <Badge variant="neutral" className="bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800 gap-1.5">
+            <CheckCircle className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+            <span>Ready</span>
+          </Badge>
+        )
+      case 'permission_denied':
+        return (
+          <Badge variant="neutral" className="bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800 gap-1.5">
+            <AlertTriangle className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+            <span>Permission Required</span>
+          </Badge>
+        )
       case 'unavailable':
-        return {
-          icon: <XCircle className="h-5 w-5 text-danger-600 dark:text-danger-400" aria-hidden="true" />,
-          label: 'Unavailable',
-          className: 'text-danger-700 dark:text-danger-300',
-        }
+        return (
+          <Badge variant="neutral" className="bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800 gap-1.5">
+            <XCircle className="h-3.5 w-3.5 text-rose-600 dark:text-rose-400" aria-hidden="true" />
+            <span>Device Missing</span>
+          </Badge>
+        )
+      case 'timed_out':
+        return (
+          <Badge variant="neutral" className="bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800 gap-1.5">
+            <Clock className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+            <span>Timed Out</span>
+          </Badge>
+        )
       case 'failed':
-        return {
-          icon: <XCircle className="h-5 w-5 text-danger-600 dark:text-danger-400" aria-hidden="true" />,
-          label: 'Failed',
-          className: 'text-danger-700 dark:text-danger-300',
-        }
+        return (
+          <Badge variant="neutral" className="bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800 gap-1.5">
+            <XCircle className="h-3.5 w-3.5 text-rose-600 dark:text-rose-400" aria-hidden="true" />
+            <span>Failed</span>
+          </Badge>
+        )
       default:
-        return {
-          icon: <span className={cn('h-5 w-5 rounded-full border-2 border-surface-300 dark:border-surface-600', !isMandatory && 'border-dashed')} aria-hidden="true" />,
-          label: isMandatory ? 'Not checked' : 'Not checked (optional)',
-          className: 'text-surface-500 dark:text-surface-400',
-        }
+        return (
+          <Badge variant="neutral" className="bg-surface-100 text-surface-500 dark:bg-surface-800 dark:text-surface-400 gap-1.5">
+            <span className="h-2 w-2 rounded-full bg-surface-400" aria-hidden="true" />
+            <span>Pending</span>
+          </Badge>
+        )
     }
   }
 
-  const checkRows: Array<{ id: string; icon: typeof Camera; label: string }> = [
-    { id: 'camera', icon: Camera, label: 'Camera' },
-    { id: 'microphone', icon: Mic, label: 'Microphone' },
-    { id: 'connection', icon: navigator.onLine ? Wifi : WifiOff, label: 'Connection' },
-    { id: 'browser', icon: Monitor, label: 'Browser' },
+  const checkRows: Array<{ id: CheckId; icon: typeof Camera; title: string; subtitle: string }> = [
+    {
+      id: 'camera',
+      icon: Camera,
+      title: 'Camera Check',
+      subtitle: 'Mandatory — Web video feed for interview interaction and AI monitoring',
+    },
+    {
+      id: 'microphone',
+      icon: Mic,
+      title: 'Microphone Check',
+      subtitle: 'Mandatory — Audio feed for clear dialogue with the interviewer',
+    },
+    {
+      id: 'connection',
+      icon: typeof navigator !== 'undefined' && navigator.onLine ? Wifi : WifiOff,
+      title: 'Server Connection',
+      subtitle: 'Mandatory — Low latency reachability to the InterviewGuard platform',
+    },
+    {
+      id: 'browser',
+      icon: Monitor,
+      title: 'Browser Compatibility',
+      subtitle: 'Mandatory — WebRTC media stream and signaling support',
+    },
   ]
 
-  if (completed) {
+  if (isCompleted) {
     return (
-      <div className="space-y-6 max-w-2xl">
+      <div className="space-y-6 max-w-2xl mx-auto">
         <div>
           <Button variant="ghost" size="sm" asChild className="gap-2 -ml-2 mb-2">
             <Link to="/interviewee/interviews">
@@ -211,20 +454,33 @@ export function IntervieweeSystemCheckPage() {
           </Button>
           <h1 className="text-2xl font-bold text-surface-900 dark:text-surface-50">System Check</h1>
         </div>
-        <Card className="border-emerald-300 dark:border-emerald-800">
-          <CardContent className="py-14 text-center">
-            <ShieldCheck className="h-12 w-12 text-emerald-600 dark:text-emerald-400 mx-auto mb-4" aria-hidden="true" />
-            <h2 className="text-xl font-semibold text-surface-900 dark:text-surface-50">System check complete</h2>
-            <p className="text-surface-500 dark:text-surface-400 mt-2 max-w-sm mx-auto">
-              Your device and browser are ready for the interview. You can now join your session directly.
+
+        <Card className="border-emerald-300 dark:border-emerald-800 shadow-sm">
+          <CardContent className="py-12 px-6 text-center">
+            <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-950/80 flex items-center justify-center mx-auto mb-4 border border-emerald-200 dark:border-emerald-800">
+              <ShieldCheck className="h-9 w-9 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+            </div>
+            <h2 className="text-xl font-bold text-surface-900 dark:text-surface-50">
+              System Check Passed!
+            </h2>
+            <p className="text-surface-600 dark:text-surface-400 mt-2 max-w-md mx-auto text-sm leading-relaxed">
+              Your camera, microphone, browser, and network connection meet all requirements. You are fully ready to join your interview session.
             </p>
-            <div className="flex justify-center flex-wrap gap-3 mt-6">
-              <Button variant="neutral" onClick={() => { setCompleted(false); runAllChecks() }}>
+
+            <div className="flex justify-center flex-wrap gap-3 mt-8">
+              <Button
+                variant="neutral"
+                onClick={() => {
+                  setIsCompleted(false)
+                  runAllChecks()
+                }}
+              >
                 Run checks again
               </Button>
-              {typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('interviewId') ? (
-                <Button asChild>
-                  <Link to={`/interviewee/interviews/${new URLSearchParams(window.location.search).get('interviewId')}/room`}>
+
+              {interviewId ? (
+                <Button asChild className="gap-2">
+                  <Link to={`/interviewee/interviews/${encodeURIComponent(interviewId)}/room`}>
                     Enter Interview Room
                   </Link>
                 </Button>
@@ -241,7 +497,7 @@ export function IntervieweeSystemCheckPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-2xl">
+    <div className="space-y-6 max-w-2xl mx-auto">
       <div>
         <Button variant="ghost" size="sm" asChild className="gap-2 -ml-2 mb-2">
           <Link to="/interviewee/interviews">
@@ -249,76 +505,117 @@ export function IntervieweeSystemCheckPage() {
             Back to my interviews
           </Link>
         </Button>
-        <h1 className="text-2xl font-bold text-surface-900 dark:text-surface-50">Pre-Interview System Check</h1>
-        <p className="text-surface-600 dark:text-surface-400 mt-1">
-          Before joining your interview, let's make sure your device and browser are ready. All checks run
-          locally in your browser.
+        <h1 className="text-2xl font-bold text-surface-900 dark:text-surface-50">
+          Pre-Interview System Check
+        </h1>
+        <p className="text-surface-600 dark:text-surface-400 mt-1 text-sm">
+          Both <strong>Camera</strong> and <strong>Microphone</strong> are mandatory to ensure fair interview conduct. All device checks execute entirely inside your browser.
         </p>
       </div>
 
-      <Card className="border-surface-200 dark:border-surface-800">
-        <CardContent className="divide-y divide-surface-100 dark:divide-surface-800">
-          {checkRows.map(({ id, icon: Icon, label }) => {
-            const display = stateDisplay(id)
-            const result = checkMap[id]?.[0] ?? idleResult()
-            const isMandatory = (MANDATORY_CHECKS as readonly string[]).includes(id)
+      <Card className="border-surface-200 dark:border-surface-800 shadow-sm">
+        <CardContent className="divide-y divide-surface-100 dark:divide-surface-800 p-0">
+          {checkRows.map(({ id, icon: Icon, title, subtitle }) => {
+            const check = checks[id]
+            const canRetry =
+              check.state === 'permission_denied' ||
+              check.state === 'unavailable' ||
+              check.state === 'timed_out' ||
+              check.state === 'failed'
+
             return (
-              <div key={id} className="py-4 first:pt-0 last:pb-0">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="p-2 rounded-lg bg-surface-100 dark:bg-surface-800 flex-shrink-0">
-                      <Icon className="h-5 w-5 text-surface-600 dark:text-surface-400" aria-hidden="true" />
+              <div key={id} className="p-4 sm:p-5 transition-colors">
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start gap-3.5 min-w-0">
+                    <div className="p-2.5 rounded-xl bg-surface-100 dark:bg-surface-800 text-surface-600 dark:text-surface-400 shrink-0 mt-0.5">
+                      <Icon className="h-5 w-5" aria-hidden="true" />
                     </div>
-                    <div className="min-w-0">
-                      <p className="font-medium text-surface-900 dark:text-surface-50">
-                        {label}
-                        {!isMandatory && <span className="text-surface-400 font-normal text-sm ml-1.5">(optional)</span>}
+                    <div className="min-w-0 space-y-1">
+                      <div className="flex items-center gap-2.5 flex-wrap">
+                        <span className="font-semibold text-sm text-surface-900 dark:text-surface-50">
+                          {title}
+                        </span>
+                        {stateBadge(check.state)}
+                      </div>
+                      <p className="text-xs text-surface-500 dark:text-surface-400">
+                        {subtitle}
                       </p>
-                      <p className={cn('text-sm mt-0.5', display.className)} role="status">
-                        {display.icon}
-                        <span className="align-middle ml-1.5">{display.label}</span>
-                      </p>
+                      {check.message && (
+                        <p
+                          className={cn(
+                            'text-xs font-medium pt-1',
+                            check.state === 'passed' && 'text-emerald-700 dark:text-emerald-300',
+                            check.state === 'permission_denied' && 'text-amber-700 dark:text-amber-300',
+                            (check.state === 'unavailable' || check.state === 'failed' || check.state === 'timed_out') &&
+                              'text-rose-700 dark:text-rose-300'
+                          )}
+                        >
+                          {check.message}
+                        </p>
+                      )}
+                      {check.details && (
+                        <p className="text-xs text-surface-500 dark:text-surface-400 bg-surface-50 dark:bg-surface-800/80 p-2 rounded-lg border border-surface-200/60 dark:border-surface-700/60 mt-1.5">
+                          {check.details}
+                        </p>
+                      )}
                     </div>
                   </div>
-                  {(result.state === 'permission_required' || result.state === 'unavailable' || result.state === 'failed') && (
+
+                  {canRetry && (
                     <Button
                       variant="neutral"
                       size="sm"
-                      className="gap-1.5 flex-shrink-0"
-                      onClick={() => runCheck(id)}
+                      className="gap-1.5 shrink-0 text-xs"
+                      onClick={() => executeCheck(id)}
                       disabled={isRunning}
                     >
-                      <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
+                      <RefreshCw className="h-3 w-3" aria-hidden="true" />
                       Retry
                     </Button>
                   )}
                 </div>
-                {result.message && (
-                  <p className="text-sm text-surface-500 dark:text-surface-400 mt-2 ml-[52px]">{result.message}</p>
-                )}
               </div>
             )
           })}
         </CardContent>
       </Card>
 
-      <Card className="border-surface-200 dark:border-surface-800">
-        <CardContent className="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <p className="text-sm text-surface-500 dark:text-surface-400">
-            {mandatoryPassed
-              ? 'All required checks passed. You can continue to the next step.'
-              : 'One or more required checks have not passed yet. Follow the guidance above and retry.'}
-          </p>
-          <div className="flex items-center gap-3 flex-shrink-0">
-            <Button variant="neutral" className="gap-1.5" onClick={runAllChecks} disabled={isRunning}>
-              <RefreshCw className="h-4 w-4" aria-hidden="true" />
-              Run all checks
-            </Button>
+      <Card className="border-surface-200 dark:border-surface-800 shadow-sm">
+        <CardContent className="p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="text-sm">
+            <p className="font-medium text-surface-900 dark:text-surface-100">
+              {mandatoryPassed
+                ? 'All mandatory checks passed successfully!'
+                : 'All 4 system checks are required to join the interview.'}
+            </p>
+            <p className="text-xs text-surface-500 dark:text-surface-400 mt-0.5">
+              {mandatoryPassed
+                ? 'Click "Continue" to proceed to your scheduled interview session.'
+                : 'Please resolve any issues or permissions and retry the checks.'}
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3 shrink-0 w-full sm:w-auto">
             <Button
+              variant="neutral"
+              className="gap-2 flex-1 sm:flex-none"
+              onClick={runAllChecks}
+              disabled={isRunning}
+            >
+              <RefreshCw className={cn('h-4 w-4', isRunning && 'animate-spin')} aria-hidden="true" />
+              Run All Checks
+            </Button>
+
+            <Button
+              className="flex-1 sm:flex-none"
               disabled={!canContinue}
               aria-disabled={!canContinue}
-              title={canContinue ? undefined : 'All required checks must pass before you can continue'}
-              onClick={() => setCompleted(true)}
+              title={
+                canContinue
+                  ? undefined
+                  : 'All 4 checks (Camera, Microphone, Connection, and Browser) must pass before continuing.'
+              }
+              onClick={() => setIsCompleted(true)}
             >
               Continue
             </Button>

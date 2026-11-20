@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeft, Calendar, Clock, FileText, Shield, User, Video } from 'lucide-react'
+import { ArrowLeft, Calendar, Clock, Eye, FileText, Shield, User, Video } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
+import { Modal } from '@/components/ui/Modal'
 import { apiClient, ApiError, AssignedInterview, InterviewReport } from '@/lib/api'
 import { interviewStatusConfig, formatInterviewDate } from '@/pages/hr/interviewStatus'
+import { InterviewReportView } from '@/components/reports/InterviewReportView'
 
 export function InterviewerInterviewDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -15,6 +17,8 @@ export function InterviewerInterviewDetailPage() {
   const [reportUnavailable, setReportUnavailable] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
+  const [showReportModal, setShowReportModal] = useState(false)
+  const [isGeneratingReport, setIsGeneratingReport] = useState(false)
 
   const load = useCallback(async () => {
     if (!id) return
@@ -202,7 +206,7 @@ export function InterviewerInterviewDetailPage() {
         </CardHeader>
         <CardContent>
           {report ? (
-            <div className="space-y-2 text-sm">
+            <div className="space-y-3 text-sm">
               <p className="text-surface-600 dark:text-surface-400 whitespace-pre-wrap">
                 {report.summary ?? 'Report available'}
               </p>
@@ -211,16 +215,69 @@ export function InterviewerInterviewDetailPage() {
                   Generated {formatInterviewDate(report.generated_at)}
                 </p>
               )}
+              <div className="pt-2">
+                <Button size="sm" onClick={() => setShowReportModal(true)} className="gap-2">
+                  <Eye className="h-4 w-4" />
+                  View Full Report & Integrity Indicators
+                </Button>
+              </div>
             </div>
           ) : (
-            <p className="text-sm text-surface-500 dark:text-surface-400">
-              {reportUnavailable || interview.status !== 'completed'
-                ? 'The report will be available after the interview is completed and reviewed.'
-                : 'No report is available for this interview yet.'}
-            </p>
+            <div className="space-y-3">
+              <p className="text-sm text-surface-500 dark:text-surface-400">
+                {reportUnavailable || interview.status !== 'completed'
+                  ? 'The report will be available after the interview is completed and reviewed.'
+                  : 'No report is available for this interview yet.'}
+              </p>
+              {interview.status === 'completed' && (
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  disabled={isGeneratingReport}
+                  onClick={async () => {
+                    setIsGeneratingReport(true)
+                    try {
+                      const res = await apiClient.generateInterviewReport(interview.id)
+                      setReport(res.report)
+                      setShowReportModal(true)
+                    } catch (err) {
+                      // fallback to standard get
+                      try {
+                        const res2 = await apiClient.getInterviewReport(interview.id)
+                        setReport(res2.report)
+                        setShowReportModal(true)
+                      } catch (e) {
+                        setLoadError(e instanceof ApiError ? e.message : 'Failed to generate report')
+                      }
+                    } finally {
+                      setIsGeneratingReport(false)
+                    }
+                  }}
+                >
+                  Generate & View Report
+                </Button>
+              )}
+            </div>
           )}
         </CardContent>
       </Card>
+
+      <Modal
+        isOpen={showReportModal && Boolean(report)}
+        onClose={() => setShowReportModal(false)}
+        title={report?.session_metadata?.title ? `Report: ${report.session_metadata.title}` : 'Post-Interview Integrity Report'}
+        size="xl"
+      >
+        {report && (
+          <div className="max-h-[82vh] overflow-y-auto pr-1">
+            <InterviewReportView
+              report={report}
+              onReportUpdated={(updated) => setReport(updated)}
+              onClose={() => setShowReportModal(false)}
+            />
+          </div>
+        )}
+      </Modal>
     </div>
   )
 }

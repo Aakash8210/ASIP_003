@@ -13,6 +13,8 @@ import {
   getInterviewRoomContext,
 } from '../db/persistence.js';
 import { sessionFrameTracker } from '../monitoring/frameValidator.js';
+import { findReportByInterviewId } from '../reports/reportRepository.js';
+import { generateFinalReport } from '../reports/reportGenerator.js';
 
 function mapPersistenceError(error) {
   if (error instanceof PersistenceError) {
@@ -81,19 +83,15 @@ router.get('/interviews/:id', authenticate, authorize('interviewer'), asyncHandl
 // truthful message instead of fabricating one.
 router.get('/interviews/:id/report', authenticate, authorize('interviewer'), asyncHandler(async (req, res) => {
   const interview = await authorizeInterviewAccess(req.user.id, req.user.role, req.params.id);
-  const report = await findFinalReportByInterviewId(interview._id);
+  const report = await findReportByInterviewId(interview._id);
   if (!report) {
     throw new AppError('Report will be available after the interview is completed and reviewed', 404);
   }
   res.status(200).json({
     status: 'ok',
     report: {
-      id: report._id,
-      interview_id: report.interview_id,
-      summary: report.summary ?? null,
-      integrity_indicators: report.integrity_indicators ?? null,
-      generated_at: report.generated_at ?? null,
-      created_at: report.created_at ?? null,
+      ...report,
+      id: report._id || report.id,
     },
   });
 }));

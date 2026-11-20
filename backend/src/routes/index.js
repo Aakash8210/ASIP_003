@@ -8,6 +8,8 @@ import interviewerRouter from './interviewer.js';
 import intervieweeRouter from './interviewee.js';
 import { singleEventRouter } from './monitoringEvents.js';
 import { singleAlertRouter } from './alerts.js';
+import { singleEvidenceRouter } from './evidence.js';
+import { rootReportsRouter } from './reports.js';
 
 const router = express.Router();
 
@@ -28,10 +30,12 @@ const router = express.Router();
  * Phase 14: Observable Behaviour Signal Extraction (FastAPI AI Service)
  * Phase 15: Event Engine & Persistence (/interviews/:id/monitoring-events, /monitoring-events)
  * Phase 16: Real-Time Alerts & Notification Engine (/interviews/:id/alerts, /alerts)
+ * Phase 17: Evidence System (/interviews/:id/evidence, /evidence)
+ * Phase 18: Live Monitoring & Basic Integrity View (/interviews/:id/live-monitoring)
+ * Phase 19: Interview Report (/interviews/:id/report, /reports)
  * Future phases will add:
- * - Phase 17: /evidence (evidence extraction & keyframes)
- * - Phase 18: /monitoring (live monitoring dashboards)
- * - Phase 19: /reports (interview reports)
+ * - Phase 20: End-to-End MVP tests
+ * - Phase 21: Controlled AI evaluation
  */
 
 // API info endpoint
@@ -39,7 +43,7 @@ router.get('/', (req, res) => {
   res.json({
     message: 'AI Interview Monitoring API',
     version: '0.1.0',
-    status: 'Phase 16: Real-Time Alerts',
+    status: 'Phase 19: Interview Report',
     endpoints: {
       health: 'GET /health',
       api: 'GET /api',
@@ -53,15 +57,11 @@ router.use('/rbac', rbacRouter);
 router.use('/interviews', interviewsRouter);
 router.use('/monitoring-events', singleEventRouter);
 router.use('/alerts', singleAlertRouter);
+router.use('/evidence', singleEvidenceRouter);
+router.use('/reports', rootReportsRouter);
 router.use('/candidates', candidatesRouter);
 router.use('/interviewers', interviewersRouter);
 router.use('/interviewer', interviewerRouter);
 router.use('/interviewee', intervieweeRouter);
-
-// TODO Phase 18: Add monitoring routes
-// router.use('/monitoring', monitoringRouter);
-
-// TODO Phase 19: Add report routes
-// router.use('/reports', reportRouter);
 
 export default router;

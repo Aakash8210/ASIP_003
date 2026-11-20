@@ -1605,6 +1605,64 @@ PRD-FR-007, SRS-FR-007, Database Spec §11, AI/ML Spec §12, DEC-006, DEC-007, D
 
 ---
 
+## DEC-039 — System Check State Machine, Mandatory Microphone Gating & Bounded Device Check Isolation
+
+**Status:** APPROVED (by implementation)  
+**Date:** 2026-11-18  
+**Phase:** Critical Bug Fix & End-to-End Interview Workflow Stabilization  
+
+**Context:**
+During candidate pre-interview verification, `SystemCheckPage.tsx` experienced recursive re-render loops due to an unstable dependency cycle between check callbacks, state setters, and mount effects. This flooded the browser with unbounded concurrent `getUserMedia` calls, locking device hardware and resulting in "Page Unresponsive" crashes. Furthermore, microphone checks were previously marked as optional, allowing candidates to enter proctored sessions without confirmed two-way audio.
+
+**Decision:**
+1. **Decoupled Execution & Ref Guards:**
+   - Redesigned `SystemCheckPage.tsx` into an explicit state machine (`IDLE`, `CHECKING`, `PASSED`, `PERMISSION_DENIED`, `UNAVAILABLE`, `TIMED_OUT`, `FAILED`).
+   - Replaced state-dependent `useCallback` triggers with independent functional setters (`setChecks(prev => ...)`).
+   - Guarded component mount checks with an execution ref (`hasMountedRef`), ensuring `runAllChecks()` runs exactly once without re-triggering across state updates.
+2. **Strict Timeouts & Track Disposal:**
+   - Implemented bounded `Promise.race` timeouts (8000ms for Camera and Microphone device queries, 5000ms for network backend health checks).
+   - Late-resolving stream promises register cleanup callbacks to terminate (`track.stop()`) any unmanaged media tracks immediately upon eventual arrival.
+3. **Mandatory Microphone Gating:**
+   - Classified both Camera and Microphone as mandatory requirements (`MANDATORY_CHECKS = ['browser', 'camera', 'microphone', 'connection']`).
+   - Removed all "(optional)" indicators and strictly disabled the "Continue" button until all four mandatory checks achieve the `passed` state.
+4. **Backend Health Verification:**
+   - Supplemented `navigator.onLine` checks with an active `fetch('/health')` ping over a 5000ms AbortSignal to verify real API server connectivity.
+
+**Verification:**
+- Browser automation tests verify zero infinite loop locks, 100% responsive event loop, and correct handling of permission denial, timeout, and device retry.
+- All 11 browser verification artifacts captured in `docs/verification/interview-workflow/`.
+
+---
+
+## DEC-040 — Theme-Aware Custom Select Dropdown & Dark Mode Visibility Stabilization
+
+**Status:** APPROVED (by implementation)  
+**Date:** 2026-11-18  
+**Phase:** Critical Bug Fix & End-to-End Interview Workflow Stabilization  
+
+**Context:**
+The Create Interview form suffered from unreadable option menus where native `<select>` elements inherited dark-mode foreground text styles while retaining hardcoded light backgrounds (`bg-white`). This caused candidate and interviewer options to appear faint or invisible in dark mode, leading to interviews being submitted without assigned interviewers. Additionally, native dropdowns could not display dual-line content (prominent candidate name with secondary email).
+
+**Decision:**
+1. **Custom Accessible Dropdown Component (`Select.tsx`):**
+   - Replaced unstyled native `<select>` dropdowns with a theme-aware custom component adhering to WAI-ARIA combobox/listbox standards.
+   - Built dual-line item presentation prominently displaying the primary Name (`font-medium text-surface-900 dark:text-surface-50`) and secondary Email (`text-xs text-surface-500 dark:text-surface-400`).
+   - Implemented high-contrast theme classes (`bg-white dark:bg-surface-800 border-surface-300 dark:border-surface-700`) across trigger, popup menu, search bar, and option rows.
+2. **Accessibility & Form Compatibility:**
+   - Full keyboard navigation (ArrowUp, ArrowDown, Enter, Space, Escape, Tab, Home, End).
+   - Embedded a hidden synchronized native `<select>` to preserve standard HTML form validation, screen reader semantics, and browser automation compatibility.
+   - Integrated type-ahead search filtering when options list exceeds 5 entries.
+3. **Interviewer Workflow & Direct Entry:**
+   - Enhanced `InterviewerInterviewsPage.tsx` with a direct "Enter Room" action for active interviews, facilitating immediate room access.
+   - Hardened room loading in `InterviewerInterviewRoomPage.tsx` to surface descriptive error messages if room start or assignment verification fails.
+
+**Verification:**
+- Real browser verification in dark mode (`01_create_interview_candidate_select_dark.png`, `02_create_interview_interviewer_select_dark.png`).
+- 298/298 backend tests and 123/123 AI service tests pass with zero regressions.
+- Frontend production build (`npm run build`) passes with 0 errors.
+
+---
+
 ## Future Decision Template
 
 ``` text

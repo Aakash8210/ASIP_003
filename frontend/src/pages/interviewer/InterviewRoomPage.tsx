@@ -8,6 +8,7 @@ import {
   CameraOff,
   CheckCircle2,
   Clock,
+  FileText,
   LogOut,
   Mic,
   MicOff,
@@ -27,6 +28,7 @@ import { Modal } from '@/components/ui/Modal'
 import {
   apiClient,
   ApiError,
+  EvidenceItem,
   FrameCaptureStatusResponse,
   InterviewRoomContext,
   MonitoringAlert,
@@ -81,6 +83,30 @@ export function InterviewerInterviewRoomPage() {
   const [alerts, setAlerts] = useState<MonitoringAlert[]>([])
   const [showAlertPanel, setShowAlertPanel] = useState(false)
   const [actionPendingId, setActionPendingId] = useState<string | null>(null)
+
+  // Evidence Inspection State (Phase 17)
+  const [inspectingAlert, setInspectingAlert] = useState<MonitoringAlert | null>(null)
+  const [evidenceList, setEvidenceList] = useState<EvidenceItem[]>([])
+  const [isEvidenceLoading, setIsEvidenceLoading] = useState(false)
+  const [evidenceError, setEvidenceError] = useState<string | null>(null)
+
+  const handleInspectEvidence = useCallback(async (alert: MonitoringAlert) => {
+    if (!id) return
+    setInspectingAlert(alert)
+    setIsEvidenceLoading(true)
+    setEvidenceError(null)
+    try {
+      const res = await apiClient.getInterviewEvidence(
+        id,
+        alert.event_id ? { eventId: alert.event_id } : { limit: 10 }
+      )
+      setEvidenceList(res.evidence)
+    } catch {
+      setEvidenceError('Unable to load observation context for this event.')
+    } finally {
+      setIsEvidenceLoading(false)
+    }
+  }, [id])
 
   useEffect(() => {
     if (!id || room?.interview.status !== 'in_progress') return
@@ -213,8 +239,11 @@ export function InterviewerInterviewRoomPage() {
         try {
           const joinRes = await apiClient.joinInterviewerRoom(id)
           setRoom(joinRes.room)
-        } catch {
-          // Keep current room state
+        } catch (joinError) {
+          console.error('Failed to auto-join interview room:', joinError)
+          if (joinError instanceof ApiError) {
+            setLoadError(`Unable to start interview session: ${joinError.message}`)
+          }
         } finally {
           setIsJoining(false)
         }
@@ -495,6 +524,16 @@ export function InterviewerInterviewRoomPage() {
                     </div>
 
                     <div className="flex items-center gap-1.5 shrink-0">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 text-xs px-2 text-brand-600 dark:text-brand-400 hover:text-brand-700"
+                        title="Inspect observation context and metrics"
+                        onClick={() => handleInspectEvidence(alert)}
+                      >
+                        <FileText className="h-3.5 w-3.5 mr-1" />
+                        Evidence
+                      </Button>
                       {alert.status === 'NEW' && (
                         <Button
                           variant="neutral"
@@ -732,6 +771,104 @@ export function InterviewerInterviewRoomPage() {
             </Button>
             <Button variant="danger" onClick={handleEndInterview} loading={isEnding}>
               Conclude Interview
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Observation Evidence & Context Modal (Phase 17) */}
+      <Modal
+        isOpen={inspectingAlert !== null}
+        onClose={() => setInspectingAlert(null)}
+        title="Observation Context & Evidence"
+        description="Structured observation context and telemetry captured for this monitoring event."
+      >
+        <div className="space-y-4 pt-1 max-h-[70vh] overflow-y-auto">
+          {inspectingAlert && (
+            <div className="p-3 rounded-lg bg-surface-100 dark:bg-surface-800 text-xs space-y-1">
+              <div className="flex items-center gap-2">
+                <Badge variant="neutral" className="bg-brand-100 text-brand-800 dark:bg-brand-950 dark:text-brand-300">
+                  {inspectingAlert.event_type}
+                </Badge>
+                <span className="font-semibold text-surface-900 dark:text-surface-100">
+                  {inspectingAlert.title}
+                </span>
+              </div>
+              <p className="text-surface-600 dark:text-surface-300">
+                {inspectingAlert.message}
+              </p>
+              <p className="text-[11px] text-surface-400">
+                Recorded: {new Date(inspectingAlert.created_at).toLocaleString()}
+              </p>
+            </div>
+          )}
+
+          {isEvidenceLoading ? (
+            <div className="py-6 text-center text-xs text-surface-500">
+              Loading observation context...
+            </div>
+          ) : evidenceError ? (
+            <div className="p-3 text-xs text-rose-600 bg-rose-50 dark:bg-rose-950/40 rounded border border-rose-200 dark:border-rose-900">
+              {evidenceError}
+            </div>
+          ) : evidenceList.length === 0 ? (
+            <p className="text-xs text-surface-500 py-4 text-center">
+              No structured evidence items attached to this event.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {evidenceList.map((item) => (
+                <div
+                  key={item.evidence_id}
+                  className="p-3 rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-850 space-y-2 text-xs"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Badge variant="neutral" className="bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300 font-mono text-[10px]">
+                        {item.evidence_type}
+                      </Badge>
+                      <span className="font-medium text-surface-800 dark:text-surface-200">
+                        ID: {item.evidence_id.slice(0, 8)}...
+                      </span>
+                    </div>
+                    <span className="text-[11px] text-surface-400">
+                      Retention: {item.retention_class}
+                    </span>
+                  </div>
+
+                  {item.metadata.confidence !== undefined && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-surface-500">Confidence:</span>
+                      <span className="font-semibold text-surface-900 dark:text-surface-100">
+                        {Math.round(item.metadata.confidence * 100)}%
+                      </span>
+                    </div>
+                  )}
+
+                  {item.metadata.metrics && (
+                    <div className="bg-surface-100 dark:bg-surface-800 p-2 rounded text-[11px] font-mono space-y-0.5">
+                      <div className="font-semibold text-surface-700 dark:text-surface-300 mb-1">Observation Telemetry:</div>
+                      {Object.entries(item.metadata.metrics).map(([k, v]) => (
+                        <div key={k} className="flex justify-between">
+                          <span className="text-surface-500">{k}:</span>
+                          <span className="text-surface-900 dark:text-surface-100">{String(v)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between text-[10px] text-surface-400 pt-1 border-t border-surface-200 dark:border-surface-700">
+                    <span>Captured: {new Date(item.captured_at).toLocaleTimeString()}</span>
+                    <span>Expires: {new Date(item.expires_at).toLocaleDateString()}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="flex justify-end pt-2">
+            <Button variant="neutral" size="sm" onClick={() => setInspectingAlert(null)}>
+              Close
             </Button>
           </div>
         </div>

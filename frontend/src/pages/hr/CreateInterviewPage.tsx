@@ -159,17 +159,16 @@ export function HRCreateInterviewPage() {
                 id="candidate"
                 label="Candidate"
                 value={candidateId}
+                placeholder="Select a candidate..."
                 onValueChange={(value) => {
                   setCandidateId(value)
                   if (errors.candidateId) setErrors((prev) => ({ ...prev, candidateId: '' }))
                 }}
-                options={[
-                  { value: '', label: 'Select a candidate' },
-                  ...candidates.map((c) => ({
-                    value: c.id,
-                    label: `${c.name ?? 'Candidate'} — ${c.email ?? 'no email'}`,
-                  })),
-                ]}
+                options={candidates.map((c) => ({
+                  value: c.id,
+                  label: c.name ?? 'Candidate',
+                  sublabel: c.email ?? 'No email',
+                }))}
                 error={errors.candidateId}
                 disabled={isSubmitting || candidatesLoading || candidates.length === 0}
                 required
@@ -196,12 +195,14 @@ export function HRCreateInterviewPage() {
                 id="interviewer"
                 label="Interviewer"
                 value={interviewerId}
+                placeholder="Assign later (optional)"
                 onValueChange={setInterviewerId}
                 options={[
-                  { value: '', label: 'Assign later' },
+                  { value: '', label: 'Assign later', sublabel: 'You can assign an interviewer later' },
                   ...interviewers.map((i) => ({
                     value: i.id,
-                    label: `${i.name ?? 'Interviewer'} — ${i.email ?? 'no email'}`,
+                    label: i.name ?? 'Interviewer',
+                    sublabel: i.email ?? 'No email',
                   })),
                 ]}
                 disabled={isSubmitting || interviewersLoading}

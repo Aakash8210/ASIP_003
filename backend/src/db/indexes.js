@@ -42,6 +42,10 @@ const BASELINE_INDEXES = [
 
   { collection: COLLECTIONS.EVIDENCE, name: 'idx_evd_001_interview_created', key: { interview_id: 1, created_at: 1 } },
   { collection: COLLECTIONS.EVIDENCE, name: 'idx_evd_002_event_created', key: { event_id: 1, created_at: 1 } },
+  // Phase 17: Evidence System idempotency, unique evidence_id, and retention expiry
+  { collection: COLLECTIONS.EVIDENCE, name: 'idx_evd_003_idempotency_unique', key: { idempotency_key: 1 }, options: { unique: true, sparse: true } },
+  { collection: COLLECTIONS.EVIDENCE, name: 'idx_evd_004_evidence_id', key: { evidence_id: 1 }, options: { unique: true, sparse: true } },
+  { collection: COLLECTIONS.EVIDENCE, name: 'idx_evd_005_expires_at', key: { expires_at: 1 }, options: { sparse: true } },
 
   { collection: COLLECTIONS.AI_ANALYSIS_RESULTS, name: 'idx_ai_001_interview_processed', key: { interview_id: 1, processed_at: 1 } },
   { collection: COLLECTIONS.AI_ANALYSIS_RESULTS, name: 'idx_ai_002_type_processed', key: { analysis_type: 1, processed_at: 1 } },

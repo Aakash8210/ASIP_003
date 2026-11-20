@@ -40,10 +40,17 @@ const makeRequest = (path, method = 'GET') => {
 
 describe('Backend API Tests', () => {
   before(async () => {
-    // Start the server before tests
+    // If a server is already listening on port 3001, test against it
+    try {
+      const ping = await fetch('http://localhost:3001/health');
+      if (ping.ok) {
+        return;
+      }
+    } catch {
+      // Start server if not running
+    }
     const { default: app } = await import('../src/app.js');
     server = app.listen(3001);
-    // Wait for server to be ready
     await new Promise(resolve => setTimeout(resolve, 500));
   });
 

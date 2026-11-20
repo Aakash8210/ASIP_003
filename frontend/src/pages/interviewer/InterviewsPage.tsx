@@ -5,6 +5,7 @@ import {
   Calendar,
   Clock,
   AlertCircle,
+  Video,
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent } from '@/components/ui/Card'
@@ -203,9 +204,19 @@ export function InterviewerInterviewsPage() {
                           </Badge>
                         </td>
                         <td className="px-4 py-3 text-right">
-                          <Button variant="neutral" size="sm" asChild>
-                            <Link to={`/interviewer/interviews/${interview.id}`}>Open</Link>
-                          </Button>
+                          <div className="flex items-center justify-end gap-2">
+                            {interview.status !== 'completed' && (
+                              <Button size="sm" asChild className="gap-1.5">
+                                <Link to={`/interviewer/interviews/${interview.id}/room`}>
+                                  <Video className="h-3.5 w-3.5" aria-hidden="true" />
+                                  Enter Room
+                                </Link>
+                              </Button>
+                            )}
+                            <Button variant="neutral" size="sm" asChild>
+                              <Link to={`/interviewer/interviews/${interview.id}`}>Open</Link>
+                            </Button>
+                          </div>
                         </td>
                       </tr>
                     )

@@ -259,6 +259,50 @@ export class ApiClient {
   async dismissAlert(alertId: string): Promise<SingleAlertResponse> {
     return this.patch(`/api/alerts/${encodeURIComponent(alertId)}/dismiss`)
   }
+
+  // Evidence System (Phase 17)
+  async getInterviewEvidence(id: string, params?: Record<string, string | number>): Promise<EvidenceListResponse> {
+    const query = params ? `?${new URLSearchParams(Object.entries(params).map(([k, v]) => [k, String(v)]))}` : ''
+    return this.get(`/api/interviews/${encodeURIComponent(id)}/evidence${query}`)
+  }
+
+  async getInterviewEvidenceSummary(id: string): Promise<EvidenceSummaryResponse> {
+    return this.get(`/api/interviews/${encodeURIComponent(id)}/evidence/summary`)
+  }
+
+  async getEvidence(evidenceId: string): Promise<SingleEvidenceResponse> {
+    return this.get(`/api/evidence/${encodeURIComponent(evidenceId)}`)
+  }
+
+  // Live Monitoring & Integrity View (Phase 18)
+  async getLiveMonitoringSnapshot(id: string): Promise<LiveMonitoringResponse> {
+    return this.get(`/api/interviews/${encodeURIComponent(id)}/live-monitoring`)
+  }
+
+  async getLiveMonitoringIndicators(id: string): Promise<LiveMonitoringIndicatorsResponse> {
+    return this.get(`/api/interviews/${encodeURIComponent(id)}/live-monitoring/indicators`)
+  }
+
+  // Interview Reports (Phase 19)
+  async getInterviewReport(id: string): Promise<InterviewReportResponse> {
+    return this.get(`/api/interviews/${encodeURIComponent(id)}/report`)
+  }
+
+  async generateInterviewReport(id: string): Promise<InterviewReportResponse> {
+    return this.post(`/api/interviews/${encodeURIComponent(id)}/report/generate`)
+  }
+
+  async updateReportReview(
+    id: string,
+    review: { review_status: string; review_notes?: string }
+  ): Promise<InterviewReportResponse> {
+    return this.patch(`/api/interviews/${encodeURIComponent(id)}/report/review`, review)
+  }
+
+  async listReports(params?: Record<string, string | number>): Promise<ReportListResponse> {
+    const query = params ? `?${new URLSearchParams(Object.entries(params).map(([k, v]) => [k, String(v)]))}` : ''
+    return this.get(`/api/reports${query}`)
+  }
 }
 
 export interface AuthUserShape {
@@ -366,11 +410,58 @@ export interface AssignedInterviewListResponse {
 
 export interface InterviewReport {
   id: string
+  _id?: string
+  report_id?: string
   interview_id: string
+  candidate_id?: string | null
+  interviewer_id?: string | null
+  recruiter_id?: string | null
+  session_metadata?: {
+    title: string
+    status: string
+    scheduled_start_at: string | null
+    started_at: string | null
+    ended_at: string | null
+    duration_seconds: number
+    candidate?: { id: string; name: string; email: string | null } | null
+    interviewer?: { id: string; name: string; email: string | null } | null
+    recruiter?: { id: string; name: string; email: string | null } | null
+    telemetry?: FrameCaptureStatusResponse
+  }
   summary: string | null
-  integrity_indicators: Record<string, unknown> | null
+  integrity_indicators: InterpretableIntegrityIndicators | null
+  notable_event_ids?: string[]
+  events?: LiveMonitoringEventItem[]
+  alerts?: MonitoringAlert[]
+  evidence_ids?: string[]
+  evidence_summary?: {
+    interview_id: string
+    total_evidence: number
+    total_size_bytes: number
+    by_type: Record<string, number>
+  }
+  review_status: 'PENDING_REVIEW' | 'REVIEWED' | 'FLAGGED_FOR_FOLLOWUP' | string
+  review_notes?: string | null
+  reviewed_by?: string | null
+  reviewed_at?: string | null
+  generated_by?: string | null
   generated_at: string | null
   created_at: string | null
+  updated_at?: string | null
+}
+
+export interface ReportListResponse {
+  status: 'ok'
+  reports: InterviewReport[]
+  pagination: {
+    total: number
+    limit: number
+    offset: number
+    page: number
+    totalPages: number
+    hasNext: boolean
+    hasPrev: boolean
+  }
 }
 
 export interface InterviewReportResponse {
@@ -518,6 +609,152 @@ export interface AlertsSummaryResponse {
 export interface SingleAlertResponse {
   status: 'ok'
   alert: MonitoringAlert
+}
+
+// Evidence System (Phase 17)
+export interface EvidenceMetadata {
+  event_type?: string
+  confidence?: number
+  severity?: string
+  primary_metric?: number
+  metrics?: Record<string, unknown>
+  bounding_box?: unknown
+  observation_count?: number
+  duration_ms?: number
+  recorded_at?: string
+  [key: string]: unknown
+}
+
+export interface EvidenceItem {
+  evidence_id: string
+  interview_id: string
+  event_id?: string | null
+  candidate_id?: string | null
+  evidence_type: 'OBSERVATION_CONTEXT' | 'QUALITY_TELEMETRY' | 'KEYFRAME_SNAPSHOT' | 'METRICS_SUMMARY'
+  media_type: string
+  storage_reference?: string | null
+  size_bytes: number
+  retention_class: 'STANDARD' | 'EXTENDED' | 'PERMANENT'
+  metadata: EvidenceMetadata
+  captured_at: string
+  expires_at: string
+  created_at: string
+}
+
+export interface EvidenceListResponse {
+  status: 'ok'
+  interview_id: string
+  evidence: EvidenceItem[]
+  pagination: {
+    total: number
+    page: number
+    limit: number
+    totalPages: number
+    hasNext: boolean
+    hasPrev: boolean
+  }
+}
+
+export interface EvidenceSummaryResponse {
+  status: 'ok'
+  summary: {
+    interview_id: string
+    total_evidence: number
+    by_type: Record<string, number>
+    total_size_bytes: number
+    first_captured_at: string | null
+    latest_captured_at: string | null
+  }
+}
+
+export interface SingleEvidenceResponse {
+  status: 'ok'
+  evidence: EvidenceItem
+}
+
+// Live Monitoring & Integrity View (Phase 18)
+export interface IntegrityIndicatorItem {
+  status: string
+  label: string
+  severity: 'high' | 'medium' | 'low' | 'info'
+  confidence?: number
+  occurrences?: number
+  description: string
+}
+
+export interface InterpretableIntegrityIndicators {
+  visual_consistency: IntegrityIndicatorItem
+  stream_reliability: IntegrityIndicatorItem
+  multi_presence: IntegrityIndicatorItem
+  active_alerts: {
+    new_count: number
+    acknowledged_count: number
+    dismissed_count: number
+    high_priority_count: number
+  }
+  event_counts: {
+    total: number
+    by_type: Record<string, number>
+    by_severity: Record<string, number>
+  }
+  average_confidence: number
+  explanation: string
+}
+
+export interface LiveMonitoringEventItem {
+  _id: string
+  event_id: string
+  interview_id: string
+  event_type: string
+  category: string
+  severity: string
+  confidence: number
+  occurrence_count: number
+  duration_ms: number
+  status: string
+  first_observed_at: string
+  last_observed_at: string
+  metrics?: Record<string, unknown>
+  explanation?: string | null
+  evidence_ids?: string[]
+}
+
+export interface LiveMonitoringSnapshot {
+  interview_id: string
+  session: {
+    id: string
+    title: string
+    status: string
+    scheduled_start_at: string | null
+    started_at: string | null
+    ended_at: string | null
+    candidate: { id: string; name: string; email: string | null } | null
+    interviewer: { id: string; name: string; email: string | null } | null
+  }
+  telemetry: FrameCaptureStatusResponse
+  integrity_indicators: InterpretableIntegrityIndicators
+  events: LiveMonitoringEventItem[]
+  alerts: MonitoringAlert[]
+  evidence_summary: {
+    interview_id: string
+    total_evidence: number
+    total_size_bytes: number
+    by_type: Record<string, number>
+  }
+  captured_at: string
+}
+
+export interface LiveMonitoringResponse {
+  status: 'ok'
+  snapshot: LiveMonitoringSnapshot
+}
+
+export interface LiveMonitoringIndicatorsResponse {
+  status: 'ok'
+  interview_id: string
+  integrity_indicators: InterpretableIntegrityIndicators
+  telemetry: FrameCaptureStatusResponse
+  captured_at: string
 }
 
 export const apiClient = new ApiClient()

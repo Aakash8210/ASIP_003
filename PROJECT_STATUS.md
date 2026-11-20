@@ -4,10 +4,10 @@
 
 ## Current State
 
-- **Current stage:** Phase 16 COMPLETE → awaiting approval for Phase 17 (Evidence System)
-- **Current phase:** Phase 16 — Real-Time Alerts
+- **Current stage:** Phase 20 COMPLETE → awaiting approval for Phase 21 (Controlled AI Evaluation)
+- **Current phase:** Phase 20 — End-to-End MVP Test
 - **Overall status:** IN PROGRESS
-- **MVP:** IN PROGRESS (Real-Time Alerts & Notification Engine operational; Evidence System next)
+- **MVP:** COMPLETE (Full MVP vertical slice automated & verified; Controlled AI Evaluation next)
 - **V2:** NOT STARTED
 - **SaaS/Enterprise:** NOT STARTED
 
@@ -39,10 +39,10 @@ Plan v1.0 - \[x\] Startup/Product Roadmap v1.0
 |  14 | Observable Behaviour Signals     | COMPLETE    | 123/123 AI service tests pass (32 new Phase 14); temporal extraction for face absence (BEH-003), multiple faces (BEH-002), presence consistency (BEH-001), frame quality (CV-SIG-006), & monitoring data quality; POST/GET/DELETE /analysis/behaviour; frontend build + lint pass; backend 242/242 pass |
 |  15 | Event Engine & Persistence       | COMPLETE    | 268/268 backend tests pass (26 new Phase 15 tests); idempotent MongoDB persistence with unique sparse index; event normalization, lifecycle (ACTIVE/RESOLVED), summary aggregation, REST routes (/api/interviews/:id/monitoring-events, /api/monitoring-events/:eventId); AI service 123/123 tests pass; frontend build & lint pass |
 |  16 | Real-Time Alerts                 | COMPLETE    | 298/298 backend tests pass (30 new Phase 16 tests); configurable policy engine (POL_FACE_ABSENCE, POL_MULTIPLE_FACES, etc.), atomic idempotency upserts in alerts collection, lifecycle (NEW/ACKNOWLEDGED/DISMISSED), escalation service, Socket.io reviewer room targeting (candidate-isolated), reviewer room UI with live drawer; AI service 123/123 tests pass; frontend build & lint pass |
-|  17 | Evidence System                  | NOT STARTED | —            |
-|  18 | Live Monitoring & Integrity View | NOT STARTED | —            |
-|  19 | Interview Report                 | NOT STARTED | —            |
-|  20 | End-to-End MVP Test              | NOT STARTED | —            |
+|  17 | Evidence System                  | COMPLETE    | 318/318 backend tests pass (20 new Phase 17 tests in evidence.test.js); structured observation context & telemetry stored in evidence collection; bidirectional linking with monitoring_events; RBAC endpoints (/api/interviews/:id/evidence, /api/evidence/:evidenceId); Interviewer room evidence modal; AI service 123/123 tests pass; frontend build & lint pass |
+|  18 | Live Monitoring & Integrity View | COMPLETE    | 332/332 backend tests pass (14 new Phase 18 tests in live-monitoring.test.js); unified live monitoring snapshot endpoint (/api/interviews/:id/live-monitoring); interpretable integrity indicators derived strictly from observable signals; candidate-isolated Socket.io reviewer broadcast; Live Monitoring dashboard in LivePage.tsx with telemetry, indicators, chronological event stream, alerts, and evidence modal; AI service 123/123 tests pass; frontend build & lint pass |
+|  19 | Interview Report                 | COMPLETE    | 352/352 backend tests pass (20 new Phase 19 tests in reports.test.js); final_reports MongoDB collection with unique index; idempotent report generator & persistence; human review status workflow (PENDING_REVIEW, REVIEWED, FLAGGED_FOR_FOLLOWUP); auto-generation hook on session completion; print-ready frontend report view with observable indicators, timeline events table, and evidence inspection modal in HR and Interviewer reports & detail pages; AI service 123/123 tests pass; frontend build & lint pass |
+|  20 | End-to-End MVP Test              | COMPLETE    | 378/378 backend tests pass (26 new Phase 20 vertical-slice tests in e2e-mvp.test.js); live AI service (:8000) & MongoDB (:27017) end-to-end integration verified; AI service 123/123 pytest pass; frontend build & lint pass |
 |  21 | Controlled AI Evaluation         | NOT STARTED | —            |
 |  22 | Internal Validation / Pilot      | NOT STARTED | —            |
 |  23 | V2 Multimodal Intelligence       | NOT STARTED | —            |
@@ -875,10 +875,58 @@ Delivered a controlled, reliable, and configurable webcam frame-capture pipeline
     - Strictly neutral and factual explanations (no accusatory or intent-inferring terms).
     - Zero raw frame persistence and zero raw image logging.
 
+### Phase 17 Implementation Summary (Completed)
+
+- **Evidence System Architecture (`backend/src/evidence/`):**
+  - **Modular Evidence Services:**
+    - `evidenceConstants.js`: Canonical evidence types (`OBSERVATION_CONTEXT`, `QUALITY_TELEMETRY`, `KEYFRAME_SNAPSHOT`, `METRICS_SUMMARY`), retention classes (`STANDARD`, `EXTENDED`, `PERMANENT`), retention periods (30 days default), and MIME types.
+    - `evidenceRepository.js`: Atomic MongoDB operations on `evidence` collection (`COLLECTIONS.EVIDENCE`), unique idempotency indexing (`idx_evd_003_idempotency_unique`), filtering by `interview_id`, `event_id`, `evidence_type`, pagination, summary aggregation (`getEvidenceSummary`), and TTL retention deletion (`deleteExpiredEvidence`).
+    - `evidenceService.js`: Structured observation context generation (`buildEvidenceSpecForEvent`) and ingestion hook (`captureEvidenceForEvents`) linking generated evidence IDs back into `monitoring_events.evidence_ids`.
+  - **Zero Raw-Media Constraint & Metadata Persistence:**
+    - In compliance with Database Specification §12 and PRD-FR-008, no raw video frames or continuous video blobs are stored in MongoDB.
+    - Structured telemetry (facial presence, gaze, bounding box dimensions, confidence scores, observation counts, durations) is stored cleanly in JSON format.
+  - **REST Endpoints & RBAC Access Control (`backend/src/routes/evidence.js`):**
+    - `GET /api/interviews/:id/evidence`: Lists paginated evidence records for an interview session with query filtering (`eventId`, `type`, `limit`, `offset`).
+    - `GET /api/interviews/:id/evidence/summary`: Aggregates evidence counts by type, total size bytes, and capture time ranges.
+    - `GET /api/evidence/:evidenceId`: Retrieves a single evidence document with interview-level ownership verification.
+    - All routes enforce `authenticate`, `authorize('hr', 'interviewer')`, and `authorizeInterviewAccess`. Candidates are strictly forbidden (`403 Forbidden`).
+  - **Event Engine Ingestion Hook (`backend/src/events/eventEngine.js`):**
+    - `processBehaviourAnalysis` invokes `captureEvidenceForEvents` immediately after monitoring event persistence.
+    - Bidirectional referential integrity: `evidence.event_id` references the monitoring event, and `monitoring_events.evidence_ids` references the generated evidence ID.
+  - **Frontend Interviewer Room Integration (`frontend/`):**
+    - Added `getInterviewEvidence`, `getInterviewEvidenceSummary`, and `getEvidence` to `apiClient`.
+    - Added clean "Evidence" inspection button to each alert card in the Interviewer Room alert drawer.
+    - Added Observation Evidence Modal rendering structured observation context, confidence rating, metrics telemetry, retention class, and expiration dates cleanly without clutter.
+  - **Privacy & Ethics Constraints:**
+    - Strictly neutral and non-accusatory terminology throughout metadata and UI.
+    - Candidate accounts have zero visibility or access to evidence records.
+
+### Phase 18 Implementation Summary (Completed)
+
+- **Live Monitoring & Basic Integrity View Architecture (`backend/src/monitoring/`):**
+  - **Live Monitoring Service (`liveMonitoringService.js`):**
+    - `getLiveMonitoringSnapshot(interviewId)`: Aggregates active session status, candidate frame telemetry (sampling status, total frames), chronological monitoring events, alerts, and evidence summary into a unified payload.
+    - `calculateIntegrityIndicators`: Transparently derives interpretable integrity indicators (Visual Continuity, Stream Stability, Secondary Presence) strictly from observable signal counts, durations, and confidence. Strictly excludes any unexplained black-box fraud scores (PRD-FR-009, UX-INT-002).
+    - `dispatchMonitoringUpdateToReviewers`: Dispatches live monitoring updates exclusively to reviewer rooms (`interview:${interviewId}:reviewers`) over Socket.io.
+  - **Socket.io Reviewer Broadcast & Candidate Isolation:**
+    - Live monitoring updates (`monitoring:events-update`) emit strictly to `interview:${id}:reviewers`. Candidate sockets join only `interview:${id}` and never receive reviewer telemetry or alerts.
+  - **REST Endpoints (`backend/src/routes/liveMonitoring.js`):**
+    - `GET /api/interviews/:id/live-monitoring`: Retrieves unified live monitoring snapshot.
+    - `GET /api/interviews/:id/live-monitoring/indicators`: Retrieves interpretable integrity indicators and telemetry.
+    - All routes enforce JWT authentication (`authenticate`), role authorization (`authorize('hr', 'interviewer')`), and resource access (`authorizeInterviewAccess`). Candidates receive `403 Forbidden`.
+  - **Frontend Live Monitoring Dashboard (`frontend/src/pages/interviewer/LivePage.tsx`):**
+    - Complete live monitoring interface with session selector, session status banner, and stream telemetry card.
+    - Interpretable Integrity Indicators grid displaying Visual Continuity, Stream Stability, Secondary Presence, and an objective observation summary banner.
+    - Chronological Observable Events stream with severity and event type filtering.
+    - Contextual evidence inspection modal (reusing Phase 17 modal component).
+    - Real-time alerts drawer with one-click Acknowledge / Dismiss actions.
+    - Real-time Socket.io listener for instant updates.
+    - Wired entry points for both Interviewer (`/interviewer/live`) and HR (`/hr/interviews/:id/live`).
+
 ### Verification Matrix
 
 - **Backend Automated Tests:**
-  - **298/298 tests passed** (30 new Phase 16 tests in `backend/tests/alerts.test.js`, 0 regressions across all 82 test suites).
+  - **332/332 tests passed** (14 new Phase 18 tests in `backend/tests/live-monitoring.test.js`, 0 regressions across all 92 test suites).
 - **AI Service Automated Tests:**
   - **123/123 pytest tests passed** (`ai-service/tests`).
 - **Frontend Verification:**
@@ -890,10 +938,103 @@ Delivered a controlled, reliable, and configurable webcam frame-capture pipeline
   - AI service: `8000`
   - MongoDB: `mongodb://127.0.0.1:27017`
 
+### Phase 19 Implementation Summary (Completed)
+
+- **Backend Final Report Generation & Persistence (`final_reports` collection):**
+  - **Data Model & Idempotency (`backend/src/reports/reportRepository.js`):**
+    - Unique index `idx_rpt_001_interview_unique` on `interview_id` and `idx_rpt_002_generated_desc` on `generated_at`.
+    - Idempotent `upsertFinalReport` updating observable telemetry, events, alerts, and integrity indicators while preserving human review status and notes.
+    - `updateReportReview` workflow supporting `PENDING_REVIEW`, `REVIEWED`, and `FLAGGED_FOR_FOLLOWUP` review statuses.
+    - Scoped `listReports` endpoint with pagination and reviewStatus filter.
+  - **Report Generator (`backend/src/reports/reportGenerator.js`):**
+    - Aggregates session metadata, duration, participants (candidate, interviewer, recruiter).
+    - Aggregates 1 fps video frame telemetry.
+    - Aggregates chronological monitoring timeline events and alerts summary.
+    - Calculates interpretable integrity indicators (Visual Consistency, Stream Reliability, Secondary Presence, Active Alerts Summary).
+    - Generates objective, factual non-accusatory summary narrative (strictly avoiding black-box fraud scores).
+  - **Auto-Generation Hook (`backend/src/db/persistence.js`):**
+    - Hook in `completeInterviewSession` that automatically triggers `generateFinalReport` when an active interview session concludes.
+  - **REST Endpoints & RBAC Matrix (`backend/src/routes/reports.js`):**
+    - `GET /api/interviews/:id/report`: Retrieves post-interview report (auto-generates if completed and missing).
+    - `POST /api/interviews/:id/report/generate`: Force-generates or refreshes report.
+    - `PATCH /api/interviews/:id/report/review`: Submits human reviewer sign-off and feedback notes.
+    - `GET /api/reports`: Lists reports scoped to recruiter's interviews or interviewer's assignments.
+    - Role isolation: candidates receive `403 Forbidden`; unassigned interviewers and non-owning HR receive `403 Forbidden`.
+- **Frontend Report Views & Print Export (`frontend/src/`):**
+  - **Reusable Report View (`frontend/src/components/reports/InterviewReportView.tsx`):**
+    - Session metadata header with status badges and duration.
+    - Observable integrity indicators cards with transparent metrics and non-accusatory summary.
+    - Chronological Observable Events timeline table with confidence, timestamps, and one-click Evidence Inspection modal.
+    - Review Status sign-off card allowing reviewers to update status (`REVIEWED`, `FLAGGED_FOR_FOLLOWUP`) and submit audit notes.
+    - Clean browser print support (`window.print()` with print-friendly styling).
+  - **Interviewer Reports View (`frontend/src/pages/interviewer/ReportsPage.tsx`):**
+    - Real report listing connecting to `apiClient.listReports()`, KPI cards, and modal report inspection.
+  - **HR Reports Management (`frontend/src/pages/hr/ReportsPage.tsx`):**
+    - Real report listing with search, reviewStatus filtering, KPI metrics, and report view modal.
+  - **Interview Detail Integration:**
+    - Embedded report cards and modals in both `InterviewerInterviewDetailPage.tsx` and `HRInterviewDetailPage.tsx`.
+
+### Verification Matrix
+
+- **Backend Automated Tests:**
+  - **352/352 tests passed** (20 new Phase 19 tests in `backend/tests/reports.test.js`, 0 regressions across all 99 test suites).
+- **AI Service Automated Tests:**
+  - **123/123 pytest tests passed** (`ai-service/tests`).
+- **Frontend Verification:**
+  - Production build (`npm run build --prefix frontend`): **0 errors**.
+  - ESLint (`npm run lint --prefix frontend`): **0 errors** (all pre-existing warnings preserved).
+- **Pinned Ports & Services:**
+  - Frontend: `5180` (`https://5180-iteaxs65egwgp2h9q52q5.e2b.app/`)
+  - Backend: `3001` (`https://3001-iteaxs65egwgp2h9q52q5.e2b.app/`)
+  - AI service: `8000`
+  - MongoDB: `mongodb://127.0.0.1:27017`
+
+### Phase 20 Implementation Summary (Completed)
+
+- **Automated Vertical-Slice E2E Test Suite (`backend/tests/e2e-mvp.test.js`):**
+  - **Full Vertical Lifecycle Coverage (17 Sequential Steps / 26 Assertions):**
+    1. **Multi-Role Registration & Auth:** HR recruiter, candidate, assigned interviewer, and unassigned interviewer registered with scrypt-hashed passwords, JWT tokens, and MongoDB user/recruiter/candidate profile persistence.
+    2. **Interview Creation:** HR creates interview session in `draft` status linked to candidate.
+    3. **Invitation:** HR invites candidate, transitioning status to `invited` with unique invite reference.
+    4. **Interviewer Assignment:** HR assigns designated interviewer (`interviewer_id` DEC-029).
+    5. **Candidate Access & Initial RBAC:** Candidate accesses invited interview session; candidate access to HR management routes strictly denied (`403 Forbidden`).
+    6. **Room Entry & Status Transition:** Candidate and interviewer join the room; session transitions to `in_progress` with `started_at` recorded.
+    7. **Real-Time WebRTC/Socket Isolation:** Real-time Socket.io connections established; reviewer joins `interview:<id>:reviewers` room; candidate strictly excluded from reviewer alerts room.
+    8. **Candidate Frame Submission:** Sampled webcam frame transmitted via `POST /api/interviewee/interviews/:id/frames` and verified via telemetry tracker (`GET .../frames/status`).
+    9. **FastAPI AI CV Analysis:** Frame submitted to live FastAPI AI service (`POST /analysis/frame`) returning structured `CVAnalysisResult` with YuNet model metadata.
+    10. **FastAPI Behaviour Signal Extraction:** Temporal observations evaluated by live AI service (`POST /analysis/behaviour`), producing `MULTIPLE_FACES` behavioural signal with `status: 'observed'`.
+    11. **Backend Event Engine Ingestion:** AI payload processed by `processBehaviourAnalysis`, idempotently upserting into MongoDB `monitoring_events`.
+    12. **Real-Time Alert Dispatch & Candidate Isolation:** Configurable policy engine triggers `monitoring-alert:new`, delivering real-time notification to reviewer socket while candidate socket receives zero alerts (`0 leaked`).
+    13. **Evidence System Verification:** Structured observation context and telemetry verified in `evidence` collection linked to qualifying event; candidate access denied (`403 Forbidden`).
+    14. **Live Monitoring Snapshot:** Aggregated state retrieved (`GET /api/interviews/:id/live-monitoring`) verifying non-accusatory integrity indicators (`multi_presence: 'OBSERVED'`), telemetry, timeline events, and alerts.
+    15. **Alert Acknowledgment & Session End:** Interviewer acknowledges alert via `PATCH /api/alerts/:id/acknowledge`; interviewer ends session transitioning status to `completed` with `ended_at` timestamp.
+    16. **Post-Interview Final Report Auto-Compilation & Review Workflow:** Final report verified auto-generated in `final_reports` collection; HR retrieves report and submits human sign-off (`REVIEWED`) with audit notes; candidate access denied (`403 Forbidden`).
+    17. **Cross-Role & Defect Audit:** Verified unauthenticated `401 Unauthorized` across protected endpoints; unassigned interviewer `403 Forbidden`; candidate access to reviewer endpoints `403 Forbidden`.
+  - **Dynamic Environment Resilience:**
+    - AI service auto-detection and execution dynamically resolving absolute path from `import.meta.url` regardless of working directory.
+    - Dedicated test database `interview_monitoring_e2e_test` cleanly created, indexed, and dropped after execution.
+
+### Verification Matrix
+
+- **Backend Automated Tests:**
+  - **378/378 tests passed** (26 new Phase 20 E2E tests in `backend/tests/e2e-mvp.test.js`, 0 regressions across all 113 test suites).
+- **AI Service Automated Tests:**
+  - **123/123 pytest tests passed** (`ai-service/tests`).
+- **Frontend Verification:**
+  - Production build (`npm run build --prefix frontend`): **0 errors**.
+  - ESLint (`npm run lint --prefix frontend`): **0 errors** (135 warnings, 0 errors).
+- **Pinned Ports & Services:**
+  - Frontend: `5180` (`https://5180-iteaxs65egwgp2h9q52q5.e2b.app/`)
+  - Backend: `3001` (`https://3001-iteaxs65egwgp2h9q52q5.e2b.app/`)
+  - AI service: `8000`
+  - MongoDB: `mongodb://127.0.0.1:27017`
+
 ### Known Limitations / Deferred to Later Phases
 
-- Evidence keyframe extraction, thumbnail storage, and encrypted retention belong to **Phase 17 (Evidence System)**.
-- Live HR integrity dashboards belong to **Phase 18 (Live Monitoring)**.
-- Final PDF/web reports and aggregate scoring belong to **Phase 19 (Interview Report)**.
+- Controlled AI metric benchmarking (precision, recall, F1 across test datasets) belongs to **Phase 21 (Controlled AI Evaluation)**.
+- Internal pilot and user feedback validation belongs to **Phase 22 (Internal Validation / Pilot)**.
+- Multimodal audio / NLP analysis belongs to **Phase 23 (V2 Multimodal Intelligence)**.
 
-**Next Phase:** Phase 17 — Evidence System (depends on Phase 16). NOT STARTED — awaiting explicit approval.
+---
+
+**Next Phase:** Phase 21 — Controlled AI Evaluation (depends on Phase 20). NOT STARTED — awaiting explicit approval.

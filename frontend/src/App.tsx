@@ -117,6 +117,8 @@ export function App() {
                 <Route path="/hr/interviews" element={<ProtectedRoute allowedRoles={['hr']}><HRInterviewsPage /></ProtectedRoute>} />
                 <Route path="/hr/interviews/new" element={<ProtectedRoute allowedRoles={['hr']}><HRCreateInterviewPage /></ProtectedRoute>} />
                 <Route path="/hr/interviews/:id" element={<ProtectedRoute allowedRoles={['hr']}><HRInterviewDetailPage /></ProtectedRoute>} />
+                <Route path="/hr/interviews/:id/live" element={<ProtectedRoute allowedRoles={['hr']}><InterviewerLivePage /></ProtectedRoute>} />
+                <Route path="/hr/live" element={<ProtectedRoute allowedRoles={['hr']}><InterviewerLivePage /></ProtectedRoute>} />
                 <Route path="/hr/reports" element={<ProtectedRoute allowedRoles={['hr']}><HRReportsPage /></ProtectedRoute>} />
                 <Route path="/hr/organization" element={<ProtectedRoute allowedRoles={['hr']}><HROrganizationPage /></ProtectedRoute>} />
                 <Route path="/hr/settings" element={<ProtectedRoute allowedRoles={['hr']}><HRSettingsPage /></ProtectedRoute>} />

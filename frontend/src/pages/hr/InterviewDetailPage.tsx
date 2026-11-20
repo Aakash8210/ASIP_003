@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeft, Calendar, Mail, Pencil, Send, User, UserPlus, X } from 'lucide-react'
+import { Activity, ArrowLeft, Calendar, Eye, FileText, Mail, Pencil, Send, User, UserPlus, X } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
@@ -8,8 +8,9 @@ import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
 import { Modal } from '@/components/ui/Modal'
 import { useToast } from '@/components/ui/Toast'
-import { apiClient, ApiError, InterviewerUserSummary, InterviewSession } from '@/lib/api'
+import { apiClient, ApiError, InterviewerUserSummary, InterviewReport, InterviewSession } from '@/lib/api'
 import { interviewStatusConfig, formatInterviewDate } from './interviewStatus'
+import { InterviewReportView } from '@/components/reports/InterviewReportView'
 
 export function HRInterviewDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -18,6 +19,10 @@ export function HRInterviewDetailPage() {
   const [interview, setInterview] = useState<InterviewSession | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
+
+  const [report, setReport] = useState<InterviewReport | null>(null)
+  const [reportLoading, setReportLoading] = useState(false)
+  const [showReportModal, setShowReportModal] = useState(false)
 
   const [isEditing, setIsEditing] = useState(false)
   const [editTitle, setEditTitle] = useState('')
@@ -42,6 +47,14 @@ export function HRInterviewDetailPage() {
     try {
       const response = await apiClient.getInterview(id)
       setInterview(response.interview)
+      if (response.interview.status === 'completed') {
+        try {
+          const reportRes = await apiClient.getInterviewReport(id)
+          setReport(reportRes.report)
+        } catch {
+          // report not yet generated
+        }
+      }
     } catch (error) {
       if (error instanceof ApiError) {
         setLoadError(
@@ -213,6 +226,20 @@ export function HRInterviewDetailPage() {
             </Badge>
           </div>
           <div className="flex items-center gap-3">
+            {interview.status === 'in_progress' && (
+              <Button size="sm" variant="neutral" asChild className="gap-2">
+                <Link to={`/hr/interviews/${interview.id}/live`}>
+                  <Activity className="h-4 w-4 text-brand-600 dark:text-brand-400" />
+                  Live Monitoring
+                </Link>
+              </Button>
+            )}
+            {interview.status === 'completed' && (
+              <Button size="sm" variant="neutral" className="gap-2" onClick={() => setShowReportModal(true)}>
+                <FileText className="h-4 w-4 text-brand-600 dark:text-brand-400" />
+                View Report
+              </Button>
+            )}
             {canAssign && (
               <Button variant="neutral" size="sm" className="gap-2" onClick={openAssignModal} disabled={isEditing}>
                 <UserPlus className="h-4 w-4" aria-hidden="true" />
@@ -383,6 +410,71 @@ export function HRInterviewDetailPage() {
         </CardContent>
       </Card>
 
+      <Card className="border-surface-200 dark:border-surface-800">
+        <CardHeader>
+          <CardTitle className="text-lg flex items-center gap-2">
+            <FileText className="h-5 w-5 text-brand-600" aria-hidden="true" />
+            Post-Interview Report
+          </CardTitle>
+          <CardDescription>Integrity audit record and human review status for this session</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {report ? (
+            <div className="space-y-3 text-sm">
+              <p className="text-surface-600 dark:text-surface-400 whitespace-pre-wrap">
+                {report.summary ?? 'Report available'}
+              </p>
+              {report.generated_at && (
+                <p className="text-xs text-surface-400 dark:text-surface-500">
+                  Generated {formatInterviewDate(report.generated_at)}
+                </p>
+              )}
+              <div className="pt-2">
+                <Button size="sm" onClick={() => setShowReportModal(true)} className="gap-2">
+                  <Eye className="h-4 w-4" />
+                  View Full Report & Review Status
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <p className="text-sm text-surface-500 dark:text-surface-400">
+                {interview.status === 'completed'
+                  ? 'The interview has ended. You can compile the post-interview report now.'
+                  : 'The report will become available once the interview has ended.'}
+              </p>
+              {interview.status === 'completed' && (
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  disabled={reportLoading}
+                  onClick={async () => {
+                    setReportLoading(true)
+                    try {
+                      const res = await apiClient.generateInterviewReport(interview.id)
+                      setReport(res.report)
+                      setShowReportModal(true)
+                    } catch {
+                      try {
+                        const res2 = await apiClient.getInterviewReport(interview.id)
+                        setReport(res2.report)
+                        setShowReportModal(true)
+                      } catch {
+                        danger('Failed to generate report')
+                      }
+                    } finally {
+                      setReportLoading(false)
+                    }
+                  }}
+                >
+                  Generate & View Report
+                </Button>
+              )}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       <Modal
         isOpen={showInviteModal}
         onClose={() => setShowInviteModal(false)}
@@ -424,15 +516,17 @@ export function HRInterviewDetailPage() {
             id="assign-interviewer"
             label="Interviewer"
             value={selectedInterviewerId}
+            placeholder="Select an interviewer..."
             onValueChange={(value) => {
               setSelectedInterviewerId(value)
               setAssignError(null)
             }}
             options={[
-              { value: '', label: 'Select an interviewer' },
+              { value: '', label: 'Select an interviewer', sublabel: 'Choose who conducts this interview' },
               ...interviewers.map((i) => ({
                 value: i.id,
-                label: `${i.name ?? 'Interviewer'} — ${i.email ?? 'no email'}`,
+                label: i.name ?? 'Interviewer',
+                sublabel: i.email ?? 'No email',
               })),
             ]}
             disabled={isAssigning || interviewersLoading}
@@ -456,6 +550,23 @@ export function HRInterviewDetailPage() {
             </Button>
           </div>
         </div>
+      </Modal>
+
+      <Modal
+        isOpen={showReportModal && Boolean(report)}
+        onClose={() => setShowReportModal(false)}
+        title={report?.session_metadata?.title ? `Report: ${report.session_metadata.title}` : 'Post-Interview Integrity Report'}
+        size="xl"
+      >
+        {report && (
+          <div className="max-h-[82vh] overflow-y-auto pr-1">
+            <InterviewReportView
+              report={report}
+              onReportUpdated={(updated) => setReport(updated)}
+              onClose={() => setShowReportModal(false)}
+            />
+          </div>
+        )}
       </Modal>
     </div>
   )

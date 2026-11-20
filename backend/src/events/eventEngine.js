@@ -9,6 +9,8 @@ import {
   EVENT_STATUSES,
 } from './eventNormalizer.js';
 import { processEventsBatchForAlerts } from '../alerts/alertEngine.js';
+import { captureEvidenceForEvents } from '../evidence/evidenceService.js';
+import { dispatchMonitoringUpdateToReviewers } from '../monitoring/liveMonitoringService.js';
 
 /**
  * Ingests a Phase 14 BehaviourAnalysisResult payload, normalizes eligible signals into monitoring events,
@@ -126,6 +128,15 @@ export async function processBehaviourAnalysis(analysisPayload, expectedIntervie
     }
   }
 
+  // Phase 17: Capture and link structured evidence context for persisted monitoring events
+  let evidenceSummary = null;
+  try {
+    evidenceSummary = await captureEvidenceForEvents(persistedEvents, analysisPayload);
+  } catch (err) {
+    // Fault isolation: event persistence succeeded, log evidence capture error
+    console.error('[EventEngine] Evidence capture error:', err.message);
+  }
+
   // Phase 16: Evaluate real-time alerts for persisted monitoring events
   let alertSummary = null;
   try {
@@ -133,6 +144,18 @@ export async function processBehaviourAnalysis(analysisPayload, expectedIntervie
   } catch (err) {
     // Fault isolation: event persistence succeeded, log alerting error
     console.error('[EventEngine] Alert processing error:', err.message);
+  }
+
+  // Phase 18: Dispatch live monitoring update to reviewer room
+  try {
+    dispatchMonitoringUpdateToReviewers(interview_id, {
+      events_count: persistedEvents.length,
+      events: persistedEvents,
+      analysis_id: analysisPayload.analysis_id,
+    });
+  } catch (err) {
+    // Fault isolation
+    console.error('[EventEngine] Reviewer broadcast error:', err.message);
   }
 
   return {
@@ -145,6 +168,7 @@ export async function processBehaviourAnalysis(analysisPayload, expectedIntervie
     events_resolved: resolvedCount,
     events_ignored: signalsEvaluated - eventSpecs.length,
     events: persistedEvents,
+    ...(evidenceSummary && { evidence_summary: evidenceSummary }),
     ...(alertSummary && { alert_summary: alertSummary }),
   };
 }

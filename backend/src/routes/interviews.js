@@ -16,6 +16,9 @@ import {
 } from '../db/persistence.js';
 import { interviewMonitoringEventsRouter } from './monitoringEvents.js';
 import { interviewAlertsRouter } from './alerts.js';
+import { interviewEvidenceRouter } from './evidence.js';
+import { liveMonitoringRouter } from './liveMonitoring.js';
+import { interviewReportRouter } from './reports.js';
 
 const router = Router();
 
@@ -24,6 +27,15 @@ router.use('/:id/monitoring-events', interviewMonitoringEventsRouter);
 
 // Phase 16: Real-Time Alerts interview alerts routes
 router.use('/:id/alerts', interviewAlertsRouter);
+
+// Phase 17: Evidence System interview evidence routes
+router.use('/:id/evidence', interviewEvidenceRouter);
+
+// Phase 18: Live Monitoring & Basic Integrity View routes
+router.use('/:id/live-monitoring', liveMonitoringRouter);
+
+// Phase 19: Interview Report routes
+router.use('/:id/report', interviewReportRouter);
 
 // HR interview management (Phase 7). Interviewee-specific interview views
 // belong to Phase 9; interviewer assignment belongs to Phase 8. All routes

@@ -121,8 +121,11 @@ export function IntervieweeInterviewRoomPage() {
         try {
           const joinRes = await apiClient.joinIntervieweeRoom(id)
           setRoom(joinRes.room)
-        } catch {
-          // Keep current room state even if join failed
+        } catch (joinError) {
+          console.error('Failed to auto-join candidate room:', joinError)
+          if (joinError instanceof ApiError) {
+            setLoadError(`Unable to join interview session: ${joinError.message}`)
+          }
         } finally {
           setIsJoining(false)
         }

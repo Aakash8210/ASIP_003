@@ -607,6 +607,15 @@ export async function completeInterviewSession(interviewId) {
       },
       { returnDocument: 'after' }
     );
+
+  // Phase 19: Auto-generate post-interview report on session completion
+  try {
+    const { generateFinalReport } = await import('../reports/reportGenerator.js');
+    await generateFinalReport(interviewId);
+  } catch (err) {
+    console.error('[Persistence] Auto report generation error:', err.message);
+  }
+
   return result;
 }
 
