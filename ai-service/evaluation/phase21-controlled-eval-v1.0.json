@@ -1,0 +1,498 @@
+{
+  "dataset_id": "phase21-controlled-eval-v1.0",
+  "created_at": "2026-11-21T00:00:00Z",
+  "annotation_rule_version": "v1.0",
+  "model": {
+    "name": "YuNet",
+    "file": "face_detection_yunet_2023mar.onnx",
+    "score_threshold": 0.6
+  },
+  "minimum_publishable_examples": 30,
+  "cv_fixtures": [
+    {
+      "id": "cv-01-single-baseline",
+      "file": "tests/fixtures/controlled/single_face_baseline.jpg",
+      "expected_faces": 1,
+      "multiple_faces": false,
+      "absence": false,
+      "expected_grade": "good",
+      "category": "single_face",
+      "consent_status": "consented; synthetic/controlled test fixture for reproducible AI verification",
+      "source": "deterministic controlled fixture"
+    },
+    {
+      "id": "cv-02-single-resized",
+      "file": "tests/fixtures/controlled/single_face_resized_640x360.jpg",
+      "expected_faces": 1,
+      "multiple_faces": false,
+      "absence": false,
+      "expected_grade": "good",
+      "category": "single_face",
+      "consent_status": "consented; synthetic/controlled test fixture for reproducible AI verification",
+      "source": "deterministic controlled fixture"
+    },
+    {
+      "id": "cv-03-single-shift-left",
+      "file": "tests/fixtures/controlled/single_face_shift_left.jpg",
+      "expected_faces": 1,
+      "multiple_faces": false,
+      "absence": false,
+      "expected_grade": "good",
+      "category": "single_face",
+      "consent_status": "consented; synthetic/controlled test fixture for reproducible AI verification",
+      "source": "deterministic controlled fixture"
+    },
+    {
+      "id": "cv-04-single-shift-right",
+      "file": "tests/fixtures/controlled/single_face_shift_right.jpg",
+      "expected_faces": 1,
+      "multiple_faces": false,
+      "absence": false,
+      "expected_grade": "good",
+      "category": "single_face",
+      "consent_status": "consented; synthetic/controlled test fixture for reproducible AI verification",
+      "source": "deterministic controlled fixture"
+    },
+    {
+      "id": "cv-05-single-scale-08",
+      "file": "tests/fixtures/controlled/single_face_scale_0_8.jpg",
+      "expected_faces": 1,
+      "multiple_faces": false,
+      "absence": false,
+      "expected_grade": "good",
+      "category": "single_face",
+      "consent_status": "consented; synthetic/controlled test fixture for reproducible AI verification",
+      "source": "deterministic controlled fixture"
+    },
+    {
+      "id": "cv-06-single-scale-11",
+      "file": "tests/fixtures/controlled/single_face_scale_1_1.jpg",
+      "expected_faces": 1,
+      "multiple_faces": false,
+      "absence": false,
+      "expected_grade": "good",
+      "category": "single_face",
+      "consent_status": "consented; synthetic/controlled test fixture for reproducible AI verification",
+      "source": "deterministic controlled fixture"
+    },
+    {
+      "id": "cv-07-single-contrast-high",
+      "file": "tests/fixtures/controlled/single_face_contrast_high.jpg",
+      "expected_faces": 1,
+      "multiple_faces": false,
+      "absence": false,
+      "expected_grade": "good",
+      "category": "single_face",
+      "consent_status": "consented; synthetic/controlled test fixture for reproducible AI verification",
+      "source": "deterministic controlled fixture"
+    },
+    {
+      "id": "cv-08-single-contrast-low",
+      "file": "tests/fixtures/controlled/single_face_contrast_low.jpg",
+      "expected_faces": 1,
+      "multiple_faces": false,
+      "absence": false,
+      "expected_grade": "good",
+      "category": "single_face",
+      "consent_status": "consented; synthetic/controlled test fixture for reproducible AI verification",
+      "source": "deterministic controlled fixture"
+    },
+    {
+      "id": "cv-09-single-mild-blur",
+      "file": "tests/fixtures/controlled/single_face_mild_blur.jpg",
+      "expected_faces": 1,
+      "multiple_faces": false,
+      "absence": false,
+      "expected_grade": "degraded",
+      "category": "quality_blur",
+      "consent_status": "consented; synthetic/controlled test fixture for reproducible AI verification",
+      "source": "deterministic controlled fixture"
+    },
+    {
+      "id": "cv-10-single-heavy-blur",
+      "file": "tests/fixtures/controlled/single_face_heavy_blur.jpg",
+      "expected_faces": 0,
+      "multiple_faces": false,
+      "absence": true,
+      "expected_grade": "degraded",
+      "category": "quality_blur",
+      "consent_status": "consented; synthetic/controlled test fixture for reproducible AI verification",
+      "source": "deterministic controlled fixture"
+    },
+    {
+      "id": "cv-11-single-low-light",
+      "file": "tests/fixtures/controlled/single_face_low_light.jpg",
+      "expected_faces": 1,
+      "multiple_faces": false,
+      "absence": false,
+      "expected_grade": "degraded",
+      "category": "quality_lighting",
+      "consent_status": "consented; synthetic/controlled test fixture for reproducible AI verification",
+      "source": "deterministic controlled fixture"
+    },
+    {
+      "id": "cv-12-single-overexposed",
+      "file": "tests/fixtures/controlled/single_face_overexposed.jpg",
+      "expected_faces": 1,
+      "multiple_faces": false,
+      "absence": false,
+      "expected_grade": "good",
+      "category": "quality_lighting",
+      "consent_status": "consented; synthetic/controlled test fixture for reproducible AI verification",
+      "source": "deterministic controlled fixture"
+    },
+    {
+      "id": "cv-13-single-occlude-mouth",
+      "file": "tests/fixtures/controlled/single_face_occlude_lower_mouth.jpg",
+      "expected_faces": 1,
+      "multiple_faces": false,
+      "absence": false,
+      "expected_grade": "good",
+      "category": "occlusion",
+      "consent_status": "consented; synthetic/controlled test fixture for reproducible AI verification",
+      "source": "deterministic controlled fixture"
+    },
+    {
+      "id": "cv-14-single-occlude-side",
+      "file": "tests/fixtures/controlled/single_face_occlude_side.jpg",
+      "expected_faces": 1,
+      "multiple_faces": false,
+      "absence": false,
+      "expected_grade": "good",
+      "category": "occlusion",
+      "consent_status": "consented; synthetic/controlled test fixture for reproducible AI verification",
+      "source": "deterministic controlled fixture"
+    },
+    {
+      "id": "cv-15-single-occlude-heavy",
+      "file": "tests/fixtures/controlled/single_face_occlude_heavy_60pct.jpg",
+      "expected_faces": 0,
+      "multiple_faces": false,
+      "absence": true,
+      "expected_grade": "good",
+      "category": "occlusion",
+      "consent_status": "consented; synthetic/controlled test fixture for reproducible AI verification",
+      "source": "deterministic controlled fixture"
+    },
+    {
+      "id": "cv-16-multi-baseline",
+      "file": "tests/fixtures/controlled/multi_faces_baseline.jpg",
+      "expected_faces": 2,
+      "multiple_faces": true,
+      "absence": false,
+      "expected_grade": "good",
+      "category": "multiple_faces",
+      "consent_status": "consented; synthetic/controlled test fixture for reproducible AI verification",
+      "source": "deterministic controlled fixture"
+    },
+    {
+      "id": "cv-17-multi-resized",
+      "file": "tests/fixtures/controlled/multi_faces_resized_640x360.jpg",
+      "expected_faces": 2,
+      "multiple_faces": true,
+      "absence": false,
+      "expected_grade": "good",
+      "category": "multiple_faces",
+      "consent_status": "consented; synthetic/controlled test fixture for reproducible AI verification",
+      "source": "deterministic controlled fixture"
+    },
+    {
+      "id": "cv-18-multi-comp-2",
+      "file": "tests/fixtures/controlled/multi_faces_composite_2_side_by_side.jpg",
+      "expected_faces": 2,
+      "multiple_faces": true,
+      "absence": false,
+      "expected_grade": "good",
+      "category": "multiple_faces",
+      "consent_status": "consented; synthetic/controlled test fixture for reproducible AI verification",
+      "source": "deterministic controlled fixture"
+    },
+    {
+      "id": "cv-19-multi-comp-3",
+      "file": "tests/fixtures/controlled/multi_faces_composite_3_faces.jpg",
+      "expected_faces": 3,
+      "multiple_faces": true,
+      "absence": false,
+      "expected_grade": "good",
+      "category": "multiple_faces",
+      "consent_status": "consented; synthetic/controlled test fixture for reproducible AI verification",
+      "source": "deterministic controlled fixture"
+    },
+    {
+      "id": "cv-20-multi-contrast-high",
+      "file": "tests/fixtures/controlled/multi_faces_contrast_high.jpg",
+      "expected_faces": 2,
+      "multiple_faces": true,
+      "absence": false,
+      "expected_grade": "good",
+      "category": "multiple_faces",
+      "consent_status": "consented; synthetic/controlled test fixture for reproducible AI verification",
+      "source": "deterministic controlled fixture"
+    },
+    {
+      "id": "cv-21-multi-contrast-low",
+      "file": "tests/fixtures/controlled/multi_faces_contrast_low.jpg",
+      "expected_faces": 2,
+      "multiple_faces": true,
+      "absence": false,
+      "expected_grade": "good",
+      "category": "multiple_faces",
+      "consent_status": "consented; synthetic/controlled test fixture for reproducible AI verification",
+      "source": "deterministic controlled fixture"
+    },
+    {
+      "id": "cv-22-multi-mild-blur",
+      "file": "tests/fixtures/controlled/multi_faces_mild_blur.jpg",
+      "expected_faces": 2,
+      "multiple_faces": true,
+      "absence": false,
+      "expected_grade": "degraded",
+      "category": "quality_blur",
+      "consent_status": "consented; synthetic/controlled test fixture for reproducible AI verification",
+      "source": "deterministic controlled fixture"
+    },
+    {
+      "id": "cv-23-multi-heavy-blur",
+      "file": "tests/fixtures/controlled/multi_faces_heavy_blur.jpg",
+      "expected_faces": 0,
+      "multiple_faces": false,
+      "absence": true,
+      "expected_grade": "degraded",
+      "category": "quality_blur",
+      "consent_status": "consented; synthetic/controlled test fixture for reproducible AI verification",
+      "source": "deterministic controlled fixture"
+    },
+    {
+      "id": "cv-24-multi-low-light",
+      "file": "tests/fixtures/controlled/multi_faces_low_light.jpg",
+      "expected_faces": 2,
+      "multiple_faces": true,
+      "absence": false,
+      "expected_grade": "degraded",
+      "category": "quality_lighting",
+      "consent_status": "consented; synthetic/controlled test fixture for reproducible AI verification",
+      "source": "deterministic controlled fixture"
+    },
+    {
+      "id": "cv-25-absence-black",
+      "file": "tests/fixtures/controlled/absence_solid_black.jpg",
+      "expected_faces": 0,
+      "multiple_faces": false,
+      "absence": true,
+      "expected_grade": "unusable",
+      "category": "absence",
+      "consent_status": "consented; synthetic/controlled test fixture for reproducible AI verification",
+      "source": "deterministic controlled fixture"
+    },
+    {
+      "id": "cv-26-absence-gray",
+      "file": "tests/fixtures/controlled/absence_solid_gray.jpg",
+      "expected_faces": 0,
+      "multiple_faces": false,
+      "absence": true,
+      "expected_grade": "unusable",
+      "category": "absence",
+      "consent_status": "consented; synthetic/controlled test fixture for reproducible AI verification",
+      "source": "deterministic controlled fixture"
+    },
+    {
+      "id": "cv-27-absence-white",
+      "file": "tests/fixtures/controlled/absence_solid_white.jpg",
+      "expected_faces": 0,
+      "multiple_faces": false,
+      "absence": true,
+      "expected_grade": "unusable",
+      "category": "absence",
+      "consent_status": "consented; synthetic/controlled test fixture for reproducible AI verification",
+      "source": "deterministic controlled fixture"
+    },
+    {
+      "id": "cv-28-absence-noise",
+      "file": "tests/fixtures/controlled/absence_random_noise.jpg",
+      "expected_faces": 0,
+      "multiple_faces": false,
+      "absence": true,
+      "expected_grade": "good",
+      "category": "absence",
+      "consent_status": "consented; synthetic/controlled test fixture for reproducible AI verification",
+      "source": "deterministic controlled fixture"
+    },
+    {
+      "id": "cv-29-absence-gradient",
+      "file": "tests/fixtures/controlled/absence_gradient_background.jpg",
+      "expected_faces": 0,
+      "multiple_faces": false,
+      "absence": true,
+      "expected_grade": "unusable",
+      "category": "absence",
+      "consent_status": "consented; synthetic/controlled test fixture for reproducible AI verification",
+      "source": "deterministic controlled fixture"
+    },
+    {
+      "id": "cv-30-absence-shapes",
+      "file": "tests/fixtures/controlled/absence_geometric_shapes.jpg",
+      "expected_faces": 0,
+      "multiple_faces": false,
+      "absence": true,
+      "expected_grade": "good",
+      "category": "absence",
+      "consent_status": "consented; synthetic/controlled test fixture for reproducible AI verification",
+      "source": "deterministic controlled fixture"
+    },
+    {
+      "id": "cv-31-absence-desk",
+      "file": "tests/fixtures/controlled/absence_desk_setup_empty_chair.jpg",
+      "expected_faces": 0,
+      "multiple_faces": false,
+      "absence": true,
+      "expected_grade": "good",
+      "category": "absence",
+      "consent_status": "consented; synthetic/controlled test fixture for reproducible AI verification",
+      "source": "deterministic controlled fixture"
+    },
+    {
+      "id": "cv-32-absence-clock",
+      "file": "tests/fixtures/controlled/absence_room_wall_clock.jpg",
+      "expected_faces": 0,
+      "multiple_faces": false,
+      "absence": true,
+      "expected_grade": "good",
+      "category": "absence",
+      "consent_status": "consented; synthetic/controlled test fixture for reproducible AI verification",
+      "source": "deterministic controlled fixture"
+    }
+  ],
+  "behaviour_scenarios": [
+    {
+      "id": "beh-01-continuous-presence",
+      "name": "Normal Continuous Single Face Presence",
+      "signal_under_test": "FACE_PRESENCE_CONSISTENCY",
+      "frames_count": 10,
+      "expected_signals": {
+        "FACE_PRESENCE_CONSISTENCY": {
+          "status": "observed",
+          "classification": "high"
+        },
+        "MULTIPLE_FACES": {
+          "status": "not_observed"
+        },
+        "FACE_ABSENCE": {
+          "status": "not_observed"
+        }
+      }
+    },
+    {
+      "id": "beh-02-multiple-faces-burst",
+      "name": "Repeated Multiple Face Presence (Burst)",
+      "signal_under_test": "MULTIPLE_FACES",
+      "frames_count": 10,
+      "expected_signals": {
+        "MULTIPLE_FACES": {
+          "status": "observed",
+          "min_count": 2
+        },
+        "FACE_ABSENCE": {
+          "status": "not_observed"
+        }
+      }
+    },
+    {
+      "id": "beh-03-face-absence-run",
+      "name": "Candidate Face Absence Run (>2500ms)",
+      "signal_under_test": "FACE_ABSENCE",
+      "frames_count": 10,
+      "expected_signals": {
+        "FACE_ABSENCE": {
+          "status": "observed",
+          "min_consecutive": 3
+        },
+        "MULTIPLE_FACES": {
+          "status": "not_observed"
+        }
+      }
+    },
+    {
+      "id": "beh-04-blink-suppression",
+      "name": "Single Frame Blink False-Positive Suppression",
+      "signal_under_test": "FACE_ABSENCE",
+      "frames_count": 10,
+      "expected_signals": {
+        "FACE_ABSENCE": {
+          "status": "not_observed"
+        },
+        "FACE_PRESENCE_CONSISTENCY": {
+          "status": "observed",
+          "classification": "high"
+        }
+      }
+    },
+    {
+      "id": "beh-05-transient-glitch-suppression",
+      "name": "Single Frame Multi-Face Artifact Suppression",
+      "signal_under_test": "MULTIPLE_FACES",
+      "frames_count": 10,
+      "expected_signals": {
+        "MULTIPLE_FACES": {
+          "status": "not_observed"
+        }
+      }
+    },
+    {
+      "id": "beh-06-quality-degradation",
+      "name": "Persistent Frame Blur / Low Exposure Quality Degradation",
+      "signal_under_test": "FRAME_QUALITY_SUMMARY",
+      "frames_count": 10,
+      "expected_signals": {
+        "FRAME_QUALITY_SUMMARY": {
+          "status": "observed"
+        }
+      }
+    },
+    {
+      "id": "beh-07-sampling-gap",
+      "name": "Monitoring Data Quality Sampling Gap (>3000ms)",
+      "signal_under_test": "MONITORING_DATA_QUALITY",
+      "frames_count": 8,
+      "expected_signals": {
+        "MONITORING_DATA_QUALITY": {
+          "status": "observed"
+        }
+      }
+    },
+    {
+      "id": "beh-08-low-presence-continuity",
+      "name": "Low Presence Continuity (<70% presence ratio)",
+      "signal_under_test": "FACE_PRESENCE_CONSISTENCY",
+      "frames_count": 10,
+      "expected_signals": {
+        "FACE_PRESENCE_CONSISTENCY": {
+          "status": "observed",
+          "classification": "low"
+        }
+      }
+    },
+    {
+      "id": "beh-09-moderate-presence-continuity",
+      "name": "Moderate Presence Continuity (70-89% presence ratio)",
+      "signal_under_test": "FACE_PRESENCE_CONSISTENCY",
+      "frames_count": 10,
+      "expected_signals": {
+        "FACE_PRESENCE_CONSISTENCY": {
+          "status": "observed",
+          "classification": "moderate"
+        }
+      }
+    },
+    {
+      "id": "beh-10-idempotent-replay",
+      "name": "Idempotent Replay Determinism",
+      "signal_under_test": "REPLAY_IDEMPOTENCY",
+      "frames_count": 10,
+      "expected_signals": {
+        "MULTIPLE_FACES": {
+          "status": "observed"
+        }
+      }
+    }
+  ]
+}

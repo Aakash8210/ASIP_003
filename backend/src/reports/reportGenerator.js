@@ -112,6 +112,35 @@ export async function generateFinalReport(interviewId, generatedByUserId = null)
     interview
   );
 
+  // 8b. Phase 23: Extract V2 Multimodal Insights if V2 events exist
+  const v2Events = eventList.filter(
+    (e) => e.version === 'v2' || e.modality === 'multimodal' || e.category === 'MULTIMODAL' || e.category === 'AUDIO_MONITORING'
+  );
+
+  let v2MultimodalInsights = null;
+  if (v2Events.length > 0) {
+    const audioEvents = v2Events.filter((e) => e.category === 'AUDIO_MONITORING' || e.event_type?.startsWith('AUDIO_'));
+    const crossModalEvents = v2Events.filter((e) => e.event_type?.startsWith('MULTIMODAL_CORROBORATED_'));
+
+    v2MultimodalInsights = {
+      enabled: true,
+      total_v2_events: v2Events.length,
+      audio_observations_count: audioEvents.length,
+      cross_modal_corroborations_count: crossModalEvents.length,
+      corroborated_signals: crossModalEvents.map((e) => e.event_type),
+      summary: crossModalEvents.length > 0
+        ? `${crossModalEvents.length} cross-modal observation(s) corroborated between video and audio.`
+        : `${v2Events.length} multimodal observation(s) captured during session.`,
+      insights: v2Events.map((e) => ({
+        event_type: e.event_type,
+        explanation: e.explanation,
+        severity: e.severity,
+        confidence: e.confidence,
+        timestamp: e.timestamp || e.first_observed_at,
+      })),
+    };
+  }
+
   // 9. Format structured, objective report summary
   const notableEventIds = eventList.map((e) => e.event_id || e._id);
   const evidenceIds = evidenceItems.map((ev) => ev.evidence_id || ev._id);
@@ -165,6 +194,7 @@ export async function generateFinalReport(interviewId, generatedByUserId = null)
     },
     summary,
     integrity_indicators: integrityIndicators,
+    v2_multimodal_insights: v2MultimodalInsights,
     notable_event_ids: notableEventIds,
     events: eventList,
     alerts: alertList,

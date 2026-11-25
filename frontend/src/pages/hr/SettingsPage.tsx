@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { cn } from '@/lib/utils'
 import {
   User,
@@ -30,6 +31,8 @@ import {
   Trash2,
   Code,
   Download,
+  Building2,
+  ArrowRight,
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/Card'
@@ -141,10 +144,19 @@ export function HRSettingsPage() {
           <h1 className="text-2xl font-bold text-surface-900 dark:text-surface-50">Settings</h1>
           <p className="text-surface-600 dark:text-surface-400 mt-1">Manage your account, preferences, and integrations</p>
         </div>
-        <Button variant="primary" onClick={() => handleSave(activeTab)} disabled={isSaving} className="gap-2">
-          {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-          Save Changes
-        </Button>
+        <div className="flex items-center gap-3">
+          <Link to="/hr/organization">
+            <Button variant="outline" className="gap-2 text-surface-700 dark:text-surface-300">
+              <Building2 className="h-4 w-4 text-brand-600" />
+              Organization & Team
+              <ArrowRight className="h-3.5 w-3.5 ml-1 text-surface-400" />
+            </Button>
+          </Link>
+          <Button variant="primary" onClick={() => handleSave(activeTab)} disabled={isSaving} className="gap-2">
+            {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+            Save Changes
+          </Button>
+        </div>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab as any} className="space-y-4">

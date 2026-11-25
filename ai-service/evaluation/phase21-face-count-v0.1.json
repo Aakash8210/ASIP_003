@@ -1,0 +1,30 @@
+{
+  "dataset_id": "phase21-face-count-v0.1",
+  "purpose": "Controlled evaluation harness smoke baseline; not a publishable performance dataset.",
+  "annotation_rule_version": "face-count-v1",
+  "signal": "multiple_faces_detected",
+  "model": {
+    "name": "YuNet",
+    "file": "face_detection_yunet_2023mar.onnx",
+    "score_threshold": 0.6
+  },
+  "minimum_publishable_examples": 30,
+  "examples": [
+    {
+      "id": "fixture-single-face-01",
+      "file": "tests/fixtures/single_face.jpg",
+      "expected_face_count": 1,
+      "multiple_faces_present": false,
+      "source": "repository fixture",
+      "consent_status": "not recorded; smoke-only fixture"
+    },
+    {
+      "id": "fixture-multiple-faces-01",
+      "file": "tests/fixtures/multiple_faces.jpg",
+      "expected_face_count": 2,
+      "multiple_faces_present": true,
+      "source": "repository fixture",
+      "consent_status": "not recorded; smoke-only fixture"
+    }
+  ]
+}

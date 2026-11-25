@@ -41,11 +41,11 @@ import { IntervieweeHistoryPage } from '@/pages/interviewee/HistoryPage'
 import { IntervieweeSettingsPage } from '@/pages/interviewee/SettingsPage'
 
 function ToastProvider({ children }: { children: React.ReactNode }) {
-  const { toasts } = useToast()
+  const { toasts, dismiss } = useToast()
   return (
     <>
       {children}
-      <ToastContainer toasts={toasts} onClose={() => {}} />
+      <ToastContainer toasts={toasts} onClose={dismiss} />
     </>
   )
 }

@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/Button'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { apiClient, CandidateInterview } from '@/lib/api'
 import { formatInterviewDate } from '@/pages/hr/interviewStatus'
+import { PilotFeedbackForm } from '@/components/feedback/PilotFeedbackForm'
 
 // Interview Completion — Candidate Experience (Phase 10, UX-CAN-004)
 // Confirms unambiguous completion with professional, non-punitive messaging.
@@ -107,6 +108,17 @@ export function IntervieweeCompletionPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Internal Pilot Feedback Form (Phase 22) */}
+      {id && (
+        <PilotFeedbackForm
+          interviewId={id}
+          role="candidate"
+          title="Optional Candidate Pilot Feedback"
+          description="Your perspective on system clarity, setup ease, and interview comfort helps refine future interview monitoring."
+          collapsible={false}
+        />
+      )}
     </div>
   )
 }

@@ -303,6 +303,89 @@ export class ApiClient {
     const query = params ? `?${new URLSearchParams(Object.entries(params).map(([k, v]) => [k, String(v)]))}` : ''
     return this.get(`/api/reports${query}`)
   }
+
+  // Pilot Feedback (Phase 22)
+  async submitInterviewFeedback(id: string, payload: PilotFeedbackPayload): Promise<PilotFeedbackResponse> {
+    return this.post(`/api/interviews/${encodeURIComponent(id)}/feedback`, payload)
+  }
+
+  async getInterviewFeedback(id: string): Promise<PilotFeedbackListResponse> {
+    return this.get(`/api/interviews/${encodeURIComponent(id)}/feedback`)
+  }
+
+  async getPilotFeedbackSummary(): Promise<PilotFeedbackSummaryResponse> {
+    return this.get('/api/pilot-feedback/summary')
+  }
+
+  async listPilotFeedback(
+    params?: Record<string, string | number>
+  ): Promise<{ status: 'ok'; feedback: PilotFeedback[]; pagination: { total: number; page: number; limit: number; totalPages: number } }> {
+    const query = params ? `?${new URLSearchParams(Object.entries(params).map(([k, v]) => [k, String(v)]))}` : ''
+    return this.get(`/api/pilot-feedback${query}`)
+  }
+
+  // V2 Multimodal Intelligence (Phase 23)
+  async submitAudioAnalysis(id: string, payload: Record<string, unknown>): Promise<{ status: 'ok'; result: unknown }> {
+    return this.post(`/api/interviews/${encodeURIComponent(id)}/multimodal/audio`, payload)
+  }
+
+  async submitTranscriptAnalysis(id: string, payload: Record<string, unknown>): Promise<{ status: 'ok'; result: unknown }> {
+    return this.post(`/api/interviews/${encodeURIComponent(id)}/multimodal/transcript`, payload)
+  }
+
+  async triggerMultimodalFusion(id: string, payload: Record<string, unknown>): Promise<{ status: 'ok'; fusion: unknown; events_created: number; events_updated: number }> {
+    return this.post(`/api/interviews/${encodeURIComponent(id)}/multimodal/fuse`, payload)
+  }
+
+  async getMultimodalAnalysis(id: string): Promise<{ status: 'ok'; interview_id: string; multimodal_events: unknown[]; count: number }> {
+    return this.get(`/api/interviews/${encodeURIComponent(id)}/multimodal`)
+  }
+
+  // Phase 24: SaaS Organization & Enterprise Governance
+  async getOrganization(): Promise<{ status: 'ok'; organization: OrganizationProfile }> {
+    return this.get('/api/organization')
+  }
+
+  async updateOrganization(payload: Partial<OrganizationProfile>): Promise<{ status: 'ok'; organization: OrganizationProfile }> {
+    return this.patch('/api/organization', payload)
+  }
+
+  async getOrganizationMembers(): Promise<{ status: 'ok'; members: OrganizationMember[]; total_members: number; max_members: number }> {
+    return this.get('/api/organization/members')
+  }
+
+  async addOrganizationMember(payload: { email: string; name: string; role?: string }): Promise<{ status: 'ok'; organization: OrganizationProfile; member: OrganizationMember }> {
+    return this.post('/api/organization/members', payload)
+  }
+
+  async updateOrganizationMemberRole(userId: string, role: string): Promise<{ status: 'ok'; organization: OrganizationProfile }> {
+    return this.patch(`/api/organization/members/${encodeURIComponent(userId)}`, { role })
+  }
+
+  async removeOrganizationMember(userId: string): Promise<{ status: 'ok'; organization: OrganizationProfile }> {
+    return this.delete(`/api/organization/members/${encodeURIComponent(userId)}`)
+  }
+
+  async getGovernanceSettings(): Promise<{ status: 'ok'; governance: GovernanceSettings; webhook_config: WebhookConfig; entitlements: PlanEntitlements }> {
+    return this.get('/api/organization/governance')
+  }
+
+  async updateGovernanceSettings(payload: { governance?: Partial<GovernanceSettings>; webhook_config?: Partial<WebhookConfig> }): Promise<{ status: 'ok'; governance: GovernanceSettings; webhook_config: WebhookConfig }> {
+    return this.patch('/api/organization/governance', payload)
+  }
+
+  async purgeExpiredData(): Promise<{ status: 'ok'; purged_evidence_count: number; purged_events_count: number; evidence_retention_days: number; events_retention_days: number; purged_at: string }> {
+    return this.post('/api/organization/governance/purge-expired')
+  }
+
+  async getAuditLogs(params?: Record<string, string | number>): Promise<{ status: 'ok'; logs: AuditLogEntry[]; pagination: { total: number; page: number; limit: number; totalPages: number } }> {
+    const query = params ? `?${new URLSearchParams(Object.entries(params).map(([k, v]) => [k, String(v)]))}` : ''
+    return this.get(`/api/organization/audit-log${query}`)
+  }
+
+  async testWebhook(): Promise<{ status: 'ok'; event: string; payload: unknown; signature_header: string; target_url: string | null; enabled: boolean }> {
+    return this.post('/api/organization/webhooks/test')
+  }
 }
 
 export interface AuthUserShape {
@@ -408,6 +491,22 @@ export interface AssignedInterviewListResponse {
   interviews: AssignedInterview[]
 }
 
+export interface V2MultimodalInsights {
+  enabled: boolean
+  total_v2_events: number
+  audio_observations_count: number
+  cross_modal_corroborations_count: number
+  corroborated_signals: string[]
+  summary: string
+  insights: Array<{
+    event_type: string
+    explanation: string
+    severity: string
+    confidence: number
+    timestamp: string
+  }>
+}
+
 export interface InterviewReport {
   id: string
   _id?: string
@@ -430,6 +529,7 @@ export interface InterviewReport {
   }
   summary: string | null
   integrity_indicators: InterpretableIntegrityIndicators | null
+  v2_multimodal_insights?: V2MultimodalInsights | null
   notable_event_ids?: string[]
   events?: LiveMonitoringEventItem[]
   alerts?: MonitoringAlert[]
@@ -755,6 +855,127 @@ export interface LiveMonitoringIndicatorsResponse {
   integrity_indicators: InterpretableIntegrityIndicators
   telemetry: FrameCaptureStatusResponse
   captured_at: string
+}
+
+export interface PilotFeedbackRatings {
+  overall_experience: number
+  system_clarity: number
+  technical_friction: number
+  trust_and_fairness?: number
+}
+
+export interface PilotFeedbackPayload {
+  pilot_consent_acknowledged: boolean
+  ratings: PilotFeedbackRatings
+  friction_points?: string[]
+  feedback_notes?: string
+  client_metadata?: Record<string, unknown>
+}
+
+export interface PilotFeedback {
+  _id: string
+  feedback_id: string
+  interview_id: string
+  user_id: string
+  role: 'candidate' | 'interviewer' | 'hr'
+  pilot_consent_acknowledged: boolean
+  ratings: PilotFeedbackRatings
+  friction_points: string[]
+  feedback_notes: string
+  client_metadata?: Record<string, unknown>
+  created_at: string
+  updated_at: string
+}
+
+export interface PilotFeedbackResponse {
+  status: 'ok'
+  feedback: PilotFeedback
+  isNew?: boolean
+}
+
+export interface PilotFeedbackListResponse {
+  status: 'ok'
+  feedback: PilotFeedback | PilotFeedback[] | null
+}
+
+export interface PilotFeedbackSummary {
+  total_submissions: number
+  by_role: { candidate: number; interviewer: number; hr: number }
+  average_ratings: {
+    overall_experience: number | null
+    system_clarity: number | null
+    technical_friction: number | null
+    trust_and_fairness: number | null
+  }
+  friction_points_frequency: Record<string, number>
+  recent_feedback_count: number
+}
+
+export interface PilotFeedbackSummaryResponse {
+  status: 'ok'
+  summary: PilotFeedbackSummary
+}
+
+// Phase 24: SaaS Organization & Enterprise Governance Interfaces
+export interface PlanEntitlements {
+  max_members: number
+  max_active_interviews: number
+  v2_multimodal_enabled: boolean
+  webhooks_enabled: boolean
+  custom_retention_allowed: boolean
+  max_retention_days: number
+  support_tier: string
+}
+
+export interface GovernanceSettings {
+  evidence_retention_days: number
+  events_retention_days: number
+  auto_purge_enabled: boolean
+  anonymize_candidate_after_days: number
+}
+
+export interface WebhookConfig {
+  url: string | null
+  secret: string | null
+  events: string[]
+  enabled: boolean
+}
+
+export interface OrganizationMember {
+  user_id: string
+  name: string
+  email: string
+  role: 'HR_ADMIN' | 'RECRUITER' | 'INTERVIEWER' | string
+  added_at: string
+}
+
+export interface OrganizationProfile {
+  _id: string
+  organization_id: string
+  name: string
+  slug: string
+  plan_tier: 'STARTER' | 'GROWTH' | 'ENTERPRISE' | string
+  entitlements: PlanEntitlements
+  governance: GovernanceSettings
+  webhook_config: WebhookConfig
+  members: OrganizationMember[]
+  created_by: string
+  created_at: string
+  updated_at: string
+}
+
+export interface AuditLogEntry {
+  _id: string
+  log_id: string
+  organization_id: string
+  actor_id: string
+  actor_name: string
+  actor_role: string
+  action: string
+  target_type: string
+  target_id: string | null
+  details: Record<string, unknown>
+  created_at: string
 }
 
 export const apiClient = new ApiClient()

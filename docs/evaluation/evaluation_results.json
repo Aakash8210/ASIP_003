@@ -1,0 +1,954 @@
+{
+  "evaluation_timestamp": "2026-11-21T18:30:44.179223+00:00",
+  "dataset_id": "phase21-controlled-eval-v1.0",
+  "annotation_rule_version": "v1.0",
+  "model_metadata": {
+    "name": "YuNet",
+    "file": "face_detection_yunet_2023mar.onnx",
+    "score_threshold": 0.6
+  },
+  "publishable_evaluation": true,
+  "sample_size": {
+    "cv_fixtures_evaluated": 32,
+    "behaviour_scenarios_evaluated": 10,
+    "total_frames_evaluated": 131,
+    "meets_minimum_sample_size": true
+  },
+  "metrics_summary": {
+    "cv_multiple_faces": {
+      "true_positives": 8,
+      "false_positives": 0,
+      "true_negatives": 24,
+      "false_negatives": 0,
+      "total": 32,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 0.0,
+      "accuracy": 1.0
+    },
+    "cv_face_presence": {
+      "true_positives": 21,
+      "false_positives": 0,
+      "true_negatives": 11,
+      "false_negatives": 0,
+      "total": 32,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 0.0,
+      "accuracy": 1.0
+    },
+    "behaviour_multiple_faces": {
+      "true_positives": 2,
+      "false_positives": 0,
+      "true_negatives": 8,
+      "false_negatives": 0,
+      "total": 10,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 0.0,
+      "accuracy": 1.0
+    },
+    "behaviour_face_absence": {
+      "true_positives": 1,
+      "false_positives": 0,
+      "true_negatives": 9,
+      "false_negatives": 0,
+      "total": 10,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 0.0,
+      "accuracy": 1.0
+    },
+    "behaviour_low_presence_continuity": {
+      "true_positives": 1,
+      "false_positives": 0,
+      "true_negatives": 9,
+      "false_negatives": 0,
+      "total": 10,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 0.0,
+      "accuracy": 1.0
+    },
+    "behaviour_degraded_frame_quality": {
+      "true_positives": 1,
+      "false_positives": 0,
+      "true_negatives": 9,
+      "false_negatives": 0,
+      "total": 10,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 0.0,
+      "accuracy": 1.0
+    },
+    "behaviour_sampling_gaps": {
+      "true_positives": 1,
+      "false_positives": 0,
+      "true_negatives": 9,
+      "false_negatives": 0,
+      "total": 10,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1_score": 1.0,
+      "false_positive_rate": 0.0,
+      "false_negative_rate": 0.0,
+      "accuracy": 1.0
+    },
+    "idempotent_replay_verified": true
+  },
+  "latency_benchmarks_ms": {
+    "cv_frame_inference": {
+      "min": 1.44,
+      "median": 10.59,
+      "p95": 53.42,
+      "max": 57.42
+    },
+    "behaviour_endpoint_batch": {
+      "min": 0.06,
+      "median": 0.11,
+      "p95": 0.28,
+      "max": 0.28
+    }
+  },
+  "cv_fixtures_detail": [
+    {
+      "id": "cv-01-single-baseline",
+      "category": "single_face",
+      "file": "tests/fixtures/controlled/single_face_baseline.jpg",
+      "expected_faces": 1,
+      "detected_faces": 1,
+      "expected_multiple": false,
+      "detected_multiple": false,
+      "analysis_status": "ok",
+      "quality_grade": "good",
+      "latency_ms": 51.26
+    },
+    {
+      "id": "cv-02-single-resized",
+      "category": "single_face",
+      "file": "tests/fixtures/controlled/single_face_resized_640x360.jpg",
+      "expected_faces": 1,
+      "detected_faces": 1,
+      "expected_multiple": false,
+      "detected_multiple": false,
+      "analysis_status": "ok",
+      "quality_grade": "good",
+      "latency_ms": 11.19
+    },
+    {
+      "id": "cv-03-single-shift-left",
+      "category": "single_face",
+      "file": "tests/fixtures/controlled/single_face_shift_left.jpg",
+      "expected_faces": 1,
+      "detected_faces": 1,
+      "expected_multiple": false,
+      "detected_multiple": false,
+      "analysis_status": "ok",
+      "quality_grade": "good",
+      "latency_ms": 10.04
+    },
+    {
+      "id": "cv-04-single-shift-right",
+      "category": "single_face",
+      "file": "tests/fixtures/controlled/single_face_shift_right.jpg",
+      "expected_faces": 1,
+      "detected_faces": 1,
+      "expected_multiple": false,
+      "detected_multiple": false,
+      "analysis_status": "ok",
+      "quality_grade": "good",
+      "latency_ms": 10.76
+    },
+    {
+      "id": "cv-05-single-scale-08",
+      "category": "single_face",
+      "file": "tests/fixtures/controlled/single_face_scale_0_8.jpg",
+      "expected_faces": 1,
+      "detected_faces": 1,
+      "expected_multiple": false,
+      "detected_multiple": false,
+      "analysis_status": "ok",
+      "quality_grade": "good",
+      "latency_ms": 8.97
+    },
+    {
+      "id": "cv-06-single-scale-11",
+      "category": "single_face",
+      "file": "tests/fixtures/controlled/single_face_scale_1_1.jpg",
+      "expected_faces": 1,
+      "detected_faces": 1,
+      "expected_multiple": false,
+      "detected_multiple": false,
+      "analysis_status": "ok",
+      "quality_grade": "good",
+      "latency_ms": 9.21
+    },
+    {
+      "id": "cv-07-single-contrast-high",
+      "category": "single_face",
+      "file": "tests/fixtures/controlled/single_face_contrast_high.jpg",
+      "expected_faces": 1,
+      "detected_faces": 1,
+      "expected_multiple": false,
+      "detected_multiple": false,
+      "analysis_status": "ok",
+      "quality_grade": "good",
+      "latency_ms": 11.25
+    },
+    {
+      "id": "cv-08-single-contrast-low",
+      "category": "single_face",
+      "file": "tests/fixtures/controlled/single_face_contrast_low.jpg",
+      "expected_faces": 1,
+      "detected_faces": 1,
+      "expected_multiple": false,
+      "detected_multiple": false,
+      "analysis_status": "ok",
+      "quality_grade": "good",
+      "latency_ms": 9.82
+    },
+    {
+      "id": "cv-09-single-mild-blur",
+      "category": "quality_blur",
+      "file": "tests/fixtures/controlled/single_face_mild_blur.jpg",
+      "expected_faces": 1,
+      "detected_faces": 1,
+      "expected_multiple": false,
+      "detected_multiple": false,
+      "analysis_status": "ok",
+      "quality_grade": "degraded",
+      "latency_ms": 8.67
+    },
+    {
+      "id": "cv-10-single-heavy-blur",
+      "category": "quality_blur",
+      "file": "tests/fixtures/controlled/single_face_heavy_blur.jpg",
+      "expected_faces": 0,
+      "detected_faces": 0,
+      "expected_multiple": false,
+      "detected_multiple": false,
+      "analysis_status": "ok",
+      "quality_grade": "degraded",
+      "latency_ms": 8.14
+    },
+    {
+      "id": "cv-11-single-low-light",
+      "category": "quality_lighting",
+      "file": "tests/fixtures/controlled/single_face_low_light.jpg",
+      "expected_faces": 1,
+      "detected_faces": 1,
+      "expected_multiple": false,
+      "detected_multiple": false,
+      "analysis_status": "ok",
+      "quality_grade": "degraded",
+      "latency_ms": 9.39
+    },
+    {
+      "id": "cv-12-single-overexposed",
+      "category": "quality_lighting",
+      "file": "tests/fixtures/controlled/single_face_overexposed.jpg",
+      "expected_faces": 1,
+      "detected_faces": 1,
+      "expected_multiple": false,
+      "detected_multiple": false,
+      "analysis_status": "ok",
+      "quality_grade": "good",
+      "latency_ms": 57.42
+    },
+    {
+      "id": "cv-13-single-occlude-mouth",
+      "category": "occlusion",
+      "file": "tests/fixtures/controlled/single_face_occlude_lower_mouth.jpg",
+      "expected_faces": 1,
+      "detected_faces": 1,
+      "expected_multiple": false,
+      "detected_multiple": false,
+      "analysis_status": "ok",
+      "quality_grade": "good",
+      "latency_ms": 29.04
+    },
+    {
+      "id": "cv-14-single-occlude-side",
+      "category": "occlusion",
+      "file": "tests/fixtures/controlled/single_face_occlude_side.jpg",
+      "expected_faces": 1,
+      "detected_faces": 1,
+      "expected_multiple": false,
+      "detected_multiple": false,
+      "analysis_status": "ok",
+      "quality_grade": "good",
+      "latency_ms": 13.5
+    },
+    {
+      "id": "cv-15-single-occlude-heavy",
+      "category": "occlusion",
+      "file": "tests/fixtures/controlled/single_face_occlude_heavy_60pct.jpg",
+      "expected_faces": 0,
+      "detected_faces": 0,
+      "expected_multiple": false,
+      "detected_multiple": false,
+      "analysis_status": "ok",
+      "quality_grade": "good",
+      "latency_ms": 16.86
+    },
+    {
+      "id": "cv-16-multi-baseline",
+      "category": "multiple_faces",
+      "file": "tests/fixtures/controlled/multi_faces_baseline.jpg",
+      "expected_faces": 2,
+      "detected_faces": 2,
+      "expected_multiple": true,
+      "detected_multiple": true,
+      "analysis_status": "ok",
+      "quality_grade": "good",
+      "latency_ms": 19.18
+    },
+    {
+      "id": "cv-17-multi-resized",
+      "category": "multiple_faces",
+      "file": "tests/fixtures/controlled/multi_faces_resized_640x360.jpg",
+      "expected_faces": 2,
+      "detected_faces": 2,
+      "expected_multiple": true,
+      "detected_multiple": true,
+      "analysis_status": "ok",
+      "quality_grade": "good",
+      "latency_ms": 10.25
+    },
+    {
+      "id": "cv-18-multi-comp-2",
+      "category": "multiple_faces",
+      "file": "tests/fixtures/controlled/multi_faces_composite_2_side_by_side.jpg",
+      "expected_faces": 2,
+      "detected_faces": 2,
+      "expected_multiple": true,
+      "detected_multiple": true,
+      "analysis_status": "ok",
+      "quality_grade": "good",
+      "latency_ms": 13.61
+    },
+    {
+      "id": "cv-19-multi-comp-3",
+      "category": "multiple_faces",
+      "file": "tests/fixtures/controlled/multi_faces_composite_3_faces.jpg",
+      "expected_faces": 3,
+      "detected_faces": 3,
+      "expected_multiple": true,
+      "detected_multiple": true,
+      "analysis_status": "ok",
+      "quality_grade": "good",
+      "latency_ms": 10.43
+    },
+    {
+      "id": "cv-20-multi-contrast-high",
+      "category": "multiple_faces",
+      "file": "tests/fixtures/controlled/multi_faces_contrast_high.jpg",
+      "expected_faces": 2,
+      "detected_faces": 2,
+      "expected_multiple": true,
+      "detected_multiple": true,
+      "analysis_status": "ok",
+      "quality_grade": "good",
+      "latency_ms": 14.89
+    },
+    {
+      "id": "cv-21-multi-contrast-low",
+      "category": "multiple_faces",
+      "file": "tests/fixtures/controlled/multi_faces_contrast_low.jpg",
+      "expected_faces": 2,
+      "detected_faces": 2,
+      "expected_multiple": true,
+      "detected_multiple": true,
+      "analysis_status": "ok",
+      "quality_grade": "good",
+      "latency_ms": 13.35
+    },
+    {
+      "id": "cv-22-multi-mild-blur",
+      "category": "quality_blur",
+      "file": "tests/fixtures/controlled/multi_faces_mild_blur.jpg",
+      "expected_faces": 2,
+      "detected_faces": 2,
+      "expected_multiple": true,
+      "detected_multiple": true,
+      "analysis_status": "ok",
+      "quality_grade": "degraded",
+      "latency_ms": 11.91
+    },
+    {
+      "id": "cv-23-multi-heavy-blur",
+      "category": "quality_blur",
+      "file": "tests/fixtures/controlled/multi_faces_heavy_blur.jpg",
+      "expected_faces": 0,
+      "detected_faces": 0,
+      "expected_multiple": false,
+      "detected_multiple": false,
+      "analysis_status": "ok",
+      "quality_grade": "degraded",
+      "latency_ms": 12.19
+    },
+    {
+      "id": "cv-24-multi-low-light",
+      "category": "quality_lighting",
+      "file": "tests/fixtures/controlled/multi_faces_low_light.jpg",
+      "expected_faces": 2,
+      "detected_faces": 2,
+      "expected_multiple": true,
+      "detected_multiple": true,
+      "analysis_status": "ok",
+      "quality_grade": "degraded",
+      "latency_ms": 12.71
+    },
+    {
+      "id": "cv-25-absence-black",
+      "category": "absence",
+      "file": "tests/fixtures/controlled/absence_solid_black.jpg",
+      "expected_faces": 0,
+      "detected_faces": null,
+      "expected_multiple": false,
+      "detected_multiple": false,
+      "analysis_status": "skipped",
+      "quality_grade": "unusable",
+      "latency_ms": 1.6
+    },
+    {
+      "id": "cv-26-absence-gray",
+      "category": "absence",
+      "file": "tests/fixtures/controlled/absence_solid_gray.jpg",
+      "expected_faces": 0,
+      "detected_faces": null,
+      "expected_multiple": false,
+      "detected_multiple": false,
+      "analysis_status": "skipped",
+      "quality_grade": "unusable",
+      "latency_ms": 1.44
+    },
+    {
+      "id": "cv-27-absence-white",
+      "category": "absence",
+      "file": "tests/fixtures/controlled/absence_solid_white.jpg",
+      "expected_faces": 0,
+      "detected_faces": null,
+      "expected_multiple": false,
+      "detected_multiple": false,
+      "analysis_status": "skipped",
+      "quality_grade": "unusable",
+      "latency_ms": 1.54
+    },
+    {
+      "id": "cv-28-absence-noise",
+      "category": "absence",
+      "file": "tests/fixtures/controlled/absence_random_noise.jpg",
+      "expected_faces": 0,
+      "detected_faces": 0,
+      "expected_multiple": false,
+      "detected_multiple": false,
+      "analysis_status": "ok",
+      "quality_grade": "good",
+      "latency_ms": 14.39
+    },
+    {
+      "id": "cv-29-absence-gradient",
+      "category": "absence",
+      "file": "tests/fixtures/controlled/absence_gradient_background.jpg",
+      "expected_faces": 0,
+      "detected_faces": null,
+      "expected_multiple": false,
+      "detected_multiple": false,
+      "analysis_status": "skipped",
+      "quality_grade": "unusable",
+      "latency_ms": 1.83
+    },
+    {
+      "id": "cv-30-absence-shapes",
+      "category": "absence",
+      "file": "tests/fixtures/controlled/absence_geometric_shapes.jpg",
+      "expected_faces": 0,
+      "detected_faces": 0,
+      "expected_multiple": false,
+      "detected_multiple": false,
+      "analysis_status": "ok",
+      "quality_grade": "good",
+      "latency_ms": 9.26
+    },
+    {
+      "id": "cv-31-absence-desk",
+      "category": "absence",
+      "file": "tests/fixtures/controlled/absence_desk_setup_empty_chair.jpg",
+      "expected_faces": 0,
+      "detected_faces": 0,
+      "expected_multiple": false,
+      "detected_multiple": false,
+      "analysis_status": "ok",
+      "quality_grade": "good",
+      "latency_ms": 8.94
+    },
+    {
+      "id": "cv-32-absence-clock",
+      "category": "absence",
+      "file": "tests/fixtures/controlled/absence_room_wall_clock.jpg",
+      "expected_faces": 0,
+      "detected_faces": 0,
+      "expected_multiple": false,
+      "detected_multiple": false,
+      "analysis_status": "ok",
+      "quality_grade": "good",
+      "latency_ms": 10.07
+    }
+  ],
+  "behaviour_scenarios_detail": [
+    {
+      "id": "beh-01-continuous-presence",
+      "name": "Normal Continuous Single Face Presence",
+      "signal_under_test": "FACE_PRESENCE_CONSISTENCY",
+      "frames_evaluated": 10,
+      "signals_produced": {
+        "FACE_ABSENCE": {
+          "status": "not_observed",
+          "metrics": {}
+        },
+        "MULTIPLE_FACES": {
+          "status": "not_observed",
+          "metrics": {}
+        },
+        "FACE_PRESENCE_CONSISTENCY": {
+          "status": "observed",
+          "metrics": {
+            "total_valid_observations": 10,
+            "detected_face_count": 10,
+            "absent_face_count": 0,
+            "presence_ratio": 1.0,
+            "classification": "high"
+          }
+        },
+        "FRAME_QUALITY_SUMMARY": {
+          "status": "observed",
+          "metrics": {
+            "total_frames": 10,
+            "good_frames_count": 10,
+            "degraded_frames_count": 0,
+            "unusable_frames_count": 0,
+            "good_ratio": 1.0,
+            "degraded_ratio": 0.0,
+            "unusable_ratio": 0.0,
+            "average_blur_score": 150.0,
+            "average_brightness": 120.0,
+            "classification": "excellent"
+          }
+        }
+      },
+      "latency_ms": 0.28
+    },
+    {
+      "id": "beh-02-multiple-faces-burst",
+      "name": "Repeated Multiple Face Presence (Burst)",
+      "signal_under_test": "MULTIPLE_FACES",
+      "frames_evaluated": 10,
+      "signals_produced": {
+        "FACE_ABSENCE": {
+          "status": "not_observed",
+          "metrics": {}
+        },
+        "MULTIPLE_FACES": {
+          "status": "observed",
+          "metrics": {
+            "multiple_faces_frames_count": 3,
+            "max_faces_observed": 2,
+            "start_sequence": 4,
+            "end_sequence": 6,
+            "occurrence_ratio": 0.3
+          }
+        },
+        "FACE_PRESENCE_CONSISTENCY": {
+          "status": "observed",
+          "metrics": {
+            "total_valid_observations": 10,
+            "detected_face_count": 10,
+            "absent_face_count": 0,
+            "presence_ratio": 1.0,
+            "classification": "high"
+          }
+        },
+        "FRAME_QUALITY_SUMMARY": {
+          "status": "observed",
+          "metrics": {
+            "total_frames": 10,
+            "good_frames_count": 10,
+            "degraded_frames_count": 0,
+            "unusable_frames_count": 0,
+            "good_ratio": 1.0,
+            "degraded_ratio": 0.0,
+            "unusable_ratio": 0.0,
+            "average_blur_score": 150.0,
+            "average_brightness": 120.0,
+            "classification": "excellent"
+          }
+        }
+      },
+      "latency_ms": 0.13
+    },
+    {
+      "id": "beh-03-face-absence-run",
+      "name": "Candidate Face Absence Run (>2500ms)",
+      "signal_under_test": "FACE_ABSENCE",
+      "frames_evaluated": 14,
+      "signals_produced": {
+        "FACE_ABSENCE": {
+          "status": "observed",
+          "metrics": {
+            "consecutive_absent_frames": 4,
+            "absence_start_sequence": 6,
+            "absence_end_sequence": 9,
+            "is_ongoing": false,
+            "sampling_gaps_within_run": 0
+          }
+        },
+        "MULTIPLE_FACES": {
+          "status": "not_observed",
+          "metrics": {}
+        },
+        "FACE_PRESENCE_CONSISTENCY": {
+          "status": "observed",
+          "metrics": {
+            "total_valid_observations": 14,
+            "detected_face_count": 10,
+            "absent_face_count": 4,
+            "presence_ratio": 0.7143,
+            "classification": "moderate"
+          }
+        },
+        "FRAME_QUALITY_SUMMARY": {
+          "status": "observed",
+          "metrics": {
+            "total_frames": 14,
+            "good_frames_count": 14,
+            "degraded_frames_count": 0,
+            "unusable_frames_count": 0,
+            "good_ratio": 1.0,
+            "degraded_ratio": 0.0,
+            "unusable_ratio": 0.0,
+            "average_blur_score": 150.0,
+            "average_brightness": 120.0,
+            "classification": "excellent"
+          }
+        }
+      },
+      "latency_ms": 0.15
+    },
+    {
+      "id": "beh-04-blink-suppression",
+      "name": "Single Frame Blink False-Positive Suppression",
+      "signal_under_test": "FACE_ABSENCE",
+      "frames_evaluated": 10,
+      "signals_produced": {
+        "FACE_ABSENCE": {
+          "status": "not_observed",
+          "metrics": {}
+        },
+        "MULTIPLE_FACES": {
+          "status": "not_observed",
+          "metrics": {}
+        },
+        "FACE_PRESENCE_CONSISTENCY": {
+          "status": "observed",
+          "metrics": {
+            "total_valid_observations": 10,
+            "detected_face_count": 9,
+            "absent_face_count": 1,
+            "presence_ratio": 0.9,
+            "classification": "high"
+          }
+        },
+        "FRAME_QUALITY_SUMMARY": {
+          "status": "observed",
+          "metrics": {
+            "total_frames": 10,
+            "good_frames_count": 10,
+            "degraded_frames_count": 0,
+            "unusable_frames_count": 0,
+            "good_ratio": 1.0,
+            "degraded_ratio": 0.0,
+            "unusable_ratio": 0.0,
+            "average_blur_score": 150.0,
+            "average_brightness": 120.0,
+            "classification": "excellent"
+          }
+        }
+      },
+      "latency_ms": 0.09
+    },
+    {
+      "id": "beh-05-transient-glitch-suppression",
+      "name": "Single Frame Multi-Face Artifact Suppression",
+      "signal_under_test": "MULTIPLE_FACES",
+      "frames_evaluated": 10,
+      "signals_produced": {
+        "FACE_ABSENCE": {
+          "status": "not_observed",
+          "metrics": {}
+        },
+        "MULTIPLE_FACES": {
+          "status": "not_observed",
+          "metrics": {
+            "isolated_single_frame": true,
+            "count": 1
+          }
+        },
+        "FACE_PRESENCE_CONSISTENCY": {
+          "status": "observed",
+          "metrics": {
+            "total_valid_observations": 10,
+            "detected_face_count": 10,
+            "absent_face_count": 0,
+            "presence_ratio": 1.0,
+            "classification": "high"
+          }
+        },
+        "FRAME_QUALITY_SUMMARY": {
+          "status": "observed",
+          "metrics": {
+            "total_frames": 10,
+            "good_frames_count": 10,
+            "degraded_frames_count": 0,
+            "unusable_frames_count": 0,
+            "good_ratio": 1.0,
+            "degraded_ratio": 0.0,
+            "unusable_ratio": 0.0,
+            "average_blur_score": 150.0,
+            "average_brightness": 120.0,
+            "classification": "excellent"
+          }
+        }
+      },
+      "latency_ms": 0.09
+    },
+    {
+      "id": "beh-06-quality-degradation",
+      "name": "Persistent Frame Blur / Low Exposure Quality Degradation",
+      "signal_under_test": "FRAME_QUALITY_SUMMARY",
+      "frames_evaluated": 10,
+      "signals_produced": {
+        "FACE_ABSENCE": {
+          "status": "not_observed",
+          "metrics": {}
+        },
+        "MULTIPLE_FACES": {
+          "status": "not_observed",
+          "metrics": {}
+        },
+        "FACE_PRESENCE_CONSISTENCY": {
+          "status": "observed",
+          "metrics": {
+            "total_valid_observations": 10,
+            "detected_face_count": 10,
+            "absent_face_count": 0,
+            "presence_ratio": 1.0,
+            "classification": "high"
+          }
+        },
+        "FRAME_QUALITY_SUMMARY": {
+          "status": "observed",
+          "metrics": {
+            "total_frames": 10,
+            "good_frames_count": 5,
+            "degraded_frames_count": 5,
+            "unusable_frames_count": 0,
+            "good_ratio": 0.5,
+            "degraded_ratio": 0.5,
+            "unusable_ratio": 0.0,
+            "average_blur_score": 95.0,
+            "average_brightness": 120.0,
+            "classification": "degraded"
+          }
+        }
+      },
+      "latency_ms": 0.08
+    },
+    {
+      "id": "beh-07-sampling-gap",
+      "name": "Monitoring Data Quality Sampling Gap (>3000ms)",
+      "signal_under_test": "MONITORING_DATA_QUALITY",
+      "frames_evaluated": 5,
+      "signals_produced": {
+        "FACE_ABSENCE": {
+          "status": "not_observed",
+          "metrics": {}
+        },
+        "MULTIPLE_FACES": {
+          "status": "not_observed",
+          "metrics": {}
+        },
+        "FACE_PRESENCE_CONSISTENCY": {
+          "status": "observed",
+          "metrics": {
+            "total_valid_observations": 5,
+            "detected_face_count": 5,
+            "absent_face_count": 0,
+            "presence_ratio": 1.0,
+            "classification": "high"
+          }
+        },
+        "FRAME_QUALITY_SUMMARY": {
+          "status": "observed",
+          "metrics": {
+            "total_frames": 5,
+            "good_frames_count": 5,
+            "degraded_frames_count": 0,
+            "unusable_frames_count": 0,
+            "good_ratio": 1.0,
+            "degraded_ratio": 0.0,
+            "unusable_ratio": 0.0,
+            "average_blur_score": 150.0,
+            "average_brightness": 120.0,
+            "classification": "excellent"
+          }
+        }
+      },
+      "latency_ms": 0.06
+    },
+    {
+      "id": "beh-08-low-presence-continuity",
+      "name": "Low Presence Continuity (<70% presence ratio)",
+      "signal_under_test": "FACE_PRESENCE_CONSISTENCY",
+      "frames_evaluated": 10,
+      "signals_produced": {
+        "FACE_ABSENCE": {
+          "status": "not_observed",
+          "metrics": {}
+        },
+        "MULTIPLE_FACES": {
+          "status": "not_observed",
+          "metrics": {}
+        },
+        "FACE_PRESENCE_CONSISTENCY": {
+          "status": "observed",
+          "metrics": {
+            "total_valid_observations": 10,
+            "detected_face_count": 4,
+            "absent_face_count": 6,
+            "presence_ratio": 0.4,
+            "classification": "low"
+          }
+        },
+        "FRAME_QUALITY_SUMMARY": {
+          "status": "observed",
+          "metrics": {
+            "total_frames": 10,
+            "good_frames_count": 10,
+            "degraded_frames_count": 0,
+            "unusable_frames_count": 0,
+            "good_ratio": 1.0,
+            "degraded_ratio": 0.0,
+            "unusable_ratio": 0.0,
+            "average_blur_score": 150.0,
+            "average_brightness": 120.0,
+            "classification": "excellent"
+          }
+        }
+      },
+      "latency_ms": 0.2
+    },
+    {
+      "id": "beh-09-moderate-presence-continuity",
+      "name": "Moderate Presence Continuity (70-89% presence ratio)",
+      "signal_under_test": "FACE_PRESENCE_CONSISTENCY",
+      "frames_evaluated": 10,
+      "signals_produced": {
+        "FACE_ABSENCE": {
+          "status": "not_observed",
+          "metrics": {}
+        },
+        "MULTIPLE_FACES": {
+          "status": "not_observed",
+          "metrics": {}
+        },
+        "FACE_PRESENCE_CONSISTENCY": {
+          "status": "observed",
+          "metrics": {
+            "total_valid_observations": 10,
+            "detected_face_count": 8,
+            "absent_face_count": 2,
+            "presence_ratio": 0.8,
+            "classification": "moderate"
+          }
+        },
+        "FRAME_QUALITY_SUMMARY": {
+          "status": "observed",
+          "metrics": {
+            "total_frames": 10,
+            "good_frames_count": 10,
+            "degraded_frames_count": 0,
+            "unusable_frames_count": 0,
+            "good_ratio": 1.0,
+            "degraded_ratio": 0.0,
+            "unusable_ratio": 0.0,
+            "average_blur_score": 150.0,
+            "average_brightness": 120.0,
+            "classification": "excellent"
+          }
+        }
+      },
+      "latency_ms": 0.11
+    },
+    {
+      "id": "beh-10-idempotent-replay",
+      "name": "Idempotent Replay Determinism",
+      "signal_under_test": "REPLAY_IDEMPOTENCY",
+      "frames_evaluated": 10,
+      "signals_produced": {
+        "FACE_ABSENCE": {
+          "status": "not_observed",
+          "metrics": {}
+        },
+        "MULTIPLE_FACES": {
+          "status": "observed",
+          "metrics": {
+            "multiple_faces_frames_count": 3,
+            "max_faces_observed": 2,
+            "start_sequence": 3,
+            "end_sequence": 5,
+            "occurrence_ratio": 0.3
+          }
+        },
+        "FACE_PRESENCE_CONSISTENCY": {
+          "status": "observed",
+          "metrics": {
+            "total_valid_observations": 10,
+            "detected_face_count": 10,
+            "absent_face_count": 0,
+            "presence_ratio": 1.0,
+            "classification": "high"
+          }
+        },
+        "FRAME_QUALITY_SUMMARY": {
+          "status": "observed",
+          "metrics": {
+            "total_frames": 10,
+            "good_frames_count": 10,
+            "degraded_frames_count": 0,
+            "unusable_frames_count": 0,
+            "good_ratio": 1.0,
+            "degraded_ratio": 0.0,
+            "unusable_ratio": 0.0,
+            "average_blur_score": 150.0,
+            "average_brightness": 120.0,
+            "classification": "excellent"
+          }
+        }
+      },
+      "latency_ms": 0.11
+    }
+  ]
+}

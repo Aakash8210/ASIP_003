@@ -13,12 +13,15 @@ import {
 } from 'react'
 import { cn } from '@/lib/utils'
 import { ChevronDown, Check, Search, X } from 'lucide-react'
+import { AnimatePresence, motion } from 'framer-motion'
 
 export interface SelectOption {
   value: string | number
   label: string
   sublabel?: string
   description?: string
+  badge?: string
+  avatarName?: string
   disabled?: boolean
 }
 
@@ -276,150 +279,178 @@ export const Select = forwardRef<HTMLDivElement, SelectProps>(
           }}
           onKeyDown={handleKeyDown}
           className={cn(
-            'flex items-center justify-between w-full min-h-[44px] px-3.5 py-2 rounded-xl text-left transition-all duration-200',
-            'bg-white dark:bg-surface-800 border shadow-xs',
-            'border-surface-300 dark:border-surface-700',
-            'text-surface-900 dark:text-surface-50',
-            'hover:border-surface-400 dark:hover:border-surface-600',
-            'focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 dark:focus:border-brand-400',
-            error && 'border-danger-500 dark:border-danger-500 focus:ring-danger-500/20 focus:border-danger-500',
-            disabled && 'opacity-50 cursor-not-allowed bg-surface-100 dark:bg-surface-900',
-            isOpen && 'ring-2 ring-brand-500/20 border-brand-500 dark:border-brand-400'
+            'flex items-center justify-between w-full min-h-[44px] px-3.5 py-2 rounded-xl text-left transition-all duration-150',
+            'bg-white dark:bg-[#0F111A] border shadow-xs',
+            'border-surface-300 dark:border-white/[0.08]',
+            'text-surface-900 dark:text-zinc-100',
+            'hover:border-surface-400 dark:hover:border-white/[0.16] dark:hover:bg-[#171926]',
+            'focus:outline-none focus:ring-2 focus:ring-cyan-500/40 focus:border-cyan-500/60',
+            error && 'border-rose-500 dark:border-rose-500/60 focus:ring-rose-500/20 focus:border-rose-500',
+            disabled && 'opacity-50 cursor-not-allowed bg-surface-100 dark:bg-[#08090E]',
+            isOpen && 'ring-2 ring-cyan-500/40 border-cyan-500/60'
           )}
         >
           <div className="flex-1 min-w-0 pr-2">
             {selectedOption && selectedOption.value !== '' ? (
-              <div className="flex flex-col text-left truncate">
-                <span className="font-medium text-sm text-surface-900 dark:text-surface-50 truncate">
-                  {selectedParsed?.name}
-                </span>
-                {selectedParsed?.sublabel && (
-                  <span className="text-xs text-surface-500 dark:text-surface-400 truncate">
-                    {selectedParsed.sublabel}
-                  </span>
+              <div className="flex items-center gap-2.5 min-w-0">
+                {(selectedOption.avatarName || selectedParsed?.sublabel?.includes('@')) && (
+                  <div className="h-6 w-6 rounded-full bg-cyan-500/15 border border-cyan-500/30 text-cyan-700 dark:text-cyan-300 text-[11px] font-semibold flex items-center justify-center shrink-0">
+                    {(selectedOption.avatarName || selectedParsed?.name || '?').charAt(0).toUpperCase()}
+                  </div>
                 )}
+                <div className="flex flex-col text-left min-w-0">
+                  <span className="font-medium text-sm text-surface-900 dark:text-zinc-100 truncate">
+                    {selectedParsed?.name}
+                  </span>
+                  {selectedParsed?.sublabel && (
+                    <span className="text-xs text-surface-500 dark:text-zinc-400 truncate">
+                      {selectedParsed.sublabel}
+                    </span>
+                  )}
+                </div>
               </div>
             ) : (
-              <span className="text-sm text-surface-400 dark:text-surface-500">
+              <span className="text-sm text-surface-400 dark:text-zinc-500">
                 {placeholder}
               </span>
             )}
           </div>
           <ChevronDown
             className={cn(
-              'h-4 w-4 shrink-0 text-surface-400 dark:text-surface-500 transition-transform duration-200',
-              isOpen && 'rotate-180 text-brand-600 dark:text-brand-400'
+              'h-4 w-4 shrink-0 text-surface-400 dark:text-zinc-500 transition-transform duration-200',
+              isOpen && 'rotate-180 text-cyan-600 dark:text-cyan-400'
             )}
             aria-hidden="true"
           />
         </button>
 
         {/* Dropdown Menu Panel */}
-        {isOpen && (
-          <div
-            id={`${selectId}-listbox`}
-            role="listbox"
-            tabIndex={-1}
-            ref={listboxRef}
-            aria-labelledby={label ? undefined : `${selectId}-trigger`}
-            className={cn(
-              'absolute top-full left-0 right-0 mt-1.5 z-50 rounded-xl overflow-hidden shadow-xl border animate-in fade-in-0 zoom-in-95',
-              'bg-white dark:bg-surface-800 border-surface-200 dark:border-surface-700'
-            )}
-          >
-            {/* Search filter if there are more than 5 options */}
-            {normalizedOptions.length > 5 && (
-              <div className="p-2 border-b border-surface-100 dark:border-surface-700/80 bg-surface-50/50 dark:bg-surface-850">
-                <div className="relative flex items-center">
-                  <Search className="absolute left-2.5 h-3.5 w-3.5 text-surface-400 dark:text-surface-500" aria-hidden="true" />
-                  <input
-                    ref={searchInputRef}
-                    type="text"
-                    value={searchQuery}
-                    onChange={(e) => {
-                      setSearchQuery(e.target.value)
-                      setHighlightedIndex(0)
-                    }}
-                    placeholder="Search options..."
-                    className="w-full pl-8 pr-7 py-1.5 text-xs rounded-lg border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 text-surface-900 dark:text-surface-50 placeholder:text-surface-400 focus:outline-none focus:ring-1 focus:ring-brand-500"
-                    onClick={(e) => e.stopPropagation()}
-                    onKeyDown={(e) => {
-                      if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter') {
-                        handleKeyDown(e)
-                      } else if (e.key === 'Escape') {
-                        setIsOpen(false)
-                        triggerRef.current?.focus()
-                      }
-                    }}
-                  />
-                  {searchQuery && (
-                    <button
-                      type="button"
-                      onClick={() => setSearchQuery('')}
-                      className="absolute right-2 text-surface-400 hover:text-surface-600 dark:hover:text-surface-300"
-                    >
-                      <X className="h-3.5 w-3.5" />
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Options List */}
-            <div className="max-h-60 overflow-y-auto py-1 divide-y divide-surface-100/60 dark:divide-surface-700/40">
-              {filteredOptions.length === 0 ? (
-                <div className="px-4 py-3 text-xs text-center text-surface-500 dark:text-surface-400">
-                  No matching options found
-                </div>
-              ) : (
-                filteredOptions.map((opt, index) => {
-                  const isSelected = String(opt.value) === currentValue
-                  const isHighlighted = highlightedIndex === index
-                  const parsed = parseOptionLabel(opt)
-
-                  return (
-                    <div
-                      key={String(opt.value)}
-                      role="option"
-                      aria-selected={isSelected}
-                      aria-disabled={opt.disabled}
-                      onClick={() => {
-                        if (!opt.disabled) {
-                          handleValueChange(String(opt.value))
+        <AnimatePresence>
+          {isOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: -4, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -4, scale: 0.98 }}
+              transition={{ duration: 0.14, ease: 'easeOut' }}
+              id={`${selectId}-listbox`}
+              role="listbox"
+              tabIndex={-1}
+              ref={listboxRef}
+              aria-labelledby={label ? undefined : `${selectId}-trigger`}
+              className={cn(
+                'absolute top-full left-0 right-0 mt-1.5 z-50 rounded-xl overflow-hidden shadow-2xl border backdrop-blur-xl',
+                'bg-white dark:bg-[#0F111A]/95 border-surface-200 dark:border-white/[0.1]'
+              )}
+            >
+              {/* Search filter */}
+              {normalizedOptions.length > 2 && (
+                <div className="p-2 border-b border-surface-100 dark:border-white/[0.06] bg-surface-50/50 dark:bg-white/[0.02]">
+                  <div className="relative flex items-center">
+                    <Search className="absolute left-2.5 h-3.5 w-3.5 text-surface-400 dark:text-zinc-500" aria-hidden="true" />
+                    <input
+                      ref={searchInputRef}
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => {
+                        setSearchQuery(e.target.value)
+                        setHighlightedIndex(0)
+                      }}
+                      placeholder="Filter by name or email..."
+                      className="w-full pl-8 pr-7 py-1.5 text-xs rounded-lg border border-surface-200 dark:border-white/[0.08] bg-white dark:bg-[#08090E] text-surface-900 dark:text-zinc-100 placeholder:text-surface-400 dark:placeholder:text-zinc-500 focus:outline-none focus:ring-1 focus:ring-cyan-500/50"
+                      onClick={(e) => e.stopPropagation()}
+                      onKeyDown={(e) => {
+                        if (e.key === 'ArrowDown' || e.key === 'ArrowUp' || e.key === 'Enter') {
+                          handleKeyDown(e)
+                        } else if (e.key === 'Escape') {
+                          setIsOpen(false)
+                          triggerRef.current?.focus()
                         }
                       }}
-                      onMouseEnter={() => setHighlightedIndex(index)}
-                      className={cn(
-                        'flex items-center justify-between px-3.5 py-2.5 text-left cursor-pointer transition-colors',
-                        isSelected
-                          ? 'bg-brand-50/90 dark:bg-brand-950/40 text-brand-900 dark:text-brand-100 font-medium'
-                          : isHighlighted
-                          ? 'bg-surface-100 dark:bg-surface-700/60 text-surface-900 dark:text-surface-50'
-                          : 'text-surface-800 dark:text-surface-200 hover:bg-surface-50 dark:hover:bg-surface-700/40',
-                        opt.disabled && 'opacity-40 cursor-not-allowed pointer-events-none'
-                      )}
-                    >
-                      <div className="flex flex-col min-w-0 pr-2">
-                        <span className={cn('text-sm truncate', isSelected ? 'font-semibold text-brand-700 dark:text-brand-300' : 'font-medium text-surface-900 dark:text-surface-50')}>
-                          {parsed.name}
-                        </span>
-                        {parsed.sublabel && (
-                          <span className={cn('text-xs truncate mt-0.5', isSelected ? 'text-brand-600/80 dark:text-brand-300/80' : 'text-surface-500 dark:text-surface-400')}>
-                            {parsed.sublabel}
-                          </span>
+                    />
+                    {searchQuery && (
+                      <button
+                        type="button"
+                        onClick={() => setSearchQuery('')}
+                        className="absolute right-2 text-surface-400 hover:text-surface-600 dark:hover:text-zinc-300"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Options List */}
+              <div className="max-h-60 overflow-y-auto py-1 divide-y divide-surface-100/60 dark:divide-white/[0.04]">
+                {filteredOptions.length === 0 ? (
+                  <div className="px-4 py-4 text-xs text-center text-surface-500 dark:text-zinc-400">
+                    No matching options found
+                  </div>
+                ) : (
+                  filteredOptions.map((opt, index) => {
+                    const isSelected = String(opt.value) === currentValue
+                    const isHighlighted = highlightedIndex === index
+                    const parsed = parseOptionLabel(opt)
+                    const showAvatar = Boolean(opt.avatarName || (opt.value !== '' && parsed.sublabel?.includes('@')))
+
+                    return (
+                      <div
+                        key={String(opt.value)}
+                        role="option"
+                        aria-selected={isSelected}
+                        aria-disabled={opt.disabled}
+                        onClick={() => {
+                          if (!opt.disabled) {
+                            handleValueChange(String(opt.value))
+                          }
+                        }}
+                        onMouseEnter={() => setHighlightedIndex(index)}
+                        className={cn(
+                          'flex items-center justify-between px-3.5 py-2.5 text-left cursor-pointer transition-colors',
+                          isSelected
+                            ? 'bg-cyan-50 dark:bg-cyan-500/10 text-cyan-900 dark:text-cyan-100'
+                            : isHighlighted
+                            ? 'bg-surface-100 dark:bg-[#171926] text-surface-900 dark:text-zinc-50'
+                            : 'text-surface-800 dark:text-zinc-200 hover:bg-surface-50 dark:hover:bg-[#171926]/80',
+                          opt.disabled && 'opacity-40 cursor-not-allowed pointer-events-none'
+                        )}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0 pr-2">
+                          {showAvatar && (
+                            <div className="h-7 w-7 rounded-full bg-cyan-500/15 border border-cyan-500/25 text-cyan-700 dark:text-cyan-300 text-xs font-semibold flex items-center justify-center shrink-0">
+                              {(opt.avatarName || parsed.name || '?').charAt(0).toUpperCase()}
+                            </div>
+                          )}
+                          <div className="flex flex-col min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className={cn('text-sm truncate', isSelected ? 'font-semibold text-cyan-700 dark:text-cyan-300' : 'font-medium text-surface-900 dark:text-zinc-100')}>
+                                {parsed.name}
+                              </span>
+                              {opt.badge && (
+                                <span className="inline-flex items-center rounded-full px-1.5 py-0.5 text-[10px] font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                                  {opt.badge}
+                                </span>
+                              )}
+                            </div>
+                            {parsed.sublabel && (
+                              <span className={cn('text-xs truncate mt-0.5', isSelected ? 'text-cyan-600/80 dark:text-cyan-300/75' : 'text-surface-500 dark:text-zinc-400')}>
+                                {parsed.sublabel}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {isSelected && (
+                          <Check className="h-4 w-4 shrink-0 text-cyan-600 dark:text-cyan-400 ml-2" aria-hidden="true" />
                         )}
                       </div>
-
-                      {isSelected && (
-                        <Check className="h-4 w-4 shrink-0 text-brand-600 dark:text-brand-400 ml-2" aria-hidden="true" />
-                      )}
-                    </div>
-                  )
-                })
-              )}
-            </div>
-          </div>
-        )}
+                    )
+                  })
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {error && (
           <p className="mt-1.5 text-sm text-danger-500" role="alert">

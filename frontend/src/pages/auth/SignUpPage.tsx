@@ -99,13 +99,11 @@ export function SignUpPage() {
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-12">
     <div className="w-full max-w-md">
       <div className="text-center mb-8">
-        <Link to="/" className="inline-flex items-center gap-2 mb-6" aria-label="Home">
-          <div className="relative h-9 w-9 rounded-xl">
-            <div className="absolute inset-0 bg-gradient-to-br from-brand-500 to-brand-700 rounded-xl" />
-            <div className="absolute inset-1 bg-gradient-to-br from-brand-600 to-brand-800 rounded-xl" />
-            <Monitor className="relative h-5 w-5 text-white" aria-hidden="true" />
+        <Link to="/" className="inline-flex items-center gap-2.5 mb-6" aria-label="Home">
+          <div className="h-8 w-8 rounded-lg bg-gradient-to-b from-cyan-500 to-brand-600 flex items-center justify-center shadow-[0_0_14px_rgba(6,182,212,0.35)]">
+            <Monitor className="h-4 w-4 text-white" aria-hidden="true" />
           </div>
-          <span className="text-heading-md font-bold text-surface-900 dark:text-surface-50">
+          <span className="text-base font-semibold tracking-tight text-surface-900 dark:text-white">
             InterviewGuard
           </span>
         </Link>
@@ -239,15 +237,11 @@ export function SignUpPage() {
                 className="checkbox mt-1"
                 disabled={isLoading}
               />
-              <label htmlFor="acceptTerms" className="text-sm text-surface-600 dark:text-surface-400 mt-1">
-                I agree to the{' '}
-                <Link to="/terms" className="text-brand-600 hover:text-brand-500 dark:text-brand-400 dark:hover:text-brand-300">
-                  Terms of Service
-                </Link>{' '}
+              <label htmlFor="acceptTerms" className="text-sm text-surface-600 dark:text-zinc-400 mt-1">
+                I agree to the platform{' '}
+                <span className="text-cyan-600 dark:text-cyan-400 font-medium">Terms of Service</span>{' '}
                 and{' '}
-                <Link to="/privacy" className="text-brand-600 hover:text-brand-500 dark:text-brand-400 dark:hover:text-brand-300">
-                  Privacy Policy
-                </Link>
+                <span className="text-cyan-600 dark:text-cyan-400 font-medium">Privacy Policy</span>
                 {errors.acceptTerms && (
                   <p className="text-danger-500 text-xs mt-1">{errors.acceptTerms}</p>
                 )}

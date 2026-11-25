@@ -53,6 +53,19 @@ const BASELINE_INDEXES = [
 
   { collection: COLLECTIONS.FINAL_REPORTS, name: 'idx_rpt_001_interview_unique', key: { interview_id: 1 }, options: { unique: true } },
   { collection: COLLECTIONS.FINAL_REPORTS, name: 'idx_rpt_002_generated_desc', key: { generated_at: -1 } },
+
+  { collection: COLLECTIONS.PILOT_FEEDBACK, name: 'idx_pfb_001_idempotency_unique', key: { idempotency_key: 1 }, options: { unique: true } },
+  { collection: COLLECTIONS.PILOT_FEEDBACK, name: 'idx_pfb_002_interview_role', key: { interview_id: 1, role: 1 } },
+  { collection: COLLECTIONS.PILOT_FEEDBACK, name: 'idx_pfb_003_created_desc', key: { created_at: -1 } },
+
+  // Phase 24: SaaS Organization & Enterprise Governance indexes
+  { collection: COLLECTIONS.ORGANIZATIONS, name: 'idx_org_001_id_unique', key: { organization_id: 1 }, options: { unique: true, sparse: true } },
+  { collection: COLLECTIONS.ORGANIZATIONS, name: 'idx_org_002_slug_unique', key: { slug: 1 }, options: { unique: true, sparse: true } },
+  { collection: COLLECTIONS.ORGANIZATIONS, name: 'idx_org_003_members_user_id', key: { 'members.user_id': 1 } },
+
+  { collection: COLLECTIONS.AUDIT_LOGS, name: 'idx_aud_001_org_created', key: { organization_id: 1, created_at: -1 } },
+  { collection: COLLECTIONS.AUDIT_LOGS, name: 'idx_aud_002_actor_created', key: { actor_id: 1, created_at: -1 } },
+  { collection: COLLECTIONS.AUDIT_LOGS, name: 'idx_aud_003_action_created', key: { action: 1, created_at: -1 } },
 ];
 
 export const ensureBaselineIndexes = async (db) => {

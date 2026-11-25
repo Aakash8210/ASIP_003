@@ -21,6 +21,7 @@ import {
   InterviewReport,
   LiveMonitoringEventItem,
 } from '@/lib/api'
+import { PilotFeedbackForm } from '@/components/feedback/PilotFeedbackForm'
 
 interface InterviewReportViewProps {
   report: InterviewReport
@@ -245,6 +246,86 @@ export function InterviewReportView({ report, onReportUpdated, onClose }: Interv
           </CardContent>
         </Card>
 
+        {/* Phase 23: V2 Multimodal Insights (Rendered only when V2 observations exist) */}
+        {report.v2_multimodal_insights?.enabled && (
+          <Card className="border-indigo-100 dark:border-indigo-900/50 bg-gradient-to-br from-indigo-50/30 to-white dark:from-indigo-950/20 dark:to-surface-900">
+            <CardHeader className="py-3 px-4 border-b border-indigo-100 dark:border-indigo-900/40">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="p-1 rounded bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400">
+                    <Shield className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-sm font-semibold text-surface-900 dark:text-surface-100">
+                      V2 Multimodal Integrity Insights
+                    </CardTitle>
+                    <p className="text-[11px] text-surface-500">
+                      Cross-modal correlation across video, audio telemetry, and transcript observations.
+                    </p>
+                  </div>
+                </div>
+                <Badge variant="neutral" className="bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300 font-mono text-[10px]">
+                  V2 MULTIMODAL
+                </Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="p-4 space-y-3 text-xs">
+              <p className="text-surface-700 dark:text-surface-300 leading-relaxed">
+                {report.v2_multimodal_insights.summary}
+              </p>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+                <div className="p-2.5 rounded-lg border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-850">
+                  <span className="text-[11px] text-surface-500 block">Total V2 Observations</span>
+                  <span className="text-base font-bold text-surface-900 dark:text-surface-100">
+                    {report.v2_multimodal_insights.total_v2_events}
+                  </span>
+                </div>
+                <div className="p-2.5 rounded-lg border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-850">
+                  <span className="text-[11px] text-surface-500 block">Audio Acoustic Telemetry</span>
+                  <span className="text-base font-bold text-surface-900 dark:text-surface-100">
+                    {report.v2_multimodal_insights.audio_observations_count}
+                  </span>
+                </div>
+                <div className="p-2.5 rounded-lg border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-850">
+                  <span className="text-[11px] text-surface-500 block">Cross-Modal Corroborations</span>
+                  <span className="text-base font-bold text-indigo-600 dark:text-indigo-400">
+                    {report.v2_multimodal_insights.cross_modal_corroborations_count}
+                  </span>
+                </div>
+              </div>
+
+              {report.v2_multimodal_insights.insights.length > 0 && (
+                <div className="space-y-1.5 pt-2">
+                  <span className="text-[11px] font-semibold text-surface-700 dark:text-surface-300">
+                    Observable Multimodal Signals:
+                  </span>
+                  <div className="space-y-1">
+                    {report.v2_multimodal_insights.insights.map((ins, i) => (
+                      <div
+                        key={i}
+                        className="p-2 rounded bg-surface-50 dark:bg-surface-800 border border-surface-200 dark:border-surface-700 flex items-center justify-between"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Badge variant="neutral" className="text-[10px] font-mono">
+                            {ins.event_type}
+                          </Badge>
+                          <span className="text-surface-700 dark:text-surface-300 text-[11px]">
+                            {ins.explanation}
+                          </span>
+                        </div>
+                        <span className="text-surface-400 text-[10px]">
+                          {Math.round(ins.confidence * 100)}% conf
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
         {/* Chronological Observable Events Timeline */}
         <Card className="border-surface-200 dark:border-surface-700">
           <CardHeader className="py-3 px-4 border-b border-surface-200 dark:border-surface-700 flex flex-row items-center justify-between">
@@ -375,6 +456,18 @@ export function InterviewReportView({ report, onReportUpdated, onClose }: Interv
             </div>
           </CardContent>
         </Card>
+
+        {/* Reviewer Pilot Feedback (Phase 22) */}
+        <div className="print:hidden">
+          <PilotFeedbackForm
+            interviewId={report.interview_id}
+            role="interviewer"
+            title="Reviewer & HR Pilot Feedback"
+            description="Evaluate the clarity of the report, indicator accuracy, and monitoring UX for this interview session."
+            collapsible={true}
+            initialExpanded={false}
+          />
+        </div>
       </div>
 
       {/* Contextual Evidence Modal */}

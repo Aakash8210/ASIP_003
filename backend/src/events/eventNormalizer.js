@@ -6,6 +6,11 @@ export const SUPPORTED_EVENT_TYPES = [
   'FACE_PRESENCE_CONSISTENCY',
   'FRAME_QUALITY_SUMMARY',
   'MONITORING_DATA_QUALITY',
+  'AUDIO_MULTI_SPEAKER',
+  'AUDIO_EXTENDED_SILENCE',
+  'AUDIO_QUALITY_DEGRADED',
+  'MULTIMODAL_CORROBORATED_PRESENCE',
+  'MULTIMODAL_CORROBORATED_ABSENCE',
 ];
 
 export const EVENT_STATUSES = {
@@ -15,6 +20,8 @@ export const EVENT_STATUSES = {
 
 export const EVENT_CATEGORIES = {
   VISUAL_MONITORING: 'VISUAL_MONITORING',
+  AUDIO_MONITORING: 'AUDIO_MONITORING',
+  MULTIMODAL: 'MULTIMODAL',
   OPERATIONAL: 'OPERATIONAL',
 };
 
@@ -190,4 +197,118 @@ export function normalizeMonitoringQualityToEvent(monitoringQuality, analysisMet
     schema_version: schema_version,
   };
 }
+
+/**
+ * Phase 23: Normalizes V2 Multimodal Fusion results into monitoring events.
+ *
+ * @param {object} fusionResult - Result from AI service /analysis/multimodal.
+ * @param {string|null} candidateId - Associated candidate identifier.
+ * @returns {Array<object>} Array of standardized monitoring event documents.
+ */
+export function normalizeMultimodalFusionToEvents(fusionResult, candidateId = null) {
+  if (!fusionResult || typeof fusionResult !== 'object') {
+    return [];
+  }
+
+  const { interview_id, analysis_id, schema_version = '2.0' } = fusionResult;
+  if (!interview_id) return [];
+
+  const events = [];
+  const now = new Date();
+
+  // Check cross-modal corroborated signals
+  const corroborated = fusionResult.cross_modal_coherence?.corroborated_signals || [];
+
+  if (corroborated.includes('visual_multi_face+audio_multi_speaker')) {
+    events.push({
+      idempotency_key: `${interview_id}:MULTIMODAL_CORROBORATED_PRESENCE:${analysis_id}`,
+      interview_id,
+      candidate_id: candidateId,
+      event_type: 'MULTIMODAL_CORROBORATED_PRESENCE',
+      category: EVENT_CATEGORIES.MULTIMODAL,
+      source: 'PHASE_23_MULTIMODAL_ENGINE',
+      source_analysis_id: analysis_id,
+      status: EVENT_STATUSES.ACTIVE,
+      first_observed_at: now,
+      last_observed_at: now,
+      timestamp: now,
+      duration_ms: 0,
+      occurrence_count: 1,
+      reliability: 'HIGH',
+      severity: EVENT_SEVERITIES.HIGH,
+      confidence: fusionResult.confidence || 0.85,
+      version: 'v2',
+      modality: 'multimodal',
+      metrics: {
+        corroboration: 'visual_multi_face+audio_multi_speaker',
+        estimated_speakers: fusionResult.audio_activity?.estimated_speakers || 2,
+      },
+      explanation: 'Secondary presence corroborated across both visual and acoustic modalities.',
+      schema_version,
+    });
+  }
+
+  if (corroborated.includes('visual_absence+audio_silence')) {
+    events.push({
+      idempotency_key: `${interview_id}:MULTIMODAL_CORROBORATED_ABSENCE:${analysis_id}`,
+      interview_id,
+      candidate_id: candidateId,
+      event_type: 'MULTIMODAL_CORROBORATED_ABSENCE',
+      category: EVENT_CATEGORIES.MULTIMODAL,
+      source: 'PHASE_23_MULTIMODAL_ENGINE',
+      source_analysis_id: analysis_id,
+      status: EVENT_STATUSES.ACTIVE,
+      first_observed_at: now,
+      last_observed_at: now,
+      timestamp: now,
+      duration_ms: 0,
+      occurrence_count: 1,
+      reliability: 'HIGH',
+      severity: EVENT_SEVERITIES.HIGH,
+      confidence: fusionResult.confidence || 0.85,
+      version: 'v2',
+      modality: 'multimodal',
+      metrics: {
+        corroboration: 'visual_absence+audio_silence',
+      },
+      explanation: 'Participant absence corroborated by concurrent video absence and silence.',
+      schema_version,
+    });
+  }
+
+  // Audio specific alerts if not already corroborated
+  if (
+    fusionResult.audio_activity?.estimated_speakers > 1 &&
+    !corroborated.includes('visual_multi_face+audio_multi_speaker')
+  ) {
+    events.push({
+      idempotency_key: `${interview_id}:AUDIO_MULTI_SPEAKER:${analysis_id}`,
+      interview_id,
+      candidate_id: candidateId,
+      event_type: 'AUDIO_MULTI_SPEAKER',
+      category: EVENT_CATEGORIES.AUDIO_MONITORING,
+      source: 'PHASE_23_MULTIMODAL_ENGINE',
+      source_analysis_id: analysis_id,
+      status: EVENT_STATUSES.RESOLVED,
+      first_observed_at: now,
+      last_observed_at: now,
+      timestamp: now,
+      duration_ms: 0,
+      occurrence_count: 1,
+      reliability: 'SUFFICIENT',
+      severity: EVENT_SEVERITIES.MEDIUM,
+      confidence: 0.80,
+      version: 'v2',
+      modality: 'audio',
+      metrics: {
+        estimated_speakers: fusionResult.audio_activity.estimated_speakers,
+      },
+      explanation: 'Multiple distinct voice patterns detected in session audio stream.',
+      schema_version,
+    });
+  }
+
+  return events;
+}
+
 

@@ -357,7 +357,7 @@ export function InterviewerLivePage() {
       ) : (
         <div className="space-y-6">
           {/* Active Session Info Banner */}
-          <div className="p-4 rounded-xl bg-surface-50 dark:bg-surface-850 border border-surface-200 dark:border-surface-700 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="p-4 rounded-xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-surface-800 flex flex-col md:flex-row md:items-center md:justify-between gap-4 shadow-xs">
             <div className="space-y-1">
               <div className="flex items-center gap-2.5 flex-wrap">
                 <span className="text-base font-semibold text-surface-900 dark:text-surface-50">

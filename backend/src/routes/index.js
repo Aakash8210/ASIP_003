@@ -10,6 +10,8 @@ import { singleEventRouter } from './monitoringEvents.js';
 import { singleAlertRouter } from './alerts.js';
 import { singleEvidenceRouter } from './evidence.js';
 import { rootReportsRouter } from './reports.js';
+import { rootPilotFeedbackRouter } from './feedback.js';
+import { organizationRouter } from './organization.js';
 
 const router = express.Router();
 
@@ -43,7 +45,7 @@ router.get('/', (req, res) => {
   res.json({
     message: 'AI Interview Monitoring API',
     version: '0.1.0',
-    status: 'Phase 19: Interview Report',
+    status: 'Phase 24: SaaS Productization & Enterprise Scale',
     endpoints: {
       health: 'GET /health',
       api: 'GET /api',
@@ -59,6 +61,8 @@ router.use('/monitoring-events', singleEventRouter);
 router.use('/alerts', singleAlertRouter);
 router.use('/evidence', singleEvidenceRouter);
 router.use('/reports', rootReportsRouter);
+router.use('/pilot-feedback', rootPilotFeedbackRouter);
+router.use('/organization', organizationRouter);
 router.use('/candidates', candidatesRouter);
 router.use('/interviewers', interviewersRouter);
 router.use('/interviewer', interviewerRouter);

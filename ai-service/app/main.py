@@ -19,6 +19,7 @@ from .core.logging import configure_logging
 from .routes import health as health_routes
 from .routes import analysis as analysis_routes
 from .routes import behaviour as behaviour_routes
+from .routes import multimodal as multimodal_routes
 from .services.computer_vision.face_detector import FaceDetectorRegistry
 
 logger = logging.getLogger("ai-service")
@@ -79,6 +80,7 @@ def create_app() -> FastAPI:
     app.include_router(health_routes.router)
     app.include_router(analysis_routes.router)
     app.include_router(behaviour_routes.router)
+    app.include_router(multimodal_routes.router)
     return app
 
 

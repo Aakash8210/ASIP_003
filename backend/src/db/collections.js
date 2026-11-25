@@ -8,4 +8,7 @@ export const COLLECTIONS = {
   ALERTS: 'alerts',
   EVIDENCE: 'evidence',
   FINAL_REPORTS: 'final_reports',
+  PILOT_FEEDBACK: 'pilot_feedback',
+  ORGANIZATIONS: 'organizations',
+  AUDIT_LOGS: 'audit_logs',
 };

@@ -1,15 +1,54 @@
-import { forwardRef, type ButtonHTMLAttributes } from 'react'
+import { cloneElement, forwardRef, isValidElement, type ButtonHTMLAttributes, type ReactElement } from 'react'
 import { cn } from '@/lib/utils'
 
+export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'outline' | 'neutral'
+export type ButtonSize = 'sm' | 'md' | 'lg' | 'icon'
+
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'ghost' | 'danger' | 'outline' | 'neutral'
+  variant?: ButtonVariant
   danger?: boolean
-  size?: 'sm' | 'md' | 'lg' | 'icon'
+  size?: ButtonSize
   loading?: boolean
   leftIcon?: React.ReactNode
   rightIcon?: React.ReactNode
   fullWidth?: boolean
   asChild?: boolean
+}
+
+const VARIANT_CLASSES: Record<ButtonVariant, string> = {
+  primary: 'btn-primary',
+  secondary: 'btn-secondary',
+  ghost: 'btn-ghost',
+  danger: 'btn-danger',
+  outline: 'btn-outline',
+  neutral: 'btn-outline',
+}
+
+const SIZE_CLASSES: Record<ButtonSize, string> = {
+  sm: 'btn-sm',
+  md: '',
+  lg: 'btn-lg',
+  icon: 'btn-icon',
+}
+
+export function buttonVariants({
+  variant = 'primary',
+  size = 'md',
+  fullWidth = false,
+  className,
+}: {
+  variant?: ButtonVariant
+  size?: ButtonSize
+  fullWidth?: boolean
+  className?: string
+} = {}) {
+  return cn(
+    'btn',
+    VARIANT_CLASSES[variant],
+    SIZE_CLASSES[size],
+    fullWidth && 'w-full',
+    className
+  )
 }
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
@@ -30,29 +69,21 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     },
     ref
   ) => {
-    const baseClasses = 'btn'
-    const variantClasses = {
-      primary: 'btn-primary',
-      secondary: 'btn-secondary',
-      ghost: 'btn-ghost',
-      danger: 'btn-danger',
-      outline: 'btn-outline',
-      neutral: 'btn-outline',
-    }
-    const sizeClasses = {
-      sm: 'btn-sm',
-      md: '',
-      lg: 'btn-lg',
-      icon: 'btn-icon',
-    }
-    const widthClass = fullWidth ? 'w-full' : ''
+    const effectiveVariant: ButtonVariant = danger && variant === 'primary' ? 'danger' : variant
+    const buttonClasses = cn(
+      buttonVariants({ variant: effectiveVariant, size, fullWidth }),
+      danger && variant !== 'danger' && 'text-danger-600 hover:bg-danger-50 hover:border-danger-200 dark:text-danger-400 dark:hover:bg-danger-900/20 dark:hover:border-danger-800/50',
+      className
+    )
 
-    const effectiveVariant = danger ? 'danger' : variant
-    const buttonClasses = cn(baseClasses, variantClasses[effectiveVariant], sizeClasses[size], widthClass, danger && variant !== 'danger' && 'bg-transparent text-danger-600 hover:bg-danger-50 dark:text-danger-400 dark:hover:bg-danger-500/10', className)
-
-    // If asChild is true, just return children with classes applied
     if (asChild) {
-      return <>{children}</>
+      if (isValidElement(children)) {
+        const child = children as ReactElement<{ className?: string }>
+        return cloneElement(child, {
+          className: cn(buttonClasses, child.props?.className),
+        })
+      }
+      return <span className={buttonClasses}>{children}</span>
     }
 
     return (
@@ -87,7 +118,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           </svg>
         )}
         {!loading && leftIcon && <span className="flex-shrink-0">{leftIcon}</span>}
-        <span className={cn('flex items-center', loading && 'opacity-0')}>{children}</span>
+        <span className={cn('inline-flex items-center gap-1.5', loading && 'opacity-0')}>{children}</span>
         {!loading && rightIcon && <span className="flex-shrink-0">{rightIcon}</span>}
       </button>
     )

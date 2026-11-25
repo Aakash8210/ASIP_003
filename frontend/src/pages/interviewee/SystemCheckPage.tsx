@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import {
   ArrowLeft,
+  ArrowRight,
   Camera,
-  CheckCircle,
+  CheckCircle2,
   Clock,
   Mic,
   Monitor,
@@ -20,8 +22,8 @@ import { Badge } from '@/components/ui/Badge'
 import { cn } from '@/lib/utils'
 
 // Pre-interview system check (Phase 9, UX-CAN-002, PRD-FR-003, SRS-FR-006/007).
-// All checks run locally in the browser using native capability APIs.
-// CAMERA, MICROPHONE, CONNECTION, and BROWSER checks are ALL MANDATORY.
+// All hardware checks execute locally in non-blocking async blocks with deterministic
+// cleanup on unmount to avoid track leaks or render loops.
 
 export type CheckState =
   | 'idle'
@@ -46,6 +48,7 @@ const checkingItem = (): CheckItemState => ({ state: 'checking', message: null }
 
 const DEVICE_TIMEOUT_MS = 8000
 const NETWORK_TIMEOUT_MS = 5000
+const WAVEFORM_BARS = 20
 
 function stopStream(stream: MediaStream | null) {
   if (!stream) return
@@ -83,220 +86,7 @@ async function runBrowserCheck(): Promise<CheckItemState> {
   }
   return {
     state: 'passed',
-    message: 'Browser supports all required WebRTC and media capture capabilities.',
-  }
-}
-
-async function runCameraCheck(): Promise<CheckItemState> {
-  if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
-    return {
-      state: 'unavailable',
-      message: 'Camera access is not available in this browser.',
-      details: 'Check your browser security settings or use an updated browser.',
-    }
-  }
-
-  let lateStream: MediaStream | null = null
-
-  try {
-    const userMediaPromise = navigator.mediaDevices
-      .getUserMedia({
-        video: { width: { ideal: 640 }, height: { ideal: 480 }, facingMode: 'user' },
-      })
-      .then((s) => {
-        lateStream = s
-        return s
-      })
-
-    const timeoutPromise = new Promise<never>((_, reject) => {
-      const timer = setTimeout(() => {
-        reject(new Error('CAMERA_TIMEOUT'))
-      }, DEVICE_TIMEOUT_MS)
-      // Clear timeout if promise settles
-      userMediaPromise.finally(() => clearTimeout(timer))
-    })
-
-    const stream = await Promise.race([userMediaPromise, timeoutPromise])
-    stopStream(stream)
-    lateStream = null
-
-    return {
-      state: 'passed',
-      message: 'Camera is connected and operational.',
-    }
-  } catch (error: unknown) {
-    // Clean up if stream arrived after timeout
-    if (lateStream) {
-      stopStream(lateStream)
-      lateStream = null
-    }
-
-    const err = error as { message?: string; name?: string }
-    if (err?.message === 'CAMERA_TIMEOUT') {
-      return {
-        state: 'timed_out',
-        message: 'Camera check timed out after 8 seconds.',
-        details: 'Ensure no other application (Zoom, Teams, etc.) is using your webcam, then retry.',
-      }
-    }
-
-    const name = error instanceof DOMException ? error.name : err?.name || ''
-    if (name === 'NotAllowedError' || name === 'PermissionDeniedError' || name === 'SecurityError') {
-      return {
-        state: 'permission_denied',
-        message: 'Camera access was denied.',
-        details: 'Click the camera/lock icon in your browser address bar, set Camera to "Allow", and retry.',
-      }
-    }
-    if (name === 'NotFoundError' || name === 'DevicesNotFoundError') {
-      return {
-        state: 'unavailable',
-        message: 'No camera hardware detected.',
-        details: 'Please connect a working webcam or check your hardware connections.',
-      }
-    }
-    if (name === 'NotReadableError' || name === 'TrackStartError') {
-      return {
-        state: 'failed',
-        message: 'Camera is currently busy or cannot be opened.',
-        details: 'Another program may be using the camera. Close other video apps and retry.',
-      }
-    }
-    return {
-      state: 'failed',
-      message: err?.message || 'Camera check encountered an unexpected error.',
-      details: 'Please reconnect your camera and click retry.',
-    }
-  }
-}
-
-async function runMicrophoneCheck(): Promise<CheckItemState> {
-  if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
-    return {
-      state: 'unavailable',
-      message: 'Microphone access is not available in this browser.',
-      details: 'Check your browser security settings or use an updated browser.',
-    }
-  }
-
-  let lateStream: MediaStream | null = null
-
-  try {
-    const userMediaPromise = navigator.mediaDevices
-      .getUserMedia({
-        audio: { echoCancellation: true, noiseSuppression: true },
-      })
-      .then((s) => {
-        lateStream = s
-        return s
-      })
-
-    const timeoutPromise = new Promise<never>((_, reject) => {
-      const timer = setTimeout(() => {
-        reject(new Error('MIC_TIMEOUT'))
-      }, DEVICE_TIMEOUT_MS)
-      userMediaPromise.finally(() => clearTimeout(timer))
-    })
-
-    const stream = await Promise.race([userMediaPromise, timeoutPromise])
-    stopStream(stream)
-    lateStream = null
-
-    return {
-      state: 'passed',
-      message: 'Microphone is connected and capturing audio.',
-    }
-  } catch (error: unknown) {
-    if (lateStream) {
-      stopStream(lateStream)
-      lateStream = null
-    }
-
-    const err = error as { message?: string; name?: string }
-    if (err?.message === 'MIC_TIMEOUT') {
-      return {
-        state: 'timed_out',
-        message: 'Microphone check timed out after 8 seconds.',
-        details: 'Check that your microphone is plugged in and not exclusively captured by another app.',
-      }
-    }
-
-    const name = error instanceof DOMException ? error.name : err?.name || ''
-    if (name === 'NotAllowedError' || name === 'PermissionDeniedError' || name === 'SecurityError') {
-      return {
-        state: 'permission_denied',
-        message: 'Microphone access was denied.',
-        details: 'Microphone access is mandatory. Click the lock icon in the address bar to allow microphone access.',
-      }
-    }
-    if (name === 'NotFoundError' || name === 'DevicesNotFoundError') {
-      return {
-        state: 'unavailable',
-        message: 'No microphone hardware detected.',
-        details: 'Please connect a working microphone or headset to proceed with the interview.',
-      }
-    }
-    if (name === 'NotReadableError' || name === 'TrackStartError') {
-      return {
-        state: 'failed',
-        message: 'Microphone is currently in use by another application.',
-        details: 'Close any communication apps using your microphone and retry.',
-      }
-    }
-    return {
-      state: 'failed',
-      message: err?.message || 'Microphone check failed.',
-      details: 'Please verify your audio settings and retry.',
-    }
-  }
-}
-
-async function runConnectionCheck(): Promise<CheckItemState> {
-  if (typeof navigator !== 'undefined' && !navigator.onLine) {
-    return {
-      state: 'unavailable',
-      message: 'No internet connection detected.',
-      details: 'Check your Wi-Fi or Ethernet connection and retry.',
-    }
-  }
-
-  const controller = new AbortController()
-  const timeoutId = setTimeout(() => controller.abort(), NETWORK_TIMEOUT_MS)
-
-  try {
-    const response = await fetch('/health', {
-      method: 'GET',
-      headers: { Accept: 'application/json' },
-      signal: controller.signal,
-    })
-    clearTimeout(timeoutId)
-
-    if (response.ok) {
-      return {
-        state: 'passed',
-        message: 'Connected to interview platform server.',
-      }
-    }
-    return {
-      state: 'failed',
-      message: `Interview server returned status code ${response.status}.`,
-      details: 'The platform backend may be temporarily experiencing issues.',
-    }
-  } catch (error: unknown) {
-    clearTimeout(timeoutId)
-    const err = error as { name?: string }
-    if (err?.name === 'AbortError') {
-      return {
-        state: 'timed_out',
-        message: 'Connection check timed out reaching the server.',
-        details: 'The server did not respond within 5 seconds. Check your internet connection.',
-      }
-    }
-    return {
-      state: 'failed',
-      message: 'Unable to reach the interview platform server.',
-      details: 'Verify your network connection and proxy settings, then retry.',
-    }
+    message: 'WebRTC & MediaDevices APIs verified.',
   }
 }
 
@@ -311,30 +101,313 @@ export function IntervieweeSystemCheckPage() {
     connection: idleItem(),
   })
 
+  const [latencyMs, setLatencyMs] = useState<number | null>(null)
+  const [audioBars, setAudioBars] = useState<number[]>(() => Array(WAVEFORM_BARS).fill(12))
   const [isCompleted, setIsCompleted] = useState(false)
+
+  // Refs for leak-free hardware lifecycle
+  const mountedRef = useRef(true)
   const isRunningRef = useRef(false)
-  const hasMountedRef = useRef(false)
+  const videoRef = useRef<HTMLVideoElement | null>(null)
+  const cameraStreamRef = useRef<MediaStream | null>(null)
+  const micStreamRef = useRef<MediaStream | null>(null)
+  const audioCtxRef = useRef<AudioContext | null>(null)
+  const rafIdRef = useRef<number | null>(null)
 
-  // Single check runner with independent state updates
-  const executeCheck = useCallback(async (id: CheckId) => {
-    setChecks((prev) => ({ ...prev, [id]: checkingItem() }))
-
-    let result: CheckItemState
-    if (id === 'browser') {
-      result = await runBrowserCheck()
-    } else if (id === 'camera') {
-      result = await runCameraCheck()
-    } else if (id === 'microphone') {
-      result = await runMicrophoneCheck()
-    } else {
-      result = await runConnectionCheck()
+  const cleanupAudioVisualizer = useCallback(() => {
+    if (rafIdRef.current !== null) {
+      cancelAnimationFrame(rafIdRef.current)
+      rafIdRef.current = null
     }
-
-    setChecks((prev) => ({ ...prev, [id]: result }))
-    return result
+    if (audioCtxRef.current) {
+      audioCtxRef.current.close().catch(() => {})
+      audioCtxRef.current = null
+    }
+    stopStream(micStreamRef.current)
+    micStreamRef.current = null
   }, [])
 
-  // Sequential runner for all mandatory checks
+  const cleanupCameraPreview = useCallback(() => {
+    if (videoRef.current) {
+      videoRef.current.srcObject = null
+    }
+    stopStream(cameraStreamRef.current)
+    cameraStreamRef.current = null
+  }, [])
+
+  const cleanupAllHardware = useCallback(() => {
+    cleanupAudioVisualizer()
+    cleanupCameraPreview()
+  }, [cleanupAudioVisualizer, cleanupCameraPreview])
+
+  const startCameraPreview = useCallback(async (): Promise<CheckItemState> => {
+    if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
+      return {
+        state: 'unavailable',
+        message: 'Camera access is not available in this browser.',
+        details: 'Check your browser security settings or use an updated browser.',
+      }
+    }
+
+    cleanupCameraPreview()
+    let lateStream: MediaStream | null = null
+
+    try {
+      const userMediaPromise = navigator.mediaDevices
+        .getUserMedia({
+          video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' },
+        })
+        .then((s) => {
+          lateStream = s
+          return s
+        })
+
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        const timer = setTimeout(() => reject(new Error('CAMERA_TIMEOUT')), DEVICE_TIMEOUT_MS)
+        userMediaPromise.finally(() => clearTimeout(timer))
+      })
+
+      const stream = await Promise.race([userMediaPromise, timeoutPromise])
+      if (!mountedRef.current) {
+        stopStream(stream)
+        return { state: 'idle', message: null }
+      }
+
+      cameraStreamRef.current = stream
+      lateStream = null
+
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream
+      }
+
+      return {
+        state: 'passed',
+        message: 'Camera stream active (16:9 HD preview).',
+      }
+    } catch (error: unknown) {
+      if (lateStream) {
+        stopStream(lateStream)
+        lateStream = null
+      }
+      const err = error as { message?: string; name?: string }
+      if (err?.message === 'CAMERA_TIMEOUT') {
+        return {
+          state: 'timed_out',
+          message: 'Camera check timed out after 8 seconds.',
+          details: 'Ensure no other application (Zoom, Teams, etc.) is using your webcam, then retry.',
+        }
+      }
+      const name = error instanceof DOMException ? error.name : err?.name || ''
+      if (name === 'NotAllowedError' || name === 'PermissionDeniedError' || name === 'SecurityError') {
+        return {
+          state: 'permission_denied',
+          message: 'Camera access was denied.',
+          details: 'Allow Camera permissions in your browser address bar and retry.',
+        }
+      }
+      if (name === 'NotFoundError' || name === 'DevicesNotFoundError') {
+        return {
+          state: 'unavailable',
+          message: 'No camera hardware detected.',
+          details: 'Connect a working webcam and click retry.',
+        }
+      }
+      if (name === 'NotReadableError' || name === 'TrackStartError') {
+        return {
+          state: 'failed',
+          message: 'Camera is busy or cannot be opened.',
+          details: 'Close other video applications using the camera and retry.',
+        }
+      }
+      return {
+        state: 'failed',
+        message: err?.message || 'Camera check encountered an unexpected error.',
+      }
+    }
+  }, [cleanupCameraPreview])
+
+  const startMicVisualizer = useCallback(async (): Promise<CheckItemState> => {
+    if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
+      return {
+        state: 'unavailable',
+        message: 'Microphone access is not available in this browser.',
+      }
+    }
+
+    cleanupAudioVisualizer()
+    let lateStream: MediaStream | null = null
+
+    try {
+      const userMediaPromise = navigator.mediaDevices
+        .getUserMedia({
+          audio: { echoCancellation: true, noiseSuppression: true },
+        })
+        .then((s) => {
+          lateStream = s
+          return s
+        })
+
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        const timer = setTimeout(() => reject(new Error('MIC_TIMEOUT')), DEVICE_TIMEOUT_MS)
+        userMediaPromise.finally(() => clearTimeout(timer))
+      })
+
+      const stream = await Promise.race([userMediaPromise, timeoutPromise])
+      if (!mountedRef.current) {
+        stopStream(stream)
+        return { state: 'idle', message: null }
+      }
+
+      micStreamRef.current = stream
+      lateStream = null
+
+      // Initialize Web Audio AnalyserNode safely (non-blocking)
+      const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext
+      if (AudioCtx) {
+        const ctx = new AudioCtx()
+        audioCtxRef.current = ctx
+        const source = ctx.createMediaStreamSource(stream)
+        const analyser = ctx.createAnalyser()
+        analyser.fftSize = 64
+        source.connect(analyser)
+
+        const dataArray = new Uint8Array(analyser.frequencyBinCount)
+        let lastFrameTime = 0
+
+        const tick = (now: number) => {
+          if (!mountedRef.current || !audioCtxRef.current) return
+          if (now - lastFrameTime >= 50) {
+            lastFrameTime = now
+            analyser.getByteFrequencyData(dataArray)
+            const nextBars: number[] = []
+            for (let i = 0; i < WAVEFORM_BARS; i++) {
+              const val = dataArray[i % dataArray.length] || 0
+              nextBars.push(Math.max(12, Math.min(100, Math.round((val / 255) * 100))))
+            }
+            setAudioBars(nextBars)
+          }
+          rafIdRef.current = requestAnimationFrame(tick)
+        }
+        rafIdRef.current = requestAnimationFrame(tick)
+      }
+
+      return {
+        state: 'passed',
+        message: 'Microphone capturing live audio.',
+      }
+    } catch (error: unknown) {
+      if (lateStream) {
+        stopStream(lateStream)
+        lateStream = null
+      }
+      const err = error as { message?: string; name?: string }
+      if (err?.message === 'MIC_TIMEOUT') {
+        return {
+          state: 'timed_out',
+          message: 'Microphone check timed out after 8 seconds.',
+        }
+      }
+      const name = error instanceof DOMException ? error.name : err?.name || ''
+      if (name === 'NotAllowedError' || name === 'PermissionDeniedError' || name === 'SecurityError') {
+        return {
+          state: 'permission_denied',
+          message: 'Microphone access was denied.',
+          details: 'Allow Microphone permissions in your browser address bar and retry.',
+        }
+      }
+      if (name === 'NotFoundError' || name === 'DevicesNotFoundError') {
+        return {
+          state: 'unavailable',
+          message: 'No microphone hardware detected.',
+        }
+      }
+      return {
+        state: 'failed',
+        message: err?.message || 'Microphone check failed.',
+      }
+    }
+  }, [cleanupAudioVisualizer])
+
+  const runConnectionPing = useCallback(async (): Promise<CheckItemState> => {
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      setLatencyMs(null)
+      return {
+        state: 'unavailable',
+        message: 'No internet connection detected.',
+      }
+    }
+
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), NETWORK_TIMEOUT_MS)
+    const started = performance.now()
+
+    try {
+      const response = await fetch('/health', {
+        method: 'GET',
+        headers: { Accept: 'application/json' },
+        signal: controller.signal,
+      })
+      clearTimeout(timeoutId)
+      const rtt = Math.max(1, Math.round(performance.now() - started))
+
+      if (mountedRef.current && response.ok) {
+        setLatencyMs(rtt)
+        return {
+          state: 'passed',
+          message: `Connected (${rtt}ms RTT — Stable).`,
+        }
+      }
+      return {
+        state: 'failed',
+        message: `Server returned status ${response.status}.`,
+      }
+    } catch (error: unknown) {
+      clearTimeout(timeoutId)
+      setLatencyMs(null)
+      const err = error as { name?: string }
+      if (err?.name === 'AbortError') {
+        return {
+          state: 'timed_out',
+          message: 'Connection check timed out.',
+        }
+      }
+      return {
+        state: 'failed',
+        message: 'Unable to reach interview server.',
+      }
+    }
+  }, [])
+
+  // Attach video stream if ref mounts after stream arrived
+  useEffect(() => {
+    if (videoRef.current && cameraStreamRef.current && videoRef.current.srcObject !== cameraStreamRef.current) {
+      videoRef.current.srcObject = cameraStreamRef.current
+    }
+  }, [checks.camera.state])
+
+  const executeCheck = useCallback(
+    async (id: CheckId) => {
+      if (!mountedRef.current) return
+      setChecks((prev) => ({ ...prev, [id]: checkingItem() }))
+
+      let result: CheckItemState
+      if (id === 'browser') {
+        result = await runBrowserCheck()
+      } else if (id === 'camera') {
+        result = await startCameraPreview()
+      } else if (id === 'microphone') {
+        result = await startMicVisualizer()
+      } else {
+        result = await runConnectionPing()
+      }
+
+      if (mountedRef.current) {
+        setChecks((prev) => ({ ...prev, [id]: result }))
+      }
+    },
+    [startCameraPreview, startMicVisualizer, runConnectionPing]
+  )
+
   const runAllChecks = useCallback(async () => {
     if (isRunningRef.current) return
     isRunningRef.current = true
@@ -342,6 +415,7 @@ export function IntervieweeSystemCheckPage() {
 
     try {
       for (const id of MANDATORY_CHECKS) {
+        if (!mountedRef.current) break
         await executeCheck(id)
       }
     } finally {
@@ -349,98 +423,66 @@ export function IntervieweeSystemCheckPage() {
     }
   }, [executeCheck])
 
-  // Mount effect: run checks once without re-triggering loop
   useEffect(() => {
-    if (!hasMountedRef.current) {
-      hasMountedRef.current = true
-      runAllChecks()
+    mountedRef.current = true
+    runAllChecks()
+    return () => {
+      mountedRef.current = false
+      cleanupAllHardware()
     }
-  }, [runAllChecks])
+  }, [runAllChecks, cleanupAllHardware])
 
-  const mandatoryPassed = MANDATORY_CHECKS.every((id) => checks[id].state === 'passed')
+  const passedCount = MANDATORY_CHECKS.filter((id) => checks[id].state === 'passed').length
+  const mandatoryPassed = passedCount === MANDATORY_CHECKS.length
   const isRunning = MANDATORY_CHECKS.some((id) => checks[id].state === 'checking')
-  const canContinue = mandatoryPassed && !isCompleted && !isRunning
+  const progressPct = Math.round((passedCount / MANDATORY_CHECKS.length) * 100)
 
   const stateBadge = (state: CheckState) => {
     switch (state) {
       case 'checking':
         return (
-          <Badge variant="neutral" className="bg-surface-100 text-surface-600 dark:bg-surface-800 dark:text-surface-300 gap-1.5">
-            <RefreshCw className="h-3.5 w-3.5 animate-spin text-brand-600 dark:text-brand-400" aria-hidden="true" />
-            <span>Checking...</span>
+          <Badge variant="info" className="gap-1.5 font-mono text-[11px]">
+            <RefreshCw className="h-3 w-3 animate-spin" aria-hidden="true" />
+            Checking
           </Badge>
         )
       case 'passed':
         return (
-          <Badge variant="neutral" className="bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800 gap-1.5">
-            <CheckCircle className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
-            <span>Ready</span>
+          <Badge variant="success" className="gap-1.5 font-mono text-[11px]">
+            <CheckCircle2 className="h-3 w-3" aria-hidden="true" />
+            Operational
           </Badge>
         )
       case 'permission_denied':
         return (
-          <Badge variant="neutral" className="bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800 gap-1.5">
-            <AlertTriangle className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" aria-hidden="true" />
-            <span>Permission Required</span>
+          <Badge variant="warning" className="gap-1.5 font-mono text-[11px]">
+            <AlertTriangle className="h-3 w-3" aria-hidden="true" />
+            Permission Needed
           </Badge>
         )
       case 'unavailable':
+      case 'failed':
         return (
-          <Badge variant="neutral" className="bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800 gap-1.5">
-            <XCircle className="h-3.5 w-3.5 text-rose-600 dark:text-rose-400" aria-hidden="true" />
-            <span>Device Missing</span>
+          <Badge variant="danger" className="gap-1.5 font-mono text-[11px]">
+            <XCircle className="h-3 w-3" aria-hidden="true" />
+            Unavailable
           </Badge>
         )
       case 'timed_out':
         return (
-          <Badge variant="neutral" className="bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800 gap-1.5">
-            <Clock className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" aria-hidden="true" />
-            <span>Timed Out</span>
-          </Badge>
-        )
-      case 'failed':
-        return (
-          <Badge variant="neutral" className="bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800 gap-1.5">
-            <XCircle className="h-3.5 w-3.5 text-rose-600 dark:text-rose-400" aria-hidden="true" />
-            <span>Failed</span>
+          <Badge variant="warning" className="gap-1.5 font-mono text-[11px]">
+            <Clock className="h-3 w-3" aria-hidden="true" />
+            Timed Out
           </Badge>
         )
       default:
         return (
-          <Badge variant="neutral" className="bg-surface-100 text-surface-500 dark:bg-surface-800 dark:text-surface-400 gap-1.5">
-            <span className="h-2 w-2 rounded-full bg-surface-400" aria-hidden="true" />
-            <span>Pending</span>
+          <Badge variant="neutral" className="gap-1.5 font-mono text-[11px]">
+            Pending
           </Badge>
         )
     }
   }
-
-  const checkRows: Array<{ id: CheckId; icon: typeof Camera; title: string; subtitle: string }> = [
-    {
-      id: 'camera',
-      icon: Camera,
-      title: 'Camera Check',
-      subtitle: 'Mandatory — Web video feed for interview interaction and AI monitoring',
-    },
-    {
-      id: 'microphone',
-      icon: Mic,
-      title: 'Microphone Check',
-      subtitle: 'Mandatory — Audio feed for clear dialogue with the interviewer',
-    },
-    {
-      id: 'connection',
-      icon: typeof navigator !== 'undefined' && navigator.onLine ? Wifi : WifiOff,
-      title: 'Server Connection',
-      subtitle: 'Mandatory — Low latency reachability to the InterviewGuard platform',
-    },
-    {
-      id: 'browser',
-      icon: Monitor,
-      title: 'Browser Compatibility',
-      subtitle: 'Mandatory — WebRTC media stream and signaling support',
-    },
-  ]
 
   if (isCompleted) {
     return (
@@ -452,24 +494,27 @@ export function IntervieweeSystemCheckPage() {
               Back to my interviews
             </Link>
           </Button>
-          <h1 className="text-2xl font-bold text-surface-900 dark:text-surface-50">System Check</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-surface-900 dark:text-white">
+            System Check
+          </h1>
         </div>
 
-        <Card className="border-emerald-300 dark:border-emerald-800 shadow-sm">
+        <Card className="border-emerald-500/30 relative overflow-hidden">
+          <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-cyan-500 to-emerald-500" />
           <CardContent className="py-12 px-6 text-center">
-            <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-950/80 flex items-center justify-center mx-auto mb-4 border border-emerald-200 dark:border-emerald-800">
-              <ShieldCheck className="h-9 w-9 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+            <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center mx-auto mb-4 shadow-[0_0_24px_rgba(16,185,129,0.2)]">
+              <ShieldCheck className="h-8 w-8 text-emerald-500" aria-hidden="true" />
             </div>
-            <h2 className="text-xl font-bold text-surface-900 dark:text-surface-50">
-              System Check Passed!
+            <h2 className="text-xl font-semibold text-surface-900 dark:text-white">
+              Hardware &amp; Network Verified
             </h2>
-            <p className="text-surface-600 dark:text-surface-400 mt-2 max-w-md mx-auto text-sm leading-relaxed">
-              Your camera, microphone, browser, and network connection meet all requirements. You are fully ready to join your interview session.
+            <p className="text-surface-600 dark:text-zinc-400 mt-2 max-w-md mx-auto text-sm leading-relaxed">
+              Your camera, microphone, WebRTC engine, and server connection are ready. Hardware streams have been released for room entry.
             </p>
 
             <div className="flex justify-center flex-wrap gap-3 mt-8">
               <Button
-                variant="neutral"
+                variant="outline"
                 onClick={() => {
                   setIsCompleted(false)
                   runAllChecks()
@@ -482,6 +527,7 @@ export function IntervieweeSystemCheckPage() {
                 <Button asChild className="gap-2">
                   <Link to={`/interviewee/interviews/${encodeURIComponent(interviewId)}/room`}>
                     Enter Interview Room
+                    <ArrowRight className="h-4 w-4" aria-hidden="true" />
                   </Link>
                 </Button>
               ) : (
@@ -497,129 +543,271 @@ export function IntervieweeSystemCheckPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-2xl mx-auto">
-      <div>
-        <Button variant="ghost" size="sm" asChild className="gap-2 -ml-2 mb-2">
-          <Link to="/interviewee/interviews">
-            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-            Back to my interviews
-          </Link>
-        </Button>
-        <h1 className="text-2xl font-bold text-surface-900 dark:text-surface-50">
-          Pre-Interview System Check
-        </h1>
-        <p className="text-surface-600 dark:text-surface-400 mt-1 text-sm">
-          Both <strong>Camera</strong> and <strong>Microphone</strong> are mandatory to ensure fair interview conduct. All device checks execute entirely inside your browser.
-        </p>
+    <div className="space-y-6 max-w-5xl mx-auto pb-8">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+        <div>
+          <Button variant="ghost" size="sm" asChild className="gap-2 -ml-2 mb-2">
+            <Link to="/interviewee/interviews">
+              <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+              Back to my interviews
+            </Link>
+          </Button>
+          <h1 className="text-2xl font-semibold tracking-tight text-surface-900 dark:text-white">
+            Pre-Interview Hardware Console
+          </h1>
+          <p className="text-sm text-surface-500 dark:text-zinc-400 mt-1">
+            Verify your live webcam feed, microphone waveform, and WebRTC latency before joining.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2.5">
+          {latencyMs !== null && (
+            <Badge variant="success" className="font-mono text-xs gap-1.5 py-1 px-3">
+              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+              {latencyMs}ms · Stable
+            </Badge>
+          )}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={runAllChecks}
+            disabled={isRunning}
+            className="gap-1.5"
+          >
+            <RefreshCw className={cn('h-3.5 w-3.5', isRunning && 'animate-spin')} />
+            Re-run all
+          </Button>
+        </div>
       </div>
 
-      <Card className="border-surface-200 dark:border-surface-800 shadow-sm">
-        <CardContent className="divide-y divide-surface-100 dark:divide-surface-800 p-0">
-          {checkRows.map(({ id, icon: Icon, title, subtitle }) => {
-            const check = checks[id]
-            const canRetry =
-              check.state === 'permission_denied' ||
-              check.state === 'unavailable' ||
-              check.state === 'timed_out' ||
-              check.state === 'failed'
+      {/* Live Hardware Console Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        {/* Camera Viewfinder */}
+        <Card className="lg:col-span-7 overflow-hidden">
+          <div className="px-4 py-3 border-b border-surface-200 dark:border-white/[0.07] flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="h-7 w-7 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center">
+                <Camera className="h-3.5 w-3.5 text-cyan-500" aria-hidden="true" />
+              </div>
+              <span className="text-sm font-medium text-surface-900 dark:text-zinc-100">
+                Camera Viewfinder
+              </span>
+            </div>
+            {checks.camera.state === 'passed' ? (
+              <Badge variant="success" className="font-mono text-[11px] gap-1.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Camera Operational
+              </Badge>
+            ) : (
+              stateBadge(checks.camera.state)
+            )}
+          </div>
 
-            return (
-              <div key={id} className="p-4 sm:p-5 transition-colors">
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex items-start gap-3.5 min-w-0">
-                    <div className="p-2.5 rounded-xl bg-surface-100 dark:bg-surface-800 text-surface-600 dark:text-surface-400 shrink-0 mt-0.5">
-                      <Icon className="h-5 w-5" aria-hidden="true" />
-                    </div>
-                    <div className="min-w-0 space-y-1">
-                      <div className="flex items-center gap-2.5 flex-wrap">
-                        <span className="font-semibold text-sm text-surface-900 dark:text-surface-50">
-                          {title}
-                        </span>
-                        {stateBadge(check.state)}
-                      </div>
-                      <p className="text-xs text-surface-500 dark:text-surface-400">
-                        {subtitle}
-                      </p>
-                      {check.message && (
-                        <p
-                          className={cn(
-                            'text-xs font-medium pt-1',
-                            check.state === 'passed' && 'text-emerald-700 dark:text-emerald-300',
-                            check.state === 'permission_denied' && 'text-amber-700 dark:text-amber-300',
-                            (check.state === 'unavailable' || check.state === 'failed' || check.state === 'timed_out') &&
-                              'text-rose-700 dark:text-rose-300'
-                          )}
-                        >
-                          {check.message}
-                        </p>
-                      )}
-                      {check.details && (
-                        <p className="text-xs text-surface-500 dark:text-surface-400 bg-surface-50 dark:bg-surface-800/80 p-2 rounded-lg border border-surface-200/60 dark:border-surface-700/60 mt-1.5">
-                          {check.details}
-                        </p>
-                      )}
-                    </div>
-                  </div>
+          <div className="p-4">
+            <div className="relative aspect-video w-full rounded-xl overflow-hidden bg-surface-950 border border-surface-200 dark:border-white/[0.08]">
+              <video
+                ref={videoRef}
+                autoPlay
+                muted
+                playsInline
+                className={cn(
+                  'w-full h-full object-cover scale-x-[-1] transition-opacity duration-300',
+                  checks.camera.state === 'passed' ? 'opacity-100' : 'opacity-0'
+                )}
+              />
 
-                  {canRetry && (
+              {/* Subtle Corner Gridlines */}
+              <div className="pointer-events-none absolute inset-4 border border-white/10 rounded-lg">
+                <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-cyan-400/50 rounded-tl" />
+                <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-cyan-400/50 rounded-tr" />
+                <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-cyan-400/50 rounded-bl" />
+                <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-cyan-400/50 rounded-br" />
+              </div>
+
+              {checks.camera.state !== 'passed' && (
+                <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
+                  <Camera className="h-8 w-8 text-zinc-500 mb-2" />
+                  <p className="text-sm font-medium text-zinc-200">
+                    {checks.camera.state === 'checking'
+                      ? 'Initializing camera stream...'
+                      : checks.camera.message || 'Camera preview unavailable'}
+                  </p>
+                  {checks.camera.details && (
+                    <p className="text-xs text-zinc-400 mt-1 max-w-sm">{checks.camera.details}</p>
+                  )}
+                  {checks.camera.state !== 'checking' && (
                     <Button
-                      variant="neutral"
                       size="sm"
-                      className="gap-1.5 shrink-0 text-xs"
-                      onClick={() => executeCheck(id)}
-                      disabled={isRunning}
+                      variant="outline"
+                      onClick={() => executeCheck('camera')}
+                      className="mt-4"
                     >
-                      <RefreshCw className="h-3 w-3" aria-hidden="true" />
-                      Retry
+                      Retry Camera
                     </Button>
                   )}
                 </div>
+              )}
+            </div>
+          </div>
+        </Card>
+
+        {/* Right Diagnostics Stack: Mic Visualizer + Network + Browser */}
+        <div className="lg:col-span-5 space-y-4">
+          {/* Audio Visualizer Card */}
+          <Card>
+            <CardContent className="p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="h-7 w-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+                    <Mic className="h-3.5 w-3.5 text-emerald-500" aria-hidden="true" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-surface-900 dark:text-zinc-100">
+                      Microphone Input
+                    </p>
+                    <p className="text-[11px] text-surface-500 dark:text-zinc-400">
+                      Speak normally to verify live waveform
+                    </p>
+                  </div>
+                </div>
+                {stateBadge(checks.microphone.state)}
               </div>
-            )
-          })}
-        </CardContent>
-      </Card>
 
-      <Card className="border-surface-200 dark:border-surface-800 shadow-sm">
-        <CardContent className="p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="text-sm">
-            <p className="font-medium text-surface-900 dark:text-surface-100">
+              {/* Dynamic Waveform Bars */}
+              <div
+                className="h-16 rounded-lg border border-surface-200 dark:border-white/[0.07] bg-surface-50 dark:bg-[#08090E] px-3 flex items-center justify-between gap-1"
+                aria-label="Live microphone waveform"
+              >
+                {audioBars.map((height, i) => (
+                  <div
+                    key={i}
+                    style={{ height: `${checks.microphone.state === 'passed' ? height : 12}%` }}
+                    className={cn(
+                      'flex-1 rounded-full transition-all duration-75',
+                      checks.microphone.state === 'passed'
+                        ? height > 55
+                          ? 'bg-cyan-400'
+                          : 'bg-emerald-500/80'
+                        : 'bg-surface-300 dark:bg-white/10'
+                    )}
+                  />
+                ))}
+              </div>
+
+              {checks.microphone.state !== 'passed' && checks.microphone.state !== 'checking' && checks.microphone.state !== 'idle' && (
+                <div className="flex items-center justify-between gap-2 text-xs text-rose-500">
+                  <span className="truncate">{checks.microphone.message}</span>
+                  <Button size="sm" variant="outline" onClick={() => executeCheck('microphone')}>
+                    Retry
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Connection & Ping Card */}
+          <Card>
+            <CardContent className="p-4 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="h-8 w-8 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center shrink-0">
+                  {typeof navigator !== 'undefined' && navigator.onLine ? (
+                    <Wifi className="h-4 w-4 text-cyan-500" aria-hidden="true" />
+                  ) : (
+                    <WifiOff className="h-4 w-4 text-rose-500" aria-hidden="true" />
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-surface-900 dark:text-zinc-100">
+                    Connection &amp; Ping
+                  </p>
+                  <p className="text-xs font-mono text-surface-500 dark:text-zinc-400 truncate">
+                    {checks.connection.message || 'Measuring platform RTT...'}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 shrink-0">
+                {stateBadge(checks.connection.state)}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Browser & WebRTC Permissions Card */}
+          <Card>
+            <CardContent className="p-4 flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="h-8 w-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0">
+                  <Monitor className="h-4 w-4 text-amber-500" aria-hidden="true" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-surface-900 dark:text-zinc-100">
+                    Browser &amp; WebRTC
+                  </p>
+                  <p className="text-xs text-surface-500 dark:text-zinc-400 truncate">
+                    {checks.browser.message || 'Verifying RTCPeerConnection support...'}
+                  </p>
+                </div>
+              </div>
+              <div className="shrink-0">{stateBadge(checks.browser.state)}</div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* Bottom Status Action Drawer */}
+      <Card className="relative overflow-hidden">
+        <div
+          className="absolute top-0 left-0 h-0.5 bg-gradient-to-r from-cyan-500 to-emerald-500 transition-all duration-300"
+          style={{ width: `${progressPct}%` }}
+        />
+        <CardContent className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-semibold text-surface-900 dark:text-white tabular-nums">
+                {passedCount} of {MANDATORY_CHECKS.length} checks completed
+              </span>
+              <Badge variant={mandatoryPassed ? 'success' : 'neutral'} className="font-mono text-[10px]">
+                {progressPct}%
+              </Badge>
+            </div>
+            <p className="text-xs text-surface-500 dark:text-zinc-400">
               {mandatoryPassed
-                ? 'All mandatory checks passed successfully!'
-                : 'All 4 system checks are required to join the interview.'}
-            </p>
-            <p className="text-xs text-surface-500 dark:text-surface-400 mt-0.5">
-              {mandatoryPassed
-                ? 'Click "Continue" to proceed to your scheduled interview session.'
-                : 'Please resolve any issues or permissions and retry the checks.'}
+                ? 'All hardware and network prerequisites verified. Ready to enter the interview room.'
+                : 'Complete all 4 mandatory checks above to unlock interview room entry.'}
             </p>
           </div>
 
-          <div className="flex items-center gap-3 shrink-0 w-full sm:w-auto">
-            <Button
-              variant="neutral"
-              className="gap-2 flex-1 sm:flex-none"
-              onClick={runAllChecks}
-              disabled={isRunning}
-            >
-              <RefreshCw className={cn('h-4 w-4', isRunning && 'animate-spin')} aria-hidden="true" />
-              Run All Checks
-            </Button>
-
-            <Button
-              className="flex-1 sm:flex-none"
-              disabled={!canContinue}
-              aria-disabled={!canContinue}
-              title={
-                canContinue
-                  ? undefined
-                  : 'All 4 checks (Camera, Microphone, Connection, and Browser) must pass before continuing.'
-              }
-              onClick={() => setIsCompleted(true)}
-            >
-              Continue
-            </Button>
-          </div>
+          <motion.div
+            animate={mandatoryPassed ? { scale: [1, 1.02, 1] } : {}}
+            transition={{ duration: 0.35 }}
+            className="shrink-0"
+          >
+            {interviewId ? (
+              <Button
+                disabled={!mandatoryPassed || isRunning}
+                onClick={() => {
+                  cleanupAllHardware()
+                  setIsCompleted(true)
+                }}
+                className="gap-2 px-5"
+              >
+                Enter Interview
+                <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </Button>
+            ) : (
+              <Button
+                disabled={!mandatoryPassed || isRunning}
+                onClick={() => {
+                  cleanupAllHardware()
+                  setIsCompleted(true)
+                }}
+                className="gap-2 px-5"
+              >
+                Confirm System Readiness
+                <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+              </Button>
+            )}
+          </motion.div>
         </CardContent>
       </Card>
     </div>

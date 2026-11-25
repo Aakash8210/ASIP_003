@@ -123,18 +123,18 @@ export function HRDashboardPage() {
           const Icon = stat.icon
           return (
             <Card key={stat.label} className="border-surface-200 dark:border-surface-800">
-              <CardContent className="p-6">
-                <div className="flex items-start justify-between">
+              <CardContent className="p-5">
+                <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-surface-500 dark:text-surface-400 mb-1">{stat.label}</p>
+                    <p className="text-xs font-medium text-surface-500 dark:text-surface-400">{stat.label}</p>
                     {isLoading ? (
-                      <div className="h-9 w-16 bg-surface-200 dark:bg-surface-800 rounded animate-pulse" aria-hidden="true" />
+                      <div className="h-8 w-14 mt-1.5 bg-surface-200 dark:bg-surface-800 rounded animate-pulse" aria-hidden="true" />
                     ) : (
-                      <p className="text-3xl font-bold text-surface-900 dark:text-surface-50">{stat.value}</p>
+                      <p className="mt-1.5 text-2xl font-semibold tracking-tight tabular-nums text-surface-900 dark:text-surface-50">{stat.value}</p>
                     )}
                   </div>
-                  <div className={`p-3 rounded-xl ${stat.color}`}>
-                    <Icon className="h-6 w-6" aria-hidden="true" />
+                  <div className={`h-9 w-9 rounded-lg flex items-center justify-center shrink-0 ${stat.color}`}>
+                    <Icon className="h-4 w-4" aria-hidden="true" />
                   </div>
                 </div>
               </CardContent>

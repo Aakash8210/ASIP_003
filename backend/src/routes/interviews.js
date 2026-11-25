@@ -19,6 +19,8 @@ import { interviewAlertsRouter } from './alerts.js';
 import { interviewEvidenceRouter } from './evidence.js';
 import { liveMonitoringRouter } from './liveMonitoring.js';
 import { interviewReportRouter } from './reports.js';
+import { interviewFeedbackRouter } from './feedback.js';
+import { multimodalRouter } from './multimodal.js';
 
 const router = Router();
 
@@ -36,6 +38,12 @@ router.use('/:id/live-monitoring', liveMonitoringRouter);
 
 // Phase 19: Interview Report routes
 router.use('/:id/report', interviewReportRouter);
+
+// Phase 22: Internal Pilot & Feedback routes
+router.use('/:id/feedback', interviewFeedbackRouter);
+
+// Phase 23: V2 Multimodal Integrity Intelligence routes
+router.use('/:id/multimodal', multimodalRouter);
 
 // HR interview management (Phase 7). Interviewee-specific interview views
 // belong to Phase 9; interviewer assignment belongs to Phase 8. All routes

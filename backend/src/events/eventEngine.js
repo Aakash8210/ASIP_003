@@ -6,6 +6,7 @@ import {
   validateBehaviourAnalysisPayload,
   normalizeSignalToEvent,
   normalizeMonitoringQualityToEvent,
+  normalizeMultimodalFusionToEvents,
   EVENT_STATUSES,
 } from './eventNormalizer.js';
 import { processEventsBatchForAlerts } from '../alerts/alertEngine.js';
@@ -223,4 +224,127 @@ export async function resolveMonitoringEvent(eventId, resolutionContext = {}) {
 
   return updatedDoc;
 }
+
+/**
+ * Phase 23: Processes V2 Multimodal Fusion results into monitoring events.
+ *
+ * @param {object} fusionResult - The MultimodalFusionResult from AI Service.
+ * @param {string|null} expectedInterviewId - Optional interview ID check.
+ * @returns {Promise<object>} Processing summary.
+ */
+export async function processMultimodalFusion(fusionResult, expectedInterviewId = null) {
+  if (!fusionResult || typeof fusionResult !== 'object') {
+    throw new AppError('Multimodal fusion result is required', 400);
+  }
+
+  const { interview_id } = fusionResult;
+  if (!interview_id) {
+    throw new AppError('interview_id is required in fusion result', 400);
+  }
+
+  if (expectedInterviewId && interview_id !== expectedInterviewId) {
+    throw new AppError(`interview_id (${interview_id}) does not match expected (${expectedInterviewId})`, 400);
+  }
+
+  const db = requireDatabase();
+  const interview = await db.collection(COLLECTIONS.INTERVIEW_SESSIONS).findOne({ _id: interview_id });
+  if (!interview) {
+    throw new AppError(`Interview session '${interview_id}' does not exist`, 404);
+  }
+
+  const candidateId = interview.candidate_id || null;
+  const eventSpecs = normalizeMultimodalFusionToEvents(fusionResult, candidateId);
+
+  let createdCount = 0;
+  let updatedCount = 0;
+  const persistedEvents = [];
+  const now = new Date();
+
+  for (const spec of eventSpecs) {
+    const filter = { idempotency_key: spec.idempotency_key };
+    const update = {
+      $set: {
+        interview_id: spec.interview_id,
+        candidate_id: spec.candidate_id,
+        event_type: spec.event_type,
+        category: spec.category,
+        source: spec.source,
+        source_analysis_id: spec.source_analysis_id,
+        status: spec.status,
+        last_observed_at: spec.last_observed_at,
+        duration_ms: spec.duration_ms,
+        occurrence_count: spec.occurrence_count,
+        reliability: spec.reliability,
+        severity: spec.severity,
+        confidence: spec.confidence,
+        version: spec.version || 'v2',
+        modality: spec.modality || 'multimodal',
+        metrics: spec.metrics,
+        explanation: spec.explanation,
+        schema_version: spec.schema_version,
+        updated_at: now,
+      },
+      $setOnInsert: {
+        _id: randomUUID(),
+        event_id: `evt_${spec.interview_id}_${randomUUID().slice(0, 8)}`,
+        first_observed_at: spec.first_observed_at,
+        timestamp: spec.timestamp,
+        review_status: 'unreviewed',
+        created_at: now,
+      },
+    };
+
+    const result = await db.collection(COLLECTIONS.MONITORING_EVENTS).findOneAndUpdate(
+      filter,
+      update,
+      {
+        upsert: true,
+        returnDocument: 'after',
+        includeResultMetadata: true,
+      }
+    );
+
+    const doc = result.value !== undefined ? result.value : result;
+    const isNew = !result.lastErrorObject?.updatedExisting;
+
+    if (isNew) {
+      createdCount++;
+    } else {
+      updatedCount++;
+    }
+
+    if (doc) {
+      persistedEvents.push(doc);
+    }
+  }
+
+  // Hook into alerts, evidence, and live monitoring
+  if (persistedEvents.length > 0) {
+    try {
+      await processEventsBatchForAlerts(persistedEvents);
+    } catch {
+      // Non-critical alert processing error
+    }
+
+    try {
+      await captureEvidenceForEvents(interview_id, persistedEvents);
+    } catch {
+      // Non-critical evidence capture error
+    }
+
+    try {
+      dispatchMonitoringUpdateToReviewers(interview_id);
+    } catch {
+      // Non-critical socket notification error
+    }
+  }
+
+  return {
+    interview_id,
+    events_created: createdCount,
+    events_updated: updatedCount,
+    events: persistedEvents,
+  };
+}
+
 
