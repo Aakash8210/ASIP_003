@@ -2,16 +2,13 @@ import { useState, useMemo, useEffect, useCallback } from 'react'
 import {
   FileText,
   Search,
-  Shield,
-  AlertTriangle,
-  CheckCircle,
-  Clock,
   Eye,
   RefreshCw,
-  ShieldAlert,
+  ArrowRight,
+  ShieldCheck,
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card'
+import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { DataTable, TableColumn } from '@/components/ui/Table'
 import { Input } from '@/components/ui/Input'
@@ -89,19 +86,19 @@ export function HRReportsPage() {
   const reportColumns: TableColumn<InterviewReport>[] = [
     {
       key: 'title',
-      header: 'Interview & Candidate',
+      header: 'Interview session',
       render: (row) => (
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-brand-50 text-brand-700 dark:bg-brand-900/30 dark:text-brand-300">
-            <FileText className="h-4 w-4" aria-hidden="true" />
+          <div className="h-7 w-7 rounded-md bg-[#2D211C] border border-brand-500/25 flex items-center justify-center shrink-0">
+            <FileText className="h-3.5 w-3.5 text-brand-500" aria-hidden="true" />
           </div>
-          <div>
-            <p className="font-medium text-surface-900 dark:text-surface-50">
+          <div className="min-w-0">
+            <p className="font-medium text-surface-900 dark:text-zinc-100 truncate">
               {row.session_metadata?.title || 'Interview Session'}
             </p>
-            <p className="text-xs text-surface-500 dark:text-surface-400">
+            <p className="text-[11px] text-surface-500 dark:text-zinc-400 font-mono truncate">
               Candidate: {row.session_metadata?.candidate?.name || 'Unassigned'}
-              {row.session_metadata?.interviewer?.name ? ` · Interviewer: ${row.session_metadata.interviewer.name}` : ''}
+              {row.session_metadata?.interviewer?.name ? ` · Reviewer: ${row.session_metadata.interviewer.name}` : ''}
             </p>
           </div>
         </div>
@@ -109,29 +106,26 @@ export function HRReportsPage() {
     },
     {
       key: 'review_status',
-      header: 'Review Status',
+      header: 'Human review status',
       render: (row) => {
         switch (row.review_status) {
           case 'REVIEWED':
             return (
-              <Badge variant="success" className="gap-1">
-                <CheckCircle className="h-3 w-3" />
+              <Badge variant="success" dot className="text-[10px]">
                 Reviewed
               </Badge>
             )
           case 'FLAGGED_FOR_FOLLOWUP':
             return (
-              <Badge variant="danger" className="gap-1">
-                <ShieldAlert className="h-3 w-3" />
-                Follow-up
+              <Badge variant="danger" dot className="text-[10px]">
+                Follow-up required
               </Badge>
             )
           case 'PENDING_REVIEW':
           default:
             return (
-              <Badge variant="neutral" className="gap-1 text-surface-600 dark:text-surface-300">
-                <Clock className="h-3 w-3" />
-                Pending Review
+              <Badge variant="neutral" dot className="text-[10px]">
+                Pending review
               </Badge>
             )
         }
@@ -139,18 +133,18 @@ export function HRReportsPage() {
     },
     {
       key: 'indicators',
-      header: 'Integrity Indicators',
+      header: 'Integrity indicators',
       render: (row) => (
-        <div className="text-xs space-y-1">
+        <div className="text-xs font-mono space-y-1">
           <div className="flex items-center gap-2">
-            <span className="text-surface-500">Visual:</span>
-            <span className="font-medium text-surface-900 dark:text-surface-50">
+            <span className="text-surface-400 dark:text-zinc-500 text-[11px]">Continuity:</span>
+            <span className="font-medium text-surface-900 dark:text-zinc-200">
               {row.integrity_indicators?.visual_consistency?.label || 'Normal'}
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-surface-500">Stream:</span>
-            <span className="font-medium text-surface-900 dark:text-surface-50">
+            <span className="text-surface-400 dark:text-zinc-500 text-[11px]">Stream:</span>
+            <span className="font-medium text-surface-900 dark:text-zinc-200">
               {row.integrity_indicators?.stream_reliability?.label || 'Stable'}
             </span>
           </div>
@@ -159,39 +153,39 @@ export function HRReportsPage() {
     },
     {
       key: 'observations',
-      header: 'Events / Evidence',
+      header: 'Observable evidence',
       render: (row) => (
-        <div className="text-xs text-surface-600 dark:text-surface-300 space-y-0.5">
-          <p>{row.events?.length ?? 0} timeline event(s)</p>
-          <p className="text-surface-400">{row.evidence_summary?.total_evidence ?? 0} linked evidence</p>
+        <div className="text-xs font-mono text-surface-600 dark:text-zinc-300 space-y-0.5">
+          <p>{row.events?.length ?? 0} timestamped events</p>
+          <p className="text-[11px] text-surface-400 dark:text-zinc-500">{row.evidence_summary?.total_evidence ?? 0} linked frames</p>
         </div>
       ),
     },
     {
       key: 'generated_at',
-      header: 'Concluded / Generated',
+      header: 'Concluded date',
       render: (row) => (
-        <div className="text-xs text-surface-500 dark:text-surface-400">
+        <div className="text-xs font-mono text-surface-500 dark:text-zinc-400 tabular-nums">
           <p>{row.generated_at ? formatInterviewDate(row.generated_at) : '—'}</p>
           {row.session_metadata?.duration_seconds ? (
-            <p>{Math.round(row.session_metadata.duration_seconds / 60)} min duration</p>
+            <p className="text-[11px] text-surface-400 dark:text-zinc-500">{Math.round(row.session_metadata.duration_seconds / 60)} min duration</p>
           ) : null}
         </div>
       ),
     },
     {
       key: 'actions',
-      header: 'Actions',
+      header: 'Audit view',
       className: 'text-right',
       render: (row) => (
         <div className="flex items-center justify-end gap-2">
           <Button
             size="sm"
-            variant="neutral"
+            variant="outline"
             onClick={() => setSelectedReport(row)}
-            className="gap-1.5"
+            className="gap-1.5 text-xs py-1"
           >
-            <Eye className="h-3.5 w-3.5" />
+            <Eye className="h-3.5 w-3.5 text-brand-500" />
             <span>Open Report</span>
           </Button>
         </div>
@@ -202,171 +196,164 @@ export function HRReportsPage() {
   const templates = [
     {
       id: 'TPL-001',
-      name: 'Standard Technical Interview Report',
-      description: 'Standard post-interview audit summary including timeline observations, video stream stability, and secondary presence indicators.',
+      name: 'Standard Technical Assessment Report',
+      description: 'Audit-ready post-interview summary capturing chronological event timelines, stream stability telemetry, and human review sign-offs.',
       type: 'Technical',
-      frequency: 'Per-interview',
     },
     {
       id: 'TPL-002',
-      name: 'Behavioral & Integrity Summary',
-      description: 'Focused summary analyzing participant continuity, focus transitions, and human reviewer notes.',
+      name: 'Behavioral Signal Telemetry Summary',
+      description: 'Analyzes face presence consistency, camera continuity, and human reviewer notes without speculative fraud scoring.',
       type: 'Behavioral',
-      frequency: 'Per-interview',
     },
     {
       id: 'TPL-003',
       name: 'Executive & Senior Role Review',
-      description: 'Audit report format featuring comprehensive multi-reviewer sign-off workflows and annotated evidence inspection.',
+      description: 'Comprehensive multi-stakeholder sign-off workflow with linked observation context inspection.',
       type: 'Executive',
-      frequency: 'Per-interview',
     },
   ]
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-7xl mx-auto">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-surface-900 dark:text-surface-50">Post-Interview Reports</h1>
-          <p className="text-surface-600 dark:text-surface-400 mt-1">
-            Audit-ready post-session integrity records, observable event timelines, and human review sign-offs
+          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-surface-900 dark:text-zinc-100">
+            Post-Interview Reports
+          </h1>
+          <p className="text-xs sm:text-sm text-surface-500 dark:text-zinc-400 mt-0.5">
+            Audit-ready integrity records, factual telemetry timelines, and human review sign-offs
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="neutral" size="sm" onClick={loadReports} disabled={isLoading} className="gap-2">
-            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+          <Button variant="outline" size="sm" onClick={loadReports} disabled={isLoading} className="gap-2 text-xs">
+            <RefreshCw className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} />
             <span>Refresh</span>
           </Button>
         </div>
       </div>
 
       {loadError && (
-        <Card className="border-danger-300 dark:border-danger-800">
+        <Card className="border-danger-300 dark:border-danger-900/50 bg-danger-500/[0.04]">
           <CardContent className="p-4 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-danger-600 dark:text-danger-400" />
-              <p className="text-sm text-danger-700 dark:text-danger-300">{loadError}</p>
-            </div>
-            <Button variant="neutral" size="sm" onClick={loadReports}>
+            <p className="text-xs text-danger-600 dark:text-danger-400">{loadError}</p>
+            <Button variant="outline" size="sm" onClick={loadReports}>
               Retry
             </Button>
           </CardContent>
         </Card>
       )}
 
-      <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as 'reports' | 'templates')} className="space-y-4">
-        <TabsList className="w-auto">
+      {/* Metric Cards Row */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <Card className="p-4">
+          <p className="text-xs font-medium text-surface-500 dark:text-zinc-400">Total Reports</p>
+          <p className="text-2xl font-semibold tracking-tight text-surface-900 dark:text-zinc-100 mt-1 tabular-nums">{stats.total}</p>
+          <span className="text-[11px] font-mono text-surface-400 dark:text-zinc-500">all sessions</span>
+        </Card>
+        <Card className="p-4">
+          <p className="text-xs font-medium text-surface-500 dark:text-zinc-400">Reviewed</p>
+          <p className="text-2xl font-semibold tracking-tight text-emerald-600 dark:text-emerald-400 mt-1 tabular-nums">{stats.reviewed}</p>
+          <span className="text-[11px] font-mono text-emerald-600/70 dark:text-emerald-400/70">human signed-off</span>
+        </Card>
+        <Card className="p-4">
+          <p className="text-xs font-medium text-surface-500 dark:text-zinc-400">Pending Review</p>
+          <p className="text-2xl font-semibold tracking-tight text-amber-600 dark:text-amber-400 mt-1 tabular-nums">{stats.pending}</p>
+          <span className="text-[11px] font-mono text-amber-600/70 dark:text-amber-400/70">awaiting review</span>
+        </Card>
+        <Card className="p-4">
+          <p className="text-xs font-medium text-surface-500 dark:text-zinc-400">Follow-Up Required</p>
+          <p className="text-2xl font-semibold tracking-tight text-rose-600 dark:text-rose-400 mt-1 tabular-nums">{stats.flagged}</p>
+          <span className="text-[11px] font-mono text-rose-600/70 dark:text-rose-400/70">reviewer flagged</span>
+        </Card>
+      </div>
+
+      <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as 'reports' | 'templates')} variant="pills" className="space-y-4">
+        <TabsList>
           <TabsTrigger value="reports">Generated Reports ({reports.length})</TabsTrigger>
           <TabsTrigger value="templates">Report Templates ({templates.length})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="reports" className="space-y-4">
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-            <Card className="border-surface-200 dark:border-surface-800">
-              <CardContent className="p-4">
-                <p className="text-xs uppercase tracking-wider text-surface-500">Total Reports</p>
-                <p className="text-2xl font-bold text-surface-900 dark:text-surface-50 mt-1">{stats.total}</p>
-              </CardContent>
-            </Card>
-            <Card className="border-surface-200 dark:border-surface-800">
-              <CardContent className="p-4">
-                <p className="text-xs uppercase tracking-wider text-surface-500">Pending Review</p>
-                <p className="text-2xl font-bold text-surface-600 dark:text-surface-300 mt-1">{stats.pending}</p>
-              </CardContent>
-            </Card>
-            <Card className="border-surface-200 dark:border-surface-800">
-              <CardContent className="p-4">
-                <p className="text-xs uppercase tracking-wider text-surface-500">Reviewed</p>
-                <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 mt-1">{stats.reviewed}</p>
-              </CardContent>
-            </Card>
-            <Card className="border-surface-200 dark:border-surface-800">
-              <CardContent className="p-4">
-                <p className="text-xs uppercase tracking-wider text-surface-500">Follow-Up Required</p>
-                <p className="text-2xl font-bold text-danger-600 dark:text-danger-400 mt-1">{stats.flagged}</p>
-              </CardContent>
-            </Card>
-            <Card className="border-surface-200 dark:border-surface-800">
-              <CardContent className="p-4">
-                <p className="text-xs uppercase tracking-wider text-surface-500">Stable Streams</p>
-                <p className="text-2xl font-bold text-brand-600 dark:text-brand-400 mt-1">{stats.stableStreams}</p>
-              </CardContent>
-            </Card>
-          </div>
-
-          <Card className="border-surface-200 dark:border-surface-800">
-            <CardContent className="p-4 sm:p-5">
-              <div className="flex flex-col sm:flex-row gap-3">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-400" aria-hidden="true" />
-                  <Input
-                    placeholder="Search by candidate, interviewer, or interview title..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-                <div className="flex items-center gap-2">
-                  <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className="input w-48 text-sm"
-                  >
-                    <option value="all">All Review Statuses</option>
-                    <option value="PENDING_REVIEW">Pending Review</option>
-                    <option value="REVIEWED">Reviewed</option>
-                    <option value="FLAGGED_FOR_FOLLOWUP">Follow-up Required</option>
-                  </select>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-surface-200 dark:border-surface-800">
-            <CardContent className="p-0">
-              {isLoading ? (
-                <div className="p-6 space-y-3">
-                  {[0, 1, 2].map((i) => (
-                    <div key={i} className="h-16 bg-surface-100 dark:bg-surface-800 rounded animate-pulse" />
-                  ))}
-                </div>
-              ) : filteredReports.length === 0 ? (
-                <div className="py-12 px-4 text-center">
-                  <FileText className="h-10 w-10 text-surface-400 mx-auto mb-3" aria-hidden="true" />
-                  <p className="text-base font-medium text-surface-900 dark:text-surface-50">No reports found</p>
-                  <p className="text-sm text-surface-500 dark:text-surface-400 mt-1">
-                    {reports.length === 0
-                      ? 'No interview reports have been compiled yet. Complete an interview to generate reports.'
-                      : 'No reports matched your search filters.'}
-                  </p>
-                </div>
-              ) : (
-                <DataTable
-                  columns={reportColumns}
-                  data={filteredReports}
-                  striped
-                  hoverable
-                  emptyMessage="No reports found matching your criteria"
+          <Card className="p-4">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-400" aria-hidden="true" />
+                <Input
+                  placeholder="Search by candidate, interviewer, or interview title..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10"
                 />
-              )}
-            </CardContent>
+              </div>
+              <div className="flex items-center gap-2">
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="input w-48 text-xs font-mono"
+                  aria-label="Filter by review status"
+                >
+                  <option value="all">All review statuses</option>
+                  <option value="PENDING_REVIEW">Pending review</option>
+                  <option value="REVIEWED">Reviewed</option>
+                  <option value="FLAGGED_FOR_FOLLOWUP">Follow-up required</option>
+                </select>
+              </div>
+            </div>
           </Card>
+
+          <div className="table-container">
+            {isLoading ? (
+              <div className="p-6 space-y-3">
+                {[0, 1, 2].map((i) => (
+                  <div key={i} className="h-14 bg-surface-100 dark:bg-white/[0.04] rounded-lg animate-pulse" />
+                ))}
+              </div>
+            ) : filteredReports.length === 0 ? (
+              <div className="py-16 px-4 text-center">
+                <div className="h-10 w-10 rounded-xl bg-surface-100 dark:bg-[#1a1d28] border border-surface-200 dark:border-white/[0.06] flex items-center justify-center mx-auto mb-3 text-surface-400 dark:text-zinc-500">
+                  <FileText className="h-5 w-5" aria-hidden="true" />
+                </div>
+                <p className="text-sm font-medium text-surface-900 dark:text-zinc-200">No reports found</p>
+                <p className="text-xs text-surface-500 dark:text-zinc-400 mt-1 max-w-sm mx-auto">
+                  {reports.length === 0
+                    ? 'Completed interviews automatically compile into structured integrity reports.'
+                    : 'No reports matched your search filters.'}
+                </p>
+              </div>
+            ) : (
+              <DataTable
+                columns={reportColumns}
+                data={filteredReports}
+                hoverable
+                emptyMessage="No reports found matching your criteria"
+              />
+            )}
+          </div>
         </TabsContent>
 
         <TabsContent value="templates" className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {templates.map((tpl) => (
-              <Card key={tpl.id} className="border-surface-200 dark:border-surface-800">
-                <CardHeader>
-                  <CardTitle className="text-base flex items-center justify-between">
-                    <span>{tpl.name}</span>
-                    <Badge variant="neutral">{tpl.type}</Badge>
-                  </CardTitle>
-                  <CardDescription className="text-xs mt-1">Standard template format</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-sm text-surface-600 dark:text-surface-400">{tpl.description}</p>
-                </CardContent>
+              <Card key={tpl.id} className="p-5 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between pb-3 border-b border-surface-200/80 dark:border-white/[0.06]">
+                    <span className="text-xs font-semibold text-surface-900 dark:text-zinc-100">{tpl.name}</span>
+                    <Badge variant="neutral" className="text-[10px]">{tpl.type}</Badge>
+                  </div>
+                  <p className="text-xs text-surface-600 dark:text-zinc-400 mt-3 leading-relaxed">
+                    {tpl.description}
+                  </p>
+                </div>
+                <div className="pt-4 mt-4 border-t border-surface-200/80 dark:border-white/[0.06] flex items-center justify-between text-xs text-surface-500 dark:text-zinc-400">
+                  <span className="flex items-center gap-1.5 font-mono text-[11px]">
+                    <ShieldCheck className="h-3.5 w-3.5 text-brand-500" />
+                    Standard Format
+                  </span>
+                  <span className="text-brand-500 font-medium hover:underline cursor-pointer flex items-center gap-1">
+                    Preview <ArrowRight className="h-3 w-3" />
+                  </span>
+                </div>
               </Card>
             ))}
           </div>

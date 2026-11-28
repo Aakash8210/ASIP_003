@@ -10,25 +10,33 @@ interface ProgressProps extends React.HTMLAttributes<HTMLDivElement> {
 
 export const Progress = forwardRef<HTMLDivElement, ProgressProps>(
   ({ value = 0, max = 100, variant = 'default', showLabel = false, className, ...props }, ref) => {
-    const percentage = Math.min((value / max) * 100, 100)
+    const percentage = Math.min(Math.max((value / max) * 100, 0), 100)
 
     const variantClasses = {
-      default: 'bg-blue-500',
-      success: 'bg-green-500',
-      warning: 'bg-yellow-500',
-      danger: 'bg-red-500',
+      default: 'bg-brand-500',
+      success: 'bg-emerald-500',
+      warning: 'bg-amber-500',
+      danger: 'bg-rose-500',
     }
 
     return (
-      <div className="space-y-2">
-        <div ref={ref} className={cn('w-full h-2 bg-gray-200 rounded-full overflow-hidden', className)} {...props}>
+      <div className="space-y-1.5 w-full">
+        <div
+          ref={ref}
+          className={cn('w-full h-1.5 bg-surface-200 dark:bg-white/[0.08] rounded-full overflow-hidden', className)}
+          role="progressbar"
+          aria-valuenow={Math.round(percentage)}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          {...props}
+        >
           <div
-            className={cn('h-full transition-all duration-300', variantClasses[variant])}
+            className={cn('h-full transition-all duration-300 rounded-full', variantClasses[variant])}
             style={{ width: `${percentage}%` }}
           />
         </div>
         {showLabel && (
-          <div className="text-xs font-medium text-surface-600 dark:text-surface-400">
+          <div className="flex justify-end text-[11px] font-mono text-surface-500 dark:text-zinc-400 tabular-nums">
             {Math.round(percentage)}%
           </div>
         )}
@@ -38,4 +46,3 @@ export const Progress = forwardRef<HTMLDivElement, ProgressProps>(
 )
 
 Progress.displayName = 'Progress'
-

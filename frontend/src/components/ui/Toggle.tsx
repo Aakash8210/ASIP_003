@@ -19,14 +19,18 @@ export const Toggle = forwardRef<HTMLButtonElement, ToggleProps>(
     const pressed = isControlled ? controlled : internalPressed
 
     const sizeClasses = {
-      sm: 'h-8 px-2.5',
-      md: 'h-10 px-3',
-      lg: 'h-12 px-4',
+      sm: 'h-7 px-2.5 text-xs',
+      md: 'h-8 px-3 text-sm',
+      lg: 'h-10 px-4 text-sm',
     }
 
     const variantClasses = {
-      default: pressed ? 'bg-brand-500 text-white' : 'bg-surface-100 text-surface-900 hover:bg-surface-200',
-      outline: pressed ? 'border-2 border-brand-500 bg-brand-50' : 'border border-surface-300',
+      default: pressed
+        ? 'bg-brand-500 text-white shadow-xs'
+        : 'bg-surface-100 text-surface-700 hover:bg-surface-200 dark:bg-[#1a1d28] dark:text-zinc-300 dark:hover:bg-[#232736]',
+      outline: pressed
+        ? 'border border-brand-500/50 bg-brand-500/10 text-brand-400'
+        : 'border border-surface-200 dark:border-white/[0.08] text-surface-700 dark:text-zinc-300 hover:bg-surface-50 dark:hover:bg-white/[0.03]',
     }
 
     const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -44,7 +48,7 @@ export const Toggle = forwardRef<HTMLButtonElement, ToggleProps>(
         ref={ref}
         type="button"
         className={cn(
-          'inline-flex items-center justify-center rounded-md font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2',
+          'inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500/50',
           sizeClasses[size],
           variantClasses[variant],
           className
@@ -60,4 +64,3 @@ export const Toggle = forwardRef<HTMLButtonElement, ToggleProps>(
 )
 
 Toggle.displayName = 'Toggle'
-

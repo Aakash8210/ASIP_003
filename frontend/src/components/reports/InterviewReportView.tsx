@@ -1,15 +1,11 @@
 import { useState } from 'react'
 import {
-  Calendar,
   CheckCircle2,
   Clock,
-  Download,
   FileText,
   Printer,
   Shield,
   User,
-  AlertTriangle,
-  Flag,
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'

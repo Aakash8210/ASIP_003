@@ -1,12 +1,26 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { Activity, ArrowLeft, Calendar, Eye, FileText, Mail, Pencil, Send, User, UserPlus, X } from 'lucide-react'
+import {
+  Activity,
+  ArrowLeft,
+  Eye,
+  FileText,
+  Mail,
+  Pencil,
+  Send,
+  User,
+  UserPlus,
+  Clock,
+  Shield,
+  Layers,
+} from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
 import { Modal } from '@/components/ui/Modal'
+import { Avatar } from '@/components/ui/Avatar'
 import { useToast } from '@/components/ui/Toast'
 import { apiClient, ApiError, InterviewerUserSummary, InterviewReport, InterviewSession } from '@/lib/api'
 import { interviewStatusConfig, formatInterviewDate } from './interviewStatus'
@@ -129,7 +143,7 @@ export function HRInterviewDetailPage() {
       const response = await apiClient.inviteInterview(interview.id)
       setInterview(response.interview)
       setShowInviteModal(false)
-      success('Invitation sent', 'The candidate invitation was initiated for this interview')
+      success('Invitation dispatched', 'Candidate invitation link and token were generated')
     } catch (error) {
       const message = error instanceof ApiError ? error.message : 'Failed to initiate the invitation'
       danger('Invitation failed', message)
@@ -161,7 +175,7 @@ export function HRInterviewDetailPage() {
       const response = await apiClient.assignInterview(interview.id, selectedInterviewerId)
       setInterview(response.interview)
       setShowAssignModal(false)
-      success('Interviewer assigned', 'The interviewer was assigned to this interview')
+      success('Interviewer assigned', 'Technical reviewer was assigned to this interview')
     } catch (error) {
       const message = error instanceof ApiError ? error.message : 'Failed to assign the interviewer'
       setAssignError(message)
@@ -173,86 +187,93 @@ export function HRInterviewDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6 max-w-4xl" aria-busy="true">
-        <div className="h-8 w-64 bg-surface-200 dark:bg-surface-800 rounded-lg animate-pulse" />
-        <div className="h-64 bg-surface-200 dark:bg-surface-800 rounded-xl animate-pulse" />
+      <div className="space-y-6 max-w-5xl mx-auto" aria-busy="true">
+        <div className="h-6 w-32 bg-surface-200 dark:bg-white/[0.04] rounded animate-pulse" />
+        <div className="h-48 bg-surface-200 dark:bg-white/[0.04] rounded-xl animate-pulse" />
       </div>
     )
   }
 
   if (loadError || !interview) {
     return (
-      <div className="max-w-3xl">
-        <Button variant="ghost" size="sm" asChild className="gap-2 -ml-2 mb-4">
+      <div className="max-w-3xl mx-auto">
+        <Button variant="ghost" size="sm" asChild className="gap-2 -ml-2 mb-4 text-xs">
           <Link to="/hr/interviews">
-            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+            <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
             Back to interviews
           </Link>
         </Button>
-        <Card className="border-surface-200 dark:border-surface-800">
-          <CardContent className="py-12 text-center">
-            <p className="text-surface-900 dark:text-surface-50 font-medium">{loadError ?? 'Interview not found'}</p>
-            <p className="text-surface-500 dark:text-surface-400 text-sm mt-1">
-              The interview could not be loaded. It may not exist or you may not have access to it.
-            </p>
-          </CardContent>
+        <Card className="p-8 text-center">
+          <p className="text-surface-900 dark:text-zinc-100 font-medium">{loadError ?? 'Interview not found'}</p>
+          <p className="text-surface-500 dark:text-zinc-400 text-xs mt-1">
+            The interview could not be loaded. It may not exist or permissions may have changed.
+          </p>
         </Card>
       </div>
     )
   }
 
   const status = interviewStatusConfig(interview.status)
-  const StatusIcon = status.icon
   const canInvite = interview.status === 'draft'
   const canAssign = ['draft', 'scheduled', 'invited'].includes(interview.status)
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="space-y-6 max-w-5xl mx-auto">
+      {/* Top Breadcrumb & Action Bar */}
       <div>
-        <Button variant="ghost" size="sm" asChild className="gap-2 -ml-2 mb-2">
+        <Button variant="ghost" size="sm" asChild className="gap-2 -ml-2 mb-3 text-xs">
           <Link to="/hr/interviews">
-            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+            <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
             Back to interviews
           </Link>
         </Button>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
-            <h1 className="text-2xl font-bold text-surface-900 dark:text-surface-50 truncate">
+            <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-surface-900 dark:text-zinc-100 truncate">
               {interview.title}
             </h1>
-            <Badge variant="neutral" className={status.className}>
-              <StatusIcon className="h-3 w-3" aria-hidden="true" />
+            <Badge
+              variant={
+                interview.status === 'in_progress'
+                  ? 'danger'
+                  : interview.status === 'completed'
+                    ? 'success'
+                    : 'neutral'
+              }
+              dot
+              className="text-xs"
+            >
               {status.label}
             </Badge>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5 flex-wrap">
             {interview.status === 'in_progress' && (
-              <Button size="sm" variant="neutral" asChild className="gap-2">
+              <Button size="sm" variant="danger" asChild className="gap-1.5 text-xs">
                 <Link to={`/hr/interviews/${interview.id}/live`}>
-                  <Activity className="h-4 w-4 text-brand-600 dark:text-brand-400" />
+                  <Activity className="h-3.5 w-3.5" />
                   Live Monitoring
                 </Link>
               </Button>
             )}
             {interview.status === 'completed' && (
-              <Button size="sm" variant="neutral" className="gap-2" onClick={() => setShowReportModal(true)}>
-                <FileText className="h-4 w-4 text-brand-600 dark:text-brand-400" />
+              <Button size="sm" variant="outline" className="gap-1.5 text-xs" onClick={() => setShowReportModal(true)}>
+                <FileText className="h-3.5 w-3.5 text-brand-500" />
                 View Report
               </Button>
             )}
             {canAssign && (
-              <Button variant="neutral" size="sm" className="gap-2" onClick={openAssignModal} disabled={isEditing}>
-                <UserPlus className="h-4 w-4" aria-hidden="true" />
-                {interview.interviewer ? 'Reassign Interviewer' : 'Assign Interviewer'}
+              <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={openAssignModal} disabled={isEditing}>
+                <UserPlus className="h-3.5 w-3.5 text-surface-500 dark:text-zinc-400" aria-hidden="true" />
+                {interview.interviewer ? 'Reassign Reviewer' : 'Assign Reviewer'}
               </Button>
             )}
-            <Button variant="neutral" size="sm" className="gap-2" onClick={startEditing} disabled={isEditing}>
-              <Pencil className="h-4 w-4" aria-hidden="true" />
+            <Button variant="outline" size="sm" className="gap-1.5 text-xs" onClick={startEditing} disabled={isEditing}>
+              <Pencil className="h-3.5 w-3.5 text-surface-500 dark:text-zinc-400" aria-hidden="true" />
               Edit Details
             </Button>
             {canInvite && (
-              <Button size="sm" className="gap-2" onClick={() => setShowInviteModal(true)}>
-                <Send className="h-4 w-4" aria-hidden="true" />
+              <Button size="sm" className="gap-1.5 text-xs" onClick={() => setShowInviteModal(true)}>
+                <Send className="h-3.5 w-3.5" aria-hidden="true" />
                 Send Invitation
               </Button>
             )}
@@ -261,21 +282,21 @@ export function HRInterviewDetailPage() {
       </div>
 
       {isEditing && (
-        <Card className="border-brand-300 dark:border-brand-800">
-          <CardHeader>
-            <CardTitle className="text-lg">Edit interview details</CardTitle>
-            <CardDescription>Update the interview title and schedule</CardDescription>
+        <Card className="p-5 border-brand-500/30">
+          <CardHeader className="pb-3 border-b border-surface-200/80 dark:border-white/[0.06]">
+            <CardTitle className="text-sm font-semibold">Edit Session Details</CardTitle>
+            <CardDescription className="text-xs">Update interview title and scheduled timing</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-4">
             <form
               onSubmit={(e) => {
                 e.preventDefault()
                 handleSave()
               }}
-              className="space-y-5"
+              className="space-y-4"
               noValidate
             >
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <label htmlFor="edit-title" className="label">Interview title</label>
                 <Input
                   id="edit-title"
@@ -290,8 +311,8 @@ export function HRInterviewDetailPage() {
                   required
                 />
               </div>
-              <div className="space-y-2">
-                <label htmlFor="edit-scheduled" className="label">Scheduled date & time</label>
+              <div className="space-y-1.5">
+                <label htmlFor="edit-scheduled" className="label">Scheduled date &amp; time</label>
                 <Input
                   id="edit-scheduled"
                   type="datetime-local"
@@ -304,11 +325,11 @@ export function HRInterviewDetailPage() {
                   disabled={isSaving}
                 />
               </div>
-              <div className="flex justify-end gap-3 pt-4 border-t border-surface-200 dark:border-surface-800">
-                <Button variant="neutral" type="button" onClick={() => setIsEditing(false)} disabled={isSaving}>
+              <div className="flex justify-end gap-2.5 pt-3 border-t border-surface-200/80 dark:border-white/[0.06]">
+                <Button variant="outline" size="sm" type="button" onClick={() => setIsEditing(false)} disabled={isSaving}>
                   Cancel
                 </Button>
-                <Button type="submit" loading={isSaving}>
+                <Button size="sm" type="submit" loading={isSaving}>
                   Save Changes
                 </Button>
               </div>
@@ -317,136 +338,172 @@ export function HRInterviewDetailPage() {
         </Card>
       )}
 
-      <div className="grid md:grid-cols-2 gap-6">
-        <Card className="border-surface-200 dark:border-surface-800">
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <User className="h-5 w-5 text-brand-600" aria-hidden="true" />
-              Candidate
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2 text-sm">
+      {/* Meta Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+        {/* Candidate Card */}
+        <Card className="p-5">
+          <div className="flex items-center gap-2 pb-3 border-b border-surface-200/80 dark:border-white/[0.06] text-xs font-semibold text-surface-900 dark:text-zinc-100">
+            <User className="h-4 w-4 text-brand-500" aria-hidden="true" />
+            Candidate
+          </div>
+          <div className="pt-3.5 space-y-2 text-xs">
             {interview.candidate ? (
-              <>
-                <p className="font-medium text-surface-900 dark:text-surface-50">{interview.candidate.name ?? 'Candidate'}</p>
-                <p className="text-surface-600 dark:text-surface-400 flex items-center gap-2">
-                  <Mail className="h-4 w-4" aria-hidden="true" />
-                  {interview.candidate.email ?? 'No email on record'}
-                </p>
-              </>
+              <div className="flex items-center gap-3">
+                <Avatar name={interview.candidate.name} size="sm" />
+                <div className="min-w-0">
+                  <p className="font-semibold text-surface-900 dark:text-zinc-100 truncate">
+                    {interview.candidate.name ?? 'Candidate'}
+                  </p>
+                  <p className="text-surface-500 dark:text-zinc-400 font-mono text-[11px] flex items-center gap-1.5 truncate">
+                    <Mail className="h-3 w-3 shrink-0" aria-hidden="true" />
+                    {interview.candidate.email ?? 'No email on record'}
+                  </p>
+                </div>
+              </div>
             ) : (
-              <p className="text-surface-500 dark:text-surface-400">No candidate associated with this interview</p>
+              <p className="text-surface-500 dark:text-zinc-400">No candidate associated with this interview</p>
             )}
-          </CardContent>
+          </div>
         </Card>
 
-        <Card className="border-surface-200 dark:border-surface-800">
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <UserPlus className="h-5 w-5 text-brand-600" aria-hidden="true" />
-              Interviewer
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2 text-sm">
+        {/* Interviewer Card */}
+        <Card className="p-5">
+          <div className="flex items-center gap-2 pb-3 border-b border-surface-200/80 dark:border-white/[0.06] text-xs font-semibold text-surface-900 dark:text-zinc-100">
+            <UserPlus className="h-4 w-4 text-brand-500" aria-hidden="true" />
+            Technical Reviewer
+          </div>
+          <div className="pt-3.5 space-y-2 text-xs">
             {interview.interviewer ? (
-              <p className="font-medium text-surface-900 dark:text-surface-50">{interview.interviewer.name ?? 'Interviewer'}</p>
+              <div className="flex items-center gap-3">
+                <Avatar name={interview.interviewer.name} size="sm" />
+                <div className="min-w-0">
+                  <p className="font-semibold text-surface-900 dark:text-zinc-100 truncate">
+                    {interview.interviewer.name ?? 'Interviewer'}
+                  </p>
+                  <p className="text-surface-500 dark:text-zinc-400 font-mono text-[11px] truncate">
+                    Assigned Reviewer
+                  </p>
+                </div>
+              </div>
             ) : (
-              <p className="text-surface-500 dark:text-surface-400">
-                No interviewer assigned yet.
-                {canAssign && ' Use “Assign Interviewer” to choose who conducts this interview.'}
+              <p className="text-surface-500 dark:text-zinc-400">
+                No reviewer assigned yet.{' '}
+                {canAssign && 'Use "Assign Reviewer" to select a team member.'}
               </p>
             )}
-          </CardContent>
+          </div>
         </Card>
 
-        <Card className="border-surface-200 dark:border-surface-800">
-          <CardHeader>
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-brand-600" aria-hidden="true" />
-              Schedule
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2 text-sm">
-            <p className="text-surface-600 dark:text-surface-400">
-              <span className="font-medium text-surface-900 dark:text-surface-50">Scheduled start:</span>{' '}
-              {formatInterviewDate(interview.scheduled_start_at)}
-            </p>
-            <p className="text-surface-600 dark:text-surface-400">
-              <span className="font-medium text-surface-900 dark:text-surface-50">Created:</span>{' '}
-              {formatInterviewDate(interview.created_at)}
-            </p>
-            <p className="text-surface-600 dark:text-surface-400">
-              <span className="font-medium text-surface-900 dark:text-surface-50">Last updated:</span>{' '}
-              {formatInterviewDate(interview.updated_at)}
-            </p>
-          </CardContent>
+        {/* Timing Card */}
+        <Card className="p-5">
+          <div className="flex items-center gap-2 pb-3 border-b border-surface-200/80 dark:border-white/[0.06] text-xs font-semibold text-surface-900 dark:text-zinc-100">
+            <Clock className="h-4 w-4 text-brand-500" aria-hidden="true" />
+            Schedule Details
+          </div>
+          <div className="pt-3.5 space-y-2 text-xs font-mono">
+            <div>
+              <span className="text-surface-500 dark:text-zinc-400">Window: </span>
+              <span className="text-surface-900 dark:text-zinc-200 tabular-nums">
+                {formatInterviewDate(interview.scheduled_start_at)}
+              </span>
+            </div>
+            <div>
+              <span className="text-surface-500 dark:text-zinc-400">Created: </span>
+              <span className="text-surface-900 dark:text-zinc-200 tabular-nums">
+                {formatInterviewDate(interview.created_at)}
+              </span>
+            </div>
+          </div>
         </Card>
       </div>
 
-      <Card className="border-surface-200 dark:border-surface-800">
-        <CardHeader>
-          <CardTitle className="text-lg">Invitation</CardTitle>
-          <CardDescription>Candidate invitation state for this interview</CardDescription>
-        </CardHeader>
-        <CardContent>
+      {/* Invitation Status Card */}
+      <Card className="p-5">
+        <div className="flex items-center justify-between pb-3 border-b border-surface-200/80 dark:border-white/[0.06]">
+          <div className="flex items-center gap-2 text-xs font-semibold text-surface-900 dark:text-zinc-100">
+            <Send className="h-4 w-4 text-brand-500" aria-hidden="true" />
+            Candidate Invitation Status
+          </div>
+          {interview.invite_reference ? (
+            <Badge variant="success" dot className="text-[10px]">
+              Invitation Dispatched
+            </Badge>
+          ) : (
+            <Badge variant="neutral" className="text-[10px]">
+              Draft — Pending Dispatch
+            </Badge>
+          )}
+        </div>
+        <div className="pt-4 text-xs">
           {interview.invite_reference ? (
             <div className="space-y-2">
-              <p className="text-sm text-surface-600 dark:text-surface-400">
-                An invitation has been initiated for this interview.
+              <p className="text-surface-600 dark:text-zinc-400">
+                An invitation token has been created for candidate authentication:
               </p>
-              <p className="text-sm text-surface-600 dark:text-surface-400">
-                <span className="font-medium text-surface-900 dark:text-surface-50">Reference:</span>{' '}
-                <code className="text-xs bg-surface-100 dark:bg-surface-800 px-1.5 py-0.5 rounded">
-                  {interview.invite_reference}
-                </code>
-              </p>
+              <div className="p-2.5 rounded-lg bg-surface-100 dark:bg-[#0c0d12] border border-surface-200 dark:border-white/[0.08] font-mono text-xs flex items-center justify-between">
+                <span className="text-surface-700 dark:text-zinc-300 truncate">
+                  Reference: {interview.invite_reference}
+                </span>
+                <span className="text-[11px] text-emerald-500 font-medium">Valid</span>
+              </div>
             </div>
           ) : (
-            <p className="text-sm text-surface-500 dark:text-surface-400">
-              No invitation has been sent yet.
-              {canInvite && ' Use “Send Invitation” to initiate the candidate invitation workflow.'}
-            </p>
+            <div className="flex items-center justify-between gap-4">
+              <p className="text-surface-500 dark:text-zinc-400">
+                No invitation has been sent yet. Click “Send Invitation” to generate credentials.
+              </p>
+              {canInvite && (
+                <Button size="sm" onClick={() => setShowInviteModal(true)} className="gap-1.5 text-xs shrink-0">
+                  <Send className="h-3 w-3" />
+                  Send Invitation
+                </Button>
+              )}
+            </div>
           )}
-        </CardContent>
+        </div>
       </Card>
 
-      <Card className="border-surface-200 dark:border-surface-800">
-        <CardHeader>
-          <CardTitle className="text-lg flex items-center gap-2">
-            <FileText className="h-5 w-5 text-brand-600" aria-hidden="true" />
-            Post-Interview Report
-          </CardTitle>
-          <CardDescription>Integrity audit record and human review status for this session</CardDescription>
-        </CardHeader>
-        <CardContent>
+      {/* Post-Interview Audit Report Card */}
+      <Card className="p-5">
+        <div className="flex items-center justify-between pb-3 border-b border-surface-200/80 dark:border-white/[0.06]">
+          <div className="flex items-center gap-2 text-xs font-semibold text-surface-900 dark:text-zinc-100">
+            <Shield className="h-4 w-4 text-brand-500" aria-hidden="true" />
+            Integrity Audit &amp; Human Review
+          </div>
           {report ? (
-            <div className="space-y-3 text-sm">
-              <p className="text-surface-600 dark:text-surface-400 whitespace-pre-wrap">
-                {report.summary ?? 'Report available'}
+            <Badge variant="info" className="text-[10px]">
+              Report Generated
+            </Badge>
+          ) : null}
+        </div>
+        <div className="pt-4 text-xs">
+          {report ? (
+            <div className="space-y-3">
+              <p className="text-surface-700 dark:text-zinc-300 whitespace-pre-wrap leading-relaxed">
+                {report.summary ?? 'Session audit summary available.'}
               </p>
               {report.generated_at && (
-                <p className="text-xs text-surface-400 dark:text-surface-500">
-                  Generated {formatInterviewDate(report.generated_at)}
+                <p className="text-[11px] font-mono text-surface-400 dark:text-zinc-500">
+                  Compiled: {formatInterviewDate(report.generated_at)}
                 </p>
               )}
-              <div className="pt-2">
-                <Button size="sm" onClick={() => setShowReportModal(true)} className="gap-2">
-                  <Eye className="h-4 w-4" />
-                  View Full Report & Review Status
+              <div className="pt-1">
+                <Button size="sm" onClick={() => setShowReportModal(true)} className="gap-2 text-xs">
+                  <Eye className="h-3.5 w-3.5" />
+                  View Full Report &amp; Review Audit
                 </Button>
               </div>
             </div>
           ) : (
             <div className="space-y-3">
-              <p className="text-sm text-surface-500 dark:text-surface-400">
+              <p className="text-surface-500 dark:text-zinc-400">
                 {interview.status === 'completed'
-                  ? 'The interview has ended. You can compile the post-interview report now.'
-                  : 'The report will become available once the interview has ended.'}
+                  ? 'The interview session concluded. You may generate the human review audit report now.'
+                  : 'Post-interview integrity telemetry report becomes available once the session ends.'}
               </p>
               {interview.status === 'completed' && (
                 <Button
                   size="sm"
-                  variant="secondary"
                   disabled={reportLoading}
                   onClick={async () => {
                     setReportLoading(true)
@@ -466,55 +523,57 @@ export function HRInterviewDetailPage() {
                       setReportLoading(false)
                     }
                   }}
+                  className="gap-2 text-xs"
                 >
-                  Generate & View Report
+                  <Layers className="h-3.5 w-3.5" />
+                  Generate &amp; Review Report
                 </Button>
               )}
             </div>
           )}
-        </CardContent>
+        </div>
       </Card>
 
+      {/* Invite Modal */}
       <Modal
         isOpen={showInviteModal}
         onClose={() => setShowInviteModal(false)}
-        title="Send Invitation"
+        title="Send Candidate Invitation"
         size="md"
       >
-        <div className="space-y-5">
-          <p className="text-sm text-surface-600 dark:text-surface-400">
-            This will initiate the candidate invitation workflow for{' '}
-            <span className="font-medium text-surface-900 dark:text-surface-50">{interview.title}</span>
-            {interview.candidate?.name ? <> and invite {interview.candidate.name}</> : null}. The interview
-            status will change from Draft to Invited.
+        <div className="space-y-4 text-xs">
+          <p className="text-surface-600 dark:text-zinc-300 leading-relaxed">
+            This will initiate the invitation workflow for{' '}
+            <strong className="text-surface-900 dark:text-zinc-100">{interview.title}</strong>
+            {interview.candidate?.name ? <> and notify <strong>{interview.candidate.name}</strong></> : null}. The session
+            status will transition to Invited.
           </p>
-          <div className="flex justify-end gap-3 pt-4 border-t border-surface-200 dark:border-surface-800">
-            <Button variant="neutral" type="button" onClick={() => setShowInviteModal(false)} disabled={isInviting}>
-              <X className="h-4 w-4" aria-hidden="true" />
+          <div className="flex justify-end gap-2.5 pt-4 border-t border-surface-200/80 dark:border-white/[0.06]">
+            <Button variant="outline" size="sm" type="button" onClick={() => setShowInviteModal(false)} disabled={isInviting}>
               Cancel
             </Button>
-            <Button type="button" loading={isInviting} onClick={handleInvite}>
-              <Send className="h-4 w-4" aria-hidden="true" />
+            <Button size="sm" type="button" loading={isInviting} onClick={handleInvite} className="gap-1.5">
+              <Send className="h-3.5 w-3.5" aria-hidden="true" />
               Send Invitation
             </Button>
           </div>
         </div>
       </Modal>
 
+      {/* Assign Modal */}
       <Modal
         isOpen={showAssignModal}
         onClose={() => setShowAssignModal(false)}
-        title={interview.interviewer ? 'Reassign Interviewer' : 'Assign Interviewer'}
+        title={interview.interviewer ? 'Reassign Reviewer' : 'Assign Technical Reviewer'}
         size="md"
       >
-        <div className="space-y-5">
-          <p className="text-sm text-surface-600 dark:text-surface-400">
-            Select the interviewer who will conduct this interview. You can change the assignment while the
-            interview has not started.
+        <div className="space-y-4 text-xs">
+          <p className="text-surface-600 dark:text-zinc-300 leading-relaxed">
+            Select the reviewer who will conduct the session and monitor live WebRTC room telemetry.
           </p>
           <Select
             id="assign-interviewer"
-            label="Interviewer"
+            label="Reviewer"
             value={selectedInterviewerId}
             placeholder="Select an interviewer..."
             onValueChange={(value) => {
@@ -533,25 +592,20 @@ export function HRInterviewDetailPage() {
             error={assignError ?? undefined}
           />
           {interviewersLoading && (
-            <p className="text-sm text-surface-500 dark:text-surface-400">Loading interviewers…</p>
+            <p className="text-surface-500 dark:text-zinc-400">Loading active reviewer accounts…</p>
           )}
-          {!interviewersLoading && interviewers.length === 0 && (
-            <p className="text-sm text-surface-500 dark:text-surface-400">
-              No active interviewer accounts are available.
-            </p>
-          )}
-          <div className="flex justify-end gap-3 pt-4 border-t border-surface-200 dark:border-surface-800">
-            <Button variant="neutral" type="button" onClick={() => setShowAssignModal(false)} disabled={isAssigning}>
+          <div className="flex justify-end gap-2.5 pt-4 border-t border-surface-200/80 dark:border-white/[0.06]">
+            <Button variant="outline" size="sm" type="button" onClick={() => setShowAssignModal(false)} disabled={isAssigning}>
               Cancel
             </Button>
-            <Button type="button" loading={isAssigning} disabled={!selectedInterviewerId} onClick={handleAssign}>
-              <UserPlus className="h-4 w-4" aria-hidden="true" />
-              Assign
+            <Button size="sm" type="button" loading={isAssigning} disabled={!selectedInterviewerId} onClick={handleAssign}>
+              Assign Reviewer
             </Button>
           </div>
         </div>
       </Modal>
 
+      {/* Report Modal */}
       <Modal
         isOpen={showReportModal && Boolean(report)}
         onClose={() => setShowReportModal(false)}

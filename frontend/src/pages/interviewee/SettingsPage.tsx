@@ -6,13 +6,11 @@ import {
   Shield,
   Palette,
   Link,
-  Zap,
   Moon,
   Sun,
   Monitor,
   Layers,
   Key,
-  Lock,
   RotateCcw,
   Trash2,
   Download,
@@ -20,36 +18,17 @@ import {
   ExternalLink,
   AlertTriangle,
   CheckCircle,
-  XCircle,
-  ChevronRight,
-  ChevronLeft,
   Save,
-  Eye,
-  EyeOff,
   Mail,
   Phone,
   Calendar,
-  MapPin,
-  Headphones,
-  Mic,
   Video,
   Settings as SettingsIcon,
   Sliders,
-  Terminal,
-  Bug,
-  FileText,
-  Clock,
-  History,
-  Wifi,
-  Globe,
-  Smartphone,
-  Database,
-  Cpu,
   Camera,
-  MessageSquare,
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/Card'
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Avatar } from '@/components/ui/Avatar'
 import { Input } from '@/components/ui/Input'
@@ -84,12 +63,12 @@ export function IntervieweeSettingsPage() {
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab as any} className="w-full">
-        <TabsList className="grid grid-cols-3 md:grid-cols-7 gap-1 p-1 bg-surface-100 dark:bg-surface-800 rounded-xl w-full mb-6">
+      <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as typeof activeTab)} variant="pills" className="w-full">
+        <TabsList className="flex flex-wrap items-center gap-1.5 p-1 bg-surface-100 dark:bg-surface-900/60 rounded-xl border border-surface-200 dark:border-white/[0.07] mb-6">
           {tabs.map(tab => (
             <TabsTrigger key={tab.id} value={tab.id} className="flex items-center justify-center gap-2 py-2 px-3 text-sm">
               <tab.icon className="h-4 w-4" aria-hidden="true" />
-              <span className="hidden sm:inline">{tab.label}</span>
+              <span>{tab.label}</span>
             </TabsTrigger>
           ))}
         </TabsList>

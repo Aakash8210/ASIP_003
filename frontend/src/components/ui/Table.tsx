@@ -40,7 +40,6 @@ export function DataTable<T>({
   striped = false,
   hoverable = true,
   className,
-  children,
   ...props
 }: TableProps<T>) {
   const handleSort = (key: string) => {
@@ -260,7 +259,7 @@ export function Pagination({
         >
           <ChevronLeft className="h-5 w-5" aria-hidden="true" />
         </button>
-        {visiblePages.map((page, index) => (
+        {visiblePages.map((page) => (
           <button
             key={page}
             type="button"
@@ -268,7 +267,7 @@ export function Pagination({
             className={cn(
               'px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
               page === currentPage
-                ? 'bg-brand-600 text-white'
+                ? 'bg-brand-500 text-white'
                 : 'text-surface-600 hover:text-surface-900 hover:bg-surface-100 dark:text-surface-400 dark:hover:text-surface-50 dark:hover:bg-surface-800'
             )}
             aria-label={`Page ${page}`}

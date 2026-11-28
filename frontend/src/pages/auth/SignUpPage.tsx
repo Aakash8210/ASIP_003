@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Mail, Lock, Eye, EyeOff, Monitor, User, Building2 } from 'lucide-react'
+import { Mail, Lock, Eye, EyeOff, User, Building2 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card'
@@ -99,17 +99,22 @@ export function SignUpPage() {
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-12">
     <div className="w-full max-w-md">
       <div className="text-center mb-8">
-        <Link to="/" className="inline-flex items-center gap-2.5 mb-6" aria-label="Home">
-          <div className="h-8 w-8 rounded-lg bg-gradient-to-b from-cyan-500 to-brand-600 flex items-center justify-center shadow-[0_0_14px_rgba(6,182,212,0.35)]">
-            <Monitor className="h-4 w-4 text-white" aria-hidden="true" />
+        <Link to="/" className="inline-flex items-center gap-2.5 mb-6 group" aria-label="Home">
+          <div className="h-9 w-9 rounded-lg bg-surface-900 border border-white/10 flex items-center justify-center transition-colors group-hover:border-brand-500/40">
+            <div className="h-4 w-4 rounded-xs bg-brand-500" />
           </div>
-          <span className="text-base font-semibold tracking-tight text-surface-900 dark:text-white">
-            InterviewGuard
-          </span>
+          <div className="text-left">
+            <div className="text-sm font-bold tracking-tight text-surface-900 dark:text-surface-50 leading-none">
+              AI Interview Integrity
+            </div>
+            <div className="text-[10px] font-mono tracking-wider text-surface-500 uppercase mt-0.5">
+              Platform
+            </div>
+          </div>
         </Link>
-        <h1 className="text-2xl font-bold text-surface-900 dark:text-surface-50 mb-2">Create your account</h1>
-        <p className="text-surface-600 dark:text-surface-400">
-          Start protecting your interview integrity today
+        <h1 className="text-2xl font-bold tracking-tight text-surface-900 dark:text-surface-50 mb-2">Create Workspace Account</h1>
+        <p className="text-surface-600 dark:text-surface-400 text-sm">
+          Register to conduct, review, or participate in structured interviews
         </p>
       </div>
 
@@ -237,11 +242,15 @@ export function SignUpPage() {
                 className="checkbox mt-1"
                 disabled={isLoading}
               />
-              <label htmlFor="acceptTerms" className="text-sm text-surface-600 dark:text-zinc-400 mt-1">
-                I agree to the platform{' '}
-                <span className="text-cyan-600 dark:text-cyan-400 font-medium">Terms of Service</span>{' '}
+              <label htmlFor="acceptTerms" className="text-sm text-surface-600 dark:text-surface-400 mt-1">
+                I agree to the{' '}
+                <Link to="/terms" className="text-brand-600 hover:text-brand-500 dark:text-brand-400 dark:hover:text-brand-300">
+                  Terms of Service
+                </Link>{' '}
                 and{' '}
-                <span className="text-cyan-600 dark:text-cyan-400 font-medium">Privacy Policy</span>
+                <Link to="/privacy" className="text-brand-600 hover:text-brand-500 dark:text-brand-400 dark:hover:text-brand-300">
+                  Privacy Policy
+                </Link>
                 {errors.acceptTerms && (
                   <p className="text-danger-500 text-xs mt-1">{errors.acceptTerms}</p>
                 )}

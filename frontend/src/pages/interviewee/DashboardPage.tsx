@@ -16,7 +16,6 @@ import {
 import { Button } from '@/components/ui/Button'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
-import { useAuth } from '@/hooks/useAuth'
 import { apiClient, ApiError, CandidateInterview } from '@/lib/api'
 import { interviewStatusConfig, formatInterviewDate } from '@/pages/hr/interviewStatus'
 
@@ -29,8 +28,6 @@ const PREPARATION_ITEMS = [
 ]
 
 export function IntervieweeDashboardPage() {
-  const { user } = useAuth()
-
   const [interviews, setInterviews] = useState<CandidateInterview[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
@@ -76,9 +73,9 @@ export function IntervieweeDashboardPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-surface-900 dark:text-surface-50">My Dashboard</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-surface-900 dark:text-surface-50">Candidate Hub</h1>
         <p className="text-surface-600 dark:text-surface-400 mt-1">
-          Welcome back{user?.name ? `, ${user.name}` : ''} — your assigned interviews and preparation
+          Scheduled interview sessions, hardware readiness checklist, and preparation guidance
         </p>
       </div>
 

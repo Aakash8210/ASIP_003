@@ -5,10 +5,7 @@ import {
   Search,
   Shield,
   Building2,
-  Activity,
   Crown,
-  Settings,
-  Clock,
   Trash2,
   CheckCircle,
   RefreshCw,
@@ -236,7 +233,7 @@ export function HROrganizationPage() {
     }
   }
 
-  const members = organization?.members || []
+  const members = useMemo(() => organization?.members || [], [organization?.members])
 
   const filteredMembers = useMemo(() => {
     let result = [...members]
@@ -393,8 +390,8 @@ export function HROrganizationPage() {
       )}
 
       {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
-        <TabsList className="bg-surface-100 dark:bg-surface-800 p-1">
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)} variant="pills">
+        <TabsList>
           <TabsTrigger value="team" className="gap-1.5 text-xs">
             <Users className="h-3.5 w-3.5" />
             Team Roster ({members.length})

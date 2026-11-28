@@ -73,8 +73,6 @@ export function IntervieweeInterviewRoomPage() {
     captureState,
     isCapturing,
     transmittedCount,
-    lastFrameMetadata,
-    lastError: captureError,
   } = useWebcamCapture({
     interviewId: id,
     stream: localStream,

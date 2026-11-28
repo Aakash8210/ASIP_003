@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
-import { Search, Calendar, AlertCircle } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { Search, Calendar, AlertCircle, Users, ArrowUpRight } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Input } from '@/components/ui/Input'
+import { Avatar } from '@/components/ui/Avatar'
 import { apiClient, ApiError, CandidateProfileSummary } from '@/lib/api'
 
 export function HRCandidatesPage() {
@@ -46,123 +47,138 @@ export function HRCandidatesPage() {
   }, [candidates, searchQuery])
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-surface-900 dark:text-surface-50">Candidates</h1>
-        <p className="text-surface-600 dark:text-surface-400 mt-1">
-          Registered candidates available for interview association
-        </p>
+    <div className="space-y-6 max-w-7xl mx-auto">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-surface-900 dark:text-zinc-100">
+            Candidate Directory
+          </h1>
+          <p className="text-xs sm:text-sm text-surface-500 dark:text-zinc-400 mt-0.5">
+            Registered candidate profiles ready for interview association and telemetry assignment
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Badge variant="neutral" className="text-xs">
+            {candidates.length} Profiles Registered
+          </Badge>
+        </div>
       </div>
 
       {loadError && (
-        <Card className="border-danger-300 dark:border-danger-800">
+        <Card className="border-danger-300 dark:border-danger-900/50 bg-danger-500/[0.04]">
           <CardContent className="p-4 flex items-center gap-3">
-            <AlertCircle className="h-5 w-5 text-danger-600 dark:text-danger-400" aria-hidden="true" />
-            <div className="flex-1">
-              <p className="text-sm font-medium text-surface-900 dark:text-surface-50">Could not load candidates</p>
-              <p className="text-sm text-surface-500 dark:text-surface-400">{loadError}</p>
+            <AlertCircle className="h-5 w-5 text-danger-500 shrink-0" aria-hidden="true" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-surface-900 dark:text-zinc-100">Could not load candidates</p>
+              <p className="text-xs text-surface-500 dark:text-zinc-400 truncate">{loadError}</p>
             </div>
-            <Button variant="neutral" size="sm" onClick={() => window.location.reload()}>
+            <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
               Retry
             </Button>
           </CardContent>
         </Card>
       )}
 
-      <Card className="border-surface-200 dark:border-surface-800">
-        <CardContent className="p-4 sm:p-6">
-          <div className="relative max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-400" aria-hidden="true" />
-            <Input
-              placeholder="Search by name or email..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-              aria-label="Search candidates"
-            />
-          </div>
-        </CardContent>
+      {/* Search & Filter Bar */}
+      <Card className="p-4">
+        <div className="flex items-center gap-3 max-w-md">
+          <Input
+            placeholder="Search candidate by name or email..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            leftIcon={<Search className="h-4 w-4" aria-hidden="true" />}
+            aria-label="Search candidates"
+          />
+        </div>
       </Card>
 
-      <Card className="border-surface-200 dark:border-surface-800">
-        <CardContent className="p-0">
-          {isLoading ? (
-            <div className="p-4 space-y-3" aria-busy="true">
-              {[0, 1, 2, 3].map((i) => (
-                <div key={i} className="h-14 bg-surface-100 dark:bg-surface-800 rounded-lg animate-pulse" />
+      {/* Candidates Table */}
+      <div className="table-container">
+        {isLoading ? (
+          <div className="p-6 space-y-3" aria-busy="true">
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="h-12 bg-surface-100 dark:bg-white/[0.04] rounded-lg animate-pulse" />
+            ))}
+          </div>
+        ) : filteredCandidates.length === 0 ? (
+          <div className="py-16 px-4 text-center">
+            <div className="h-10 w-10 rounded-xl bg-surface-100 dark:bg-[#1a1d28] border border-surface-200 dark:border-white/[0.06] flex items-center justify-center mx-auto mb-3 text-surface-400 dark:text-zinc-500">
+              <Users className="h-5 w-5" aria-hidden="true" />
+            </div>
+            <p className="text-sm font-medium text-surface-900 dark:text-zinc-200">
+              {candidates.length === 0 ? 'No registered candidates yet' : 'No candidates match your search'}
+            </p>
+            <p className="text-xs text-surface-500 dark:text-zinc-400 mt-1 max-w-sm mx-auto">
+              {candidates.length === 0
+                ? 'Candidates appear automatically once they register with an interviewee account.'
+                : 'Try adjusting your search query.'}
+            </p>
+          </div>
+        ) : (
+          <table className="table">
+            <thead>
+              <tr>
+                <th scope="col">Candidate</th>
+                <th scope="col">Email address</th>
+                <th scope="col">Account status</th>
+                <th scope="col">Registration date</th>
+                <th scope="col" className="text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredCandidates.map((candidate) => (
+                <tr key={candidate.id}>
+                  <td>
+                    <div className="flex items-center gap-3">
+                      <Avatar name={candidate.name} size="sm" />
+                      <div className="min-w-0">
+                        <p className="font-medium text-surface-900 dark:text-zinc-100 truncate">
+                          {candidate.name ?? 'Candidate'}
+                        </p>
+                        <p className="text-[11px] font-mono text-surface-400 dark:text-zinc-500 truncate">
+                          ID: {candidate.id.slice(0, 8)}...
+                        </p>
+                      </div>
+                    </div>
+                  </td>
+                  <td className="text-surface-600 dark:text-zinc-400 font-mono text-xs">
+                    {candidate.email ?? '—'}
+                  </td>
+                  <td>
+                    <Badge
+                      variant={candidate.status === 'active' ? 'success' : 'neutral'}
+                      dot
+                      className="text-[10px]"
+                    >
+                      {candidate.status ?? 'active'}
+                    </Badge>
+                  </td>
+                  <td className="text-surface-600 dark:text-zinc-400 font-mono text-xs tabular-nums">
+                    {candidate.created_at
+                      ? new Date(candidate.created_at).toLocaleDateString(undefined, { dateStyle: 'medium' })
+                      : '—'}
+                  </td>
+                  <td className="text-right">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-1.5 text-xs"
+                      onClick={() =>
+                        navigate('/hr/interviews/new', { state: { candidateId: candidate.id } })
+                      }
+                    >
+                      <Calendar className="h-3.5 w-3.5 text-brand-500" aria-hidden="true" />
+                      <span>Schedule</span>
+                      <ArrowUpRight className="h-3 w-3 opacity-60" />
+                    </Button>
+                  </td>
+                </tr>
               ))}
-            </div>
-          ) : filteredCandidates.length === 0 ? (
-            <div className="py-14 px-4 text-center">
-              <Calendar className="h-10 w-10 text-surface-400 mx-auto mb-3" aria-hidden="true" />
-              <p className="text-surface-900 dark:text-surface-50 font-medium">
-                {candidates.length === 0 ? 'No registered candidates yet' : 'No candidates match your search'}
-              </p>
-              <p className="text-sm text-surface-500 dark:text-surface-400 mt-1">
-                {candidates.length === 0
-                  ? 'Candidates appear here once they register with an interviewee account'
-                  : 'Try a different name or email'}
-              </p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-surface-200 dark:border-surface-800 text-left text-surface-500 dark:text-surface-400">
-                    <th scope="col" className="px-4 py-3 font-medium">Candidate</th>
-                    <th scope="col" className="px-4 py-3 font-medium">Email</th>
-                    <th scope="col" className="px-4 py-3 font-medium">Account Status</th>
-                    <th scope="col" className="px-4 py-3 font-medium">Registered</th>
-                    <th scope="col" className="px-4 py-3 font-medium text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-surface-100 dark:divide-surface-800">
-                  {filteredCandidates.map((candidate) => (
-                    <tr key={candidate.id} className="hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors">
-                      <td className="px-4 py-3 font-medium text-surface-900 dark:text-surface-50">
-                        {candidate.name ?? 'Candidate'}
-                      </td>
-                      <td className="px-4 py-3 text-surface-600 dark:text-surface-400">
-                        {candidate.email ?? '—'}
-                      </td>
-                      <td className="px-4 py-3">
-                        <Badge
-                          variant="neutral"
-                          className={
-                            candidate.status === 'active'
-                              ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300'
-                              : 'bg-surface-100 text-surface-700 dark:bg-surface-800 dark:text-surface-300'
-                          }
-                        >
-                          {candidate.status ?? 'Unknown'}
-                        </Badge>
-                      </td>
-                      <td className="px-4 py-3 text-surface-600 dark:text-surface-400">
-                        {candidate.created_at
-                          ? new Date(candidate.created_at).toLocaleDateString(undefined, { dateStyle: 'medium' })
-                          : '—'}
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <Button
-                          variant="neutral"
-                          size="sm"
-                          className="gap-1.5"
-                          onClick={() =>
-                            navigate('/hr/interviews/new', { state: { candidateId: candidate.id } })
-                          }
-                        >
-                          <Calendar className="h-3.5 w-3.5" aria-hidden="true" />
-                          Create Interview
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+            </tbody>
+          </table>
+        )}
+      </div>
     </div>
   )
 }

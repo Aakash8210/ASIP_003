@@ -18,9 +18,9 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
 
     const paddingClasses = {
       none: '',
-      sm: 'p-4',
-      md: 'p-6',
-      lg: 'p-8',
+      sm: 'p-3.5',
+      md: 'p-5',
+      lg: 'p-6',
     }
 
     return (
@@ -49,7 +49,7 @@ CardHeader.displayName = 'CardHeader'
 
 export const CardTitle = forwardRef<HTMLHeadingElement, HTMLAttributes<HTMLHeadingElement>>(
   ({ className, children, ...props }, ref) => (
-    <h3 ref={ref} className={cn('text-heading-md font-semibold text-surface-900 dark:text-surface-50', className)} {...props}>
+    <h3 ref={ref} className={cn('text-base font-semibold text-surface-900 dark:text-zinc-100 tracking-tight', className)} {...props}>
       {children}
     </h3>
   )
@@ -59,7 +59,7 @@ CardTitle.displayName = 'CardTitle'
 
 export const CardDescription = forwardRef<HTMLParagraphElement, HTMLAttributes<HTMLParagraphElement>>(
   ({ className, children, ...props }, ref) => (
-    <p ref={ref} className={cn('mt-1 text-body-sm text-surface-500 dark:text-surface-400', className)} {...props}>
+    <p ref={ref} className={cn('mt-1 text-xs text-surface-500 dark:text-zinc-400 leading-normal', className)} {...props}>
       {children}
     </p>
   )
@@ -79,7 +79,7 @@ CardContent.displayName = 'CardContent'
 
 export const CardFooter = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
   ({ className, children, ...props }, ref) => (
-    <div ref={ref} className={cn('mt-4 flex items-center gap-2', className)} {...props}>
+    <div ref={ref} className={cn('mt-4 pt-3 border-t border-surface-200/70 dark:border-white/[0.06] flex items-center gap-2', className)} {...props}>
       {children}
     </div>
   )

@@ -12,7 +12,6 @@ import {
 import { Button } from '@/components/ui/Button'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
-import { useAuth } from '@/hooks/useAuth'
 import { apiClient, ApiError, AssignedInterview } from '@/lib/api'
 import { interviewStatusConfig, formatInterviewDate } from '@/pages/hr/interviewStatus'
 
@@ -21,8 +20,6 @@ const isCompleted = (i: AssignedInterview) => i.status === 'completed'
 const isUpcoming = (i: AssignedInterview) => !isOngoing(i) && !isCompleted(i)
 
 export function InterviewerDashboardPage() {
-  const { user } = useAuth()
-
   const [interviews, setInterviews] = useState<AssignedInterview[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
@@ -71,25 +68,25 @@ export function InterviewerDashboardPage() {
   )
 
   const statCards = [
-    { label: 'Assigned Interviews', value: stats.total, icon: Calendar, color: 'text-brand-600 bg-brand-50 dark:bg-brand-900/30' },
-    { label: 'Upcoming', value: stats.upcoming, icon: Clock, color: 'text-emerald-600 bg-emerald-50 dark:bg-emerald-900/30' },
-    { label: 'Ongoing', value: stats.ongoing, icon: Video, color: 'text-violet-600 bg-violet-50 dark:bg-violet-900/30' },
-    { label: 'Completed', value: stats.completed, icon: CheckCircle, color: 'text-warning-600 bg-warning-50 dark:bg-warning-900/30' },
+    { label: 'Assigned Interviews', value: stats.total, icon: Calendar, color: 'text-brand-500 bg-brand-500/10' },
+    { label: 'Upcoming', value: stats.upcoming, icon: Clock, color: 'text-amber-500 bg-amber-500/10' },
+    { label: 'Live Active', value: stats.ongoing, icon: Video, color: 'text-rose-500 bg-rose-500/10' },
+    { label: 'Completed', value: stats.completed, icon: CheckCircle, color: 'text-emerald-500 bg-emerald-500/10' },
   ]
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-surface-900 dark:text-surface-50">Interviewer Dashboard</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-surface-900 dark:text-surface-50">Interviewer Console</h1>
           <p className="text-surface-600 dark:text-surface-400 mt-1">
-            Welcome back{user?.name ? `, ${user.name}` : ''} — interviews assigned to you
+            Assigned candidate sessions, live telemetry queue, and post-interview sign-off
           </p>
         </div>
         <Button className="gap-2" asChild>
           <Link to="/interviewer/interviews">
             <Calendar className="h-4 w-4" aria-hidden="true" />
-            <span>My Interviews</span>
+            <span>All Sessions</span>
           </Link>
         </Button>
       </div>

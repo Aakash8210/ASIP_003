@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import { cloneElement, forwardRef, isValidElement, type ButtonHTMLAttributes, type ReactElement } from 'react'
 import { cn } from '@/lib/utils'
 
@@ -96,7 +97,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       >
         {loading && (
           <svg
-            className="animate-spin h-4 w-4"
+            className="animate-spin h-3.5 w-3.5"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
@@ -108,7 +109,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
               cy="12"
               r="10"
               stroke="currentColor"
-              strokeWidth="4"
+              strokeWidth="3"
             />
             <path
               className="opacity-75"
@@ -117,9 +118,9 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
             />
           </svg>
         )}
-        {!loading && leftIcon && <span className="flex-shrink-0">{leftIcon}</span>}
-        <span className={cn('inline-flex items-center gap-1.5', loading && 'opacity-0')}>{children}</span>
-        {!loading && rightIcon && <span className="flex-shrink-0">{rightIcon}</span>}
+        {!loading && leftIcon}
+        <span>{children}</span>
+        {rightIcon}
       </button>
     )
   }

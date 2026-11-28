@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { motion } from 'framer-motion'
 import {
   ArrowLeft,
   Calendar,
@@ -10,7 +9,6 @@ import {
   Lock,
   Mic,
   Shield,
-  Sparkles,
   User,
   Video,
 } from 'lucide-react'
@@ -145,71 +143,65 @@ export function HRCreateInterviewPage() {
     {
       icon: Camera,
       title: '1 fps Webcam & YuNet CV',
-      desc: 'Face presence & multi-face detection',
-      status: 'Enabled',
-      tone: 'bg-cyan-500/10 text-cyan-500 border-cyan-500/20',
+      desc: 'Local face presence & multi-face detection telemetry',
+      status: 'Active',
+      tone: 'text-brand-500 bg-brand-500/10 border-brand-500/20',
     },
     {
       icon: Mic,
-      title: 'Pre-Flight Audio & Hardware Check',
-      desc: 'Mandatory browser WebRTC & mic check',
+      title: 'Pre-Flight Hardware Check',
+      desc: 'Candidate camera & microphone verification',
       status: 'Required',
-      tone: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20',
+      tone: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20',
     },
     {
       icon: Eye,
       title: 'Observable Behavior Signals',
-      desc: 'Duration-aware absence & presence logs',
+      desc: 'Duration-aware absence & presence events',
       status: 'Active',
-      tone: 'bg-amber-500/10 text-amber-500 border-amber-500/20',
+      tone: 'text-amber-500 bg-amber-500/10 border-amber-500/20',
     },
     {
       icon: Lock,
       title: 'Zero Raw-Frame Persistence',
-      desc: 'Metadata & linked evidence context only',
+      desc: 'In-memory analysis; privacy boundaries enforced',
       status: 'Enforced',
-      tone: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20',
+      tone: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20',
     },
   ]
 
   return (
-    <div className="space-y-6 max-w-6xl">
+    <div className="space-y-6 max-w-6xl mx-auto">
       <div>
-        <Button variant="ghost" size="sm" asChild className="gap-2 -ml-2 mb-2">
+        <Button variant="ghost" size="sm" asChild className="gap-2 -ml-2 mb-2 text-xs">
           <Link to="/hr/interviews">
-            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+            <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
             Back to interviews
           </Link>
         </Button>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight text-surface-900 dark:text-white">
-              Create Interview
+            <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-surface-900 dark:text-zinc-100">
+              Create Interview Session
             </h1>
-            <p className="text-sm text-surface-500 dark:text-zinc-400 mt-1">
-              Configure session participants, schedule window, and integrity telemetry defaults.
+            <p className="text-xs sm:text-sm text-surface-500 dark:text-zinc-400 mt-0.5">
+              Configure session participants, schedule window, and integrity telemetry parameters
             </p>
           </div>
-          <Badge variant="info" className="w-fit font-mono text-[11px]">
-            <Sparkles className="h-3 w-3" />
-            SESSION PROVISIONING
+          <Badge variant="neutral" className="w-fit font-mono text-[11px]">
+            Session Provisioning
           </Badge>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left Column: Core Configuration Form */}
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.2 }}
-          className="lg:col-span-7"
-        >
-          <Card className="relative overflow-hidden">
-            <CardHeader className="border-b border-surface-200 dark:border-white/[0.06] pb-4">
+        <div className="lg:col-span-7">
+          <Card className="p-5 sm:p-6">
+            <CardHeader className="border-b border-surface-200/80 dark:border-white/[0.06] pb-4">
               <CardTitle className="text-base font-semibold">Session Configuration</CardTitle>
               <CardDescription className="text-xs">
-                Associate a registered candidate and optionally assign a technical interviewer.
+                Associate a registered candidate and optionally assign an interviewer.
               </CardDescription>
             </CardHeader>
             <CardContent className="pt-5">
@@ -224,7 +216,7 @@ export function HRCreateInterviewPage() {
                       setTitle(e.target.value)
                       if (errors.title) setErrors((prev) => ({ ...prev, title: '' }))
                     }}
-                    placeholder="Senior Frontend Engineer — Technical Screen"
+                    placeholder="e.g. Senior Frontend Engineer — Technical Screen"
                     error={errors.title}
                     disabled={isSubmitting}
                     required
@@ -254,7 +246,7 @@ export function HRCreateInterviewPage() {
                   />
                   {candidatesLoading && (
                     <p className="text-xs text-surface-500 dark:text-zinc-400 flex items-center gap-2 pt-1">
-                      <span className="animate-spin h-3.5 w-3.5 border-2 border-cyan-500 border-t-transparent rounded-full" aria-hidden="true" />
+                      <span className="animate-spin h-3.5 w-3.5 border-2 border-brand-500 border-t-transparent rounded-full" aria-hidden="true" />
                       Loading registered candidates…
                     </p>
                   )}
@@ -264,7 +256,7 @@ export function HRCreateInterviewPage() {
                   {!candidatesLoading && !candidatesError && candidates.length === 0 && (
                     <p className="text-xs text-surface-500 dark:text-zinc-400 flex items-center gap-2 pt-1">
                       <User className="h-3.5 w-3.5" aria-hidden="true" />
-                      No registered candidates available yet. A candidate must register an interviewee account first.
+                      No registered candidates available. Candidate must create an account first.
                     </p>
                   )}
                 </div>
@@ -294,21 +286,21 @@ export function HRCreateInterviewPage() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <label htmlFor="scheduledAt" className="label mb-0 flex items-center gap-1.5">
-                      <Calendar className="h-3.5 w-3.5 text-cyan-500" aria-hidden="true" />
+                      <Calendar className="h-3.5 w-3.5 text-brand-500" aria-hidden="true" />
                       Scheduled date &amp; time <span className="text-surface-400 dark:text-zinc-500 font-normal">(optional)</span>
                     </label>
                     <div className="flex items-center gap-1.5">
                       <button
                         type="button"
                         onClick={() => setQuickSchedule(1)}
-                        className="px-2 py-0.5 rounded-md text-[11px] font-mono border border-surface-200 dark:border-white/[0.08] bg-surface-50 dark:bg-white/[0.03] text-surface-600 dark:text-zinc-400 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors"
+                        className="px-2 py-0.5 rounded-md text-[11px] font-mono border border-surface-200 dark:border-white/[0.08] bg-surface-50 dark:bg-white/[0.03] text-surface-600 dark:text-zinc-400 hover:text-brand-500 dark:hover:text-brand-400 transition-colors"
                       >
                         +1h
                       </button>
                       <button
                         type="button"
                         onClick={() => setQuickSchedule(24)}
-                        className="px-2 py-0.5 rounded-md text-[11px] font-mono border border-surface-200 dark:border-white/[0.08] bg-surface-50 dark:bg-white/[0.03] text-surface-600 dark:text-zinc-400 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors"
+                        className="px-2 py-0.5 rounded-md text-[11px] font-mono border border-surface-200 dark:border-white/[0.08] bg-surface-50 dark:bg-white/[0.03] text-surface-600 dark:text-zinc-400 hover:text-brand-500 dark:hover:text-brand-400 transition-colors"
                       >
                         Tomorrow
                       </button>
@@ -327,50 +319,41 @@ export function HRCreateInterviewPage() {
                   />
                 </div>
 
-                <div className="flex justify-end gap-3 pt-4 border-t border-surface-200 dark:border-white/[0.06]">
+                <div className="flex justify-end gap-3 pt-4 border-t border-surface-200/80 dark:border-white/[0.06]">
                   <Button variant="outline" type="button" asChild disabled={isSubmitting}>
                     <Link to="/hr/interviews">Cancel</Link>
                   </Button>
-                  <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
-                    <Button type="submit" loading={isSubmitting} className="px-5">
-                      Create Interview
-                    </Button>
-                  </motion.div>
+                  <Button type="submit" loading={isSubmitting} className="px-5">
+                    Create Interview
+                  </Button>
                 </div>
               </form>
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
 
-        {/* Right Column: Interview Settings Preview */}
-        <motion.div
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.25, delay: 0.05 }}
-          className="lg:col-span-5 space-y-4"
-        >
-          <Card className="relative overflow-hidden">
-            <div className="absolute -top-24 -right-24 h-48 w-48 rounded-full bg-cyan-500/10 blur-3xl pointer-events-none" aria-hidden="true" />
-            <CardHeader className="border-b border-surface-200 dark:border-white/[0.06] pb-4">
+        {/* Right Column: Settings Preview */}
+        <div className="lg:col-span-5 space-y-4">
+          <Card className="p-5 sm:p-6">
+            <CardHeader className="border-b border-surface-200/80 dark:border-white/[0.06] pb-4">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                  <Shield className="h-4 w-4 text-cyan-500" aria-hidden="true" />
-                  Interview Settings Preview
+                  <Shield className="h-4 w-4 text-brand-500" aria-hidden="true" />
+                  Interview Provisioning Preview
                 </CardTitle>
-                <Badge variant="success" className="font-mono text-[10px]">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  POLICY READY
+                <Badge variant="success" dot className="text-[10px]">
+                  Policy Ready
                 </Badge>
               </div>
               <CardDescription className="text-xs">
-                Real-time summary of active proctoring & privacy modules for this session.
+                Real-time summary of active monitoring &amp; privacy parameters for this session.
               </CardDescription>
             </CardHeader>
             <CardContent className="pt-4 space-y-4">
               {/* Live Summary Box */}
-              <div className="rounded-lg border border-surface-200 dark:border-white/[0.07] bg-surface-50 dark:bg-[#08090E] p-3.5 space-y-2 text-xs">
+              <div className="rounded-lg border border-surface-200 dark:border-white/[0.07] bg-surface-50 dark:bg-[#0c0d12] p-3.5 space-y-2 text-xs">
                 <div className="flex items-center justify-between">
-                  <span className="text-surface-500 dark:text-zinc-500">Session Title</span>
+                  <span className="text-surface-500 dark:text-zinc-500">Session title</span>
                   <span className="font-medium text-surface-900 dark:text-zinc-100 truncate max-w-[180px]">
                     {title.trim() || 'Untitled Session'}
                   </span>
@@ -389,25 +372,25 @@ export function HRCreateInterviewPage() {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-surface-500 dark:text-zinc-500">Schedule</span>
-                  <span className="font-mono text-[11px] text-cyan-600 dark:text-cyan-400">
+                  <span className="font-mono text-[11px] text-surface-900 dark:text-zinc-300">
                     {scheduledAt ? new Date(scheduledAt).toLocaleString() : 'Flexible / Unscheduled'}
                   </span>
                 </div>
               </div>
 
-              {/* Proctoring Modules */}
+              {/* Integrity Modules */}
               <div className="space-y-2.5">
-                <p className="text-[11px] font-mono uppercase tracking-wider text-surface-500 dark:text-zinc-500">
+                <p className="text-[10px] font-mono uppercase tracking-wider text-surface-500 dark:text-zinc-500">
                   Active Integrity Modules
                 </p>
                 {monitoringModules.map((mod) => (
                   <div
                     key={mod.title}
-                    className="flex items-center justify-between p-2.5 rounded-lg border border-surface-200/80 dark:border-white/[0.06] bg-white dark:bg-white/[0.02]"
+                    className="flex items-center justify-between p-2.5 rounded-lg border border-surface-200/80 dark:border-white/[0.06] bg-white dark:bg-[#14161f]"
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <div className={`h-8 w-8 rounded-lg border flex items-center justify-center shrink-0 ${mod.tone}`}>
-                        <mod.icon className="h-4 w-4" aria-hidden="true" />
+                      <div className={`h-7 w-7 rounded-md border flex items-center justify-center shrink-0 ${mod.tone}`}>
+                        <mod.icon className="h-3.5 w-3.5" aria-hidden="true" />
                       </div>
                       <div className="min-w-0">
                         <p className="text-xs font-medium text-surface-900 dark:text-zinc-100 truncate">
@@ -418,7 +401,7 @@ export function HRCreateInterviewPage() {
                         </p>
                       </div>
                     </div>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-surface-100 dark:bg-white/[0.05] text-surface-600 dark:text-zinc-300 border border-surface-200 dark:border-white/[0.08] shrink-0">
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-surface-100 dark:bg-white/[0.05] text-surface-600 dark:text-zinc-300 border border-surface-200 dark:border-white/[0.08] shrink-0">
                       {mod.status}
                     </span>
                   </div>
@@ -426,16 +409,16 @@ export function HRCreateInterviewPage() {
               </div>
 
               <div className="pt-2 flex items-center gap-2 text-[11px] text-surface-500 dark:text-zinc-400">
-                <Video className="h-3.5 w-3.5 text-cyan-500 shrink-0" aria-hidden="true" />
-                <span>WebRTC room & invite token are provisioned automatically on creation.</span>
+                <Video className="h-3.5 w-3.5 text-brand-500 shrink-0" aria-hidden="true" />
+                <span>WebRTC room &amp; invite token provisioned on creation.</span>
               </div>
               <div className="flex items-center gap-2 text-[11px] text-surface-500 dark:text-zinc-400">
                 <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" aria-hidden="true" />
-                <span>Human reviewers retain final decision authority on all reports.</span>
+                <span>Human reviewers retain final evaluation authority.</span>
               </div>
             </CardContent>
           </Card>
-        </motion.div>
+        </div>
       </div>
     </div>
   )

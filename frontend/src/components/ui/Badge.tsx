@@ -1,8 +1,8 @@
 import { forwardRef, type HTMLAttributes } from 'react'
 import { cn } from '@/lib/utils'
 
-interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
-  variant?: 'success' | 'warning' | 'danger' | 'info' | 'neutral'
+export interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
+  variant?: 'success' | 'warning' | 'danger' | 'info' | 'neutral' | 'accent'
   size?: 'sm' | 'md'
   dot?: boolean
 }
@@ -15,6 +15,7 @@ export const Badge = forwardRef<HTMLSpanElement, BadgeProps>(
       danger: 'badge-danger',
       info: 'badge-info',
       neutral: 'badge-neutral',
+      accent: 'badge bg-brand-500/10 text-brand-400 border-brand-500/25',
     }
 
     const sizeClasses = {
@@ -23,16 +24,17 @@ export const Badge = forwardRef<HTMLSpanElement, BadgeProps>(
     }
 
     return (
-      <span ref={ref} className={cn('badge', variantClasses[variant], sizeClasses[size], className)} {...props}>
+      <span ref={ref} className={cn('badge font-mono', variantClasses[variant], sizeClasses[size], className)} {...props}>
         {dot && (
           <span
             className={cn(
-              'h-1.5 w-1.5 rounded-full',
-              variant === 'success' && 'bg-success-500',
-              variant === 'warning' && 'bg-warning-500',
-              variant === 'danger' && 'bg-danger-500',
+              'h-1.5 w-1.5 rounded-full shrink-0',
+              variant === 'success' && 'bg-emerald-500',
+              variant === 'warning' && 'bg-amber-500',
+              variant === 'danger' && 'bg-rose-500',
               variant === 'info' && 'bg-brand-500',
-              variant === 'neutral' && 'bg-surface-500'
+              variant === 'accent' && 'bg-brand-500',
+              variant === 'neutral' && 'bg-surface-400 dark:bg-zinc-500'
             )}
             aria-hidden="true"
           />

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { FileText, AlertCircle, Eye, CheckCircle2, Clock, ShieldAlert, Sparkles, RefreshCw } from 'lucide-react'
+import { FileText, AlertCircle, Eye, CheckCircle2, Clock, ShieldAlert, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
@@ -262,7 +262,7 @@ export function InterviewerReportsPage() {
                       disabled={isOpeningReport}
                       className="gap-2"
                     >
-                      <Sparkles className="h-4 w-4 text-brand-600" />
+                      <FileText className="h-4 w-4 text-brand-600" />
                       Generate & View Report
                     </Button>
                   </div>

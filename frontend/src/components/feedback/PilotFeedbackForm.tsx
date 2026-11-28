@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import {
   CheckCircle,
   Send,
-  Sparkles,
+  MessageSquare,
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
@@ -184,7 +184,7 @@ export function PilotFeedbackForm({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="p-1.5 rounded-lg bg-brand-50 dark:bg-brand-950 text-brand-600 dark:text-brand-400 border border-brand-200 dark:border-brand-800">
-              <Sparkles className="h-4 w-4" />
+              <MessageSquare className="h-4 w-4" />
             </div>
             <div>
               <CardTitle className="text-sm font-semibold text-surface-900 dark:text-surface-100">

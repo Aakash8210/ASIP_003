@@ -7,7 +7,6 @@ import {
   Shield,
   Key,
   Palette,
-  Globe,
   Database,
   Webhook,
   Puzzle,
@@ -35,13 +34,12 @@ import {
   ArrowRight,
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/Card'
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Input } from '@/components/ui/Input'
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/Tabs'
 import { Toggle } from '@/components/ui/Toggle'
 import { Avatar } from '@/components/ui/Avatar'
-import { Modal } from '@/components/ui/Modal'
 import { useAuth } from '@/hooks/useAuth'
 import { useToast } from '@/components/ui/Toast'
 
@@ -159,8 +157,8 @@ export function HRSettingsPage() {
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab as any} className="space-y-4">
-        <TabsList className="grid w-full grid-cols-7">
+      <Tabs value={activeTab} onValueChange={(val) => setActiveTab(val as typeof activeTab)} variant="pills" className="space-y-6">
+        <TabsList className="flex flex-wrap items-center gap-1.5 p-1 bg-surface-100 dark:bg-surface-900/60 rounded-xl border border-surface-200 dark:border-white/[0.07]">
           <TabsTrigger value="profile"><User className="h-4 w-4 mr-2" /> Profile</TabsTrigger>
           <TabsTrigger value="notifications"><Bell className="h-4 w-4 mr-2" /> Notifications</TabsTrigger>
           <TabsTrigger value="security"><Shield className="h-4 w-4 mr-2" /> Security</TabsTrigger>

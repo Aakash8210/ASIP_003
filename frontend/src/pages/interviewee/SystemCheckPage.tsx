@@ -500,9 +500,9 @@ export function IntervieweeSystemCheckPage() {
         </div>
 
         <Card className="border-emerald-500/30 relative overflow-hidden">
-          <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-emerald-500 via-cyan-500 to-emerald-500" />
+          <div className="absolute inset-x-0 top-0 h-1 bg-emerald-500" />
           <CardContent className="py-12 px-6 text-center">
-            <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center mx-auto mb-4 shadow-[0_0_24px_rgba(16,185,129,0.2)]">
+            <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center mx-auto mb-4">
               <ShieldCheck className="h-8 w-8 text-emerald-500" aria-hidden="true" />
             </div>
             <h2 className="text-xl font-semibold text-surface-900 dark:text-white">
@@ -587,8 +587,8 @@ export function IntervieweeSystemCheckPage() {
         <Card className="lg:col-span-7 overflow-hidden">
           <div className="px-4 py-3 border-b border-surface-200 dark:border-white/[0.07] flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className="h-7 w-7 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center">
-                <Camera className="h-3.5 w-3.5 text-cyan-500" aria-hidden="true" />
+              <div className="h-7 w-7 rounded-lg bg-brand-500/10 border border-brand-500/20 flex items-center justify-center">
+                <Camera className="h-3.5 w-3.5 text-brand-500" aria-hidden="true" />
               </div>
               <span className="text-sm font-medium text-surface-900 dark:text-zinc-100">
                 Camera Viewfinder
@@ -619,10 +619,10 @@ export function IntervieweeSystemCheckPage() {
 
               {/* Subtle Corner Gridlines */}
               <div className="pointer-events-none absolute inset-4 border border-white/10 rounded-lg">
-                <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-cyan-400/50 rounded-tl" />
-                <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-cyan-400/50 rounded-tr" />
-                <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-cyan-400/50 rounded-bl" />
-                <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-cyan-400/50 rounded-br" />
+                <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-brand-500/50 rounded-tl" />
+                <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-brand-500/50 rounded-tr" />
+                <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-brand-500/50 rounded-bl" />
+                <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-brand-500/50 rounded-br" />
               </div>
 
               {checks.camera.state !== 'passed' && (
@@ -687,7 +687,7 @@ export function IntervieweeSystemCheckPage() {
                       'flex-1 rounded-full transition-all duration-75',
                       checks.microphone.state === 'passed'
                         ? height > 55
-                          ? 'bg-cyan-400'
+                          ? 'bg-brand-500'
                           : 'bg-emerald-500/80'
                         : 'bg-surface-300 dark:bg-white/10'
                     )}
@@ -710,9 +710,9 @@ export function IntervieweeSystemCheckPage() {
           <Card>
             <CardContent className="p-4 flex items-center justify-between gap-3">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="h-8 w-8 rounded-lg bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center shrink-0">
+                <div className="h-8 w-8 rounded-lg bg-brand-500/10 border border-brand-500/20 flex items-center justify-center shrink-0">
                   {typeof navigator !== 'undefined' && navigator.onLine ? (
-                    <Wifi className="h-4 w-4 text-cyan-500" aria-hidden="true" />
+                    <Wifi className="h-4 w-4 text-brand-500" aria-hidden="true" />
                   ) : (
                     <WifiOff className="h-4 w-4 text-rose-500" aria-hidden="true" />
                   )}

@@ -240,7 +240,7 @@ export function InterviewerInterviewDetailPage() {
                       const res = await apiClient.generateInterviewReport(interview.id)
                       setReport(res.report)
                       setShowReportModal(true)
-                    } catch (err) {
+                    } catch {
                       // fallback to standard get
                       try {
                         const res2 = await apiClient.getInterviewReport(interview.id)

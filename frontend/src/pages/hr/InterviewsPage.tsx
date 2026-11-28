@@ -7,22 +7,24 @@ import {
   Send,
   Plus,
   AlertCircle,
+  Video,
+  ArrowRight,
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { Input } from '@/components/ui/Input'
+import { Avatar } from '@/components/ui/Avatar'
 import { apiClient, ApiError, InterviewSession } from '@/lib/api'
 import { interviewStatusConfig, formatInterviewDate } from './interviewStatus'
 
 const STATUS_FILTERS = [
-  { value: 'all', label: 'All Status' },
-  { value: 'draft', label: 'Draft' },
+  { value: 'all', label: 'All Sessions' },
+  { value: 'in_progress', label: 'Live' },
   { value: 'scheduled', label: 'Scheduled' },
   { value: 'invited', label: 'Invited' },
-  { value: 'ready', label: 'Ready' },
-  { value: 'in_progress', label: 'In Progress' },
   { value: 'completed', label: 'Completed' },
+  { value: 'draft', label: 'Draft' },
 ]
 
 export function HRInterviewsPage() {
@@ -73,186 +75,213 @@ export function HRInterviewsPage() {
   }, [interviews, searchQuery, statusFilter])
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-7xl mx-auto">
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-surface-900 dark:text-surface-50">Interviews</h1>
-          <p className="text-surface-600 dark:text-surface-400 mt-1">Manage your interview sessions</p>
+          <h1 className="text-xl sm:text-2xl font-semibold tracking-tight text-surface-900 dark:text-zinc-100">
+            Interview Sessions
+          </h1>
+          <p className="text-xs sm:text-sm text-surface-500 dark:text-zinc-400 mt-0.5">
+            Manage scheduled interviews, candidate invites, and live WebRTC monitoring sessions
+          </p>
         </div>
-        <Button className="gap-2" asChild>
+        <Button size="sm" asChild className="gap-2">
           <Link to="/hr/interviews/new">
-            <Plus className="h-4 w-4" aria-hidden="true" />
+            <Plus className="h-3.5 w-3.5" aria-hidden="true" />
             <span>Create Interview</span>
           </Link>
         </Button>
       </div>
 
       {loadError && (
-        <Card className="border-danger-300 dark:border-danger-800">
+        <Card className="border-danger-300 dark:border-danger-900/50 bg-danger-500/[0.04]">
           <CardContent className="p-4 flex items-center gap-3">
-            <AlertCircle className="h-5 w-5 text-danger-600 dark:text-danger-400" aria-hidden="true" />
-            <div className="flex-1">
-              <p className="text-sm font-medium text-surface-900 dark:text-surface-50">Could not load interviews</p>
-              <p className="text-sm text-surface-500 dark:text-surface-400">{loadError}</p>
+            <AlertCircle className="h-5 w-5 text-danger-500 shrink-0" aria-hidden="true" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-surface-900 dark:text-zinc-100">Could not load interviews</p>
+              <p className="text-xs text-surface-500 dark:text-zinc-400 truncate">{loadError}</p>
             </div>
-            <Button variant="neutral" size="sm" onClick={() => window.location.reload()}>
+            <Button variant="outline" size="sm" onClick={() => window.location.reload()}>
               Retry
             </Button>
           </CardContent>
         </Card>
       )}
 
-      <Card className="border-surface-200 dark:border-surface-800">
-        <CardContent className="p-4 sm:p-6">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-surface-400" aria-hidden="true" />
-              <Input
-                placeholder="Search by title, candidate name or email..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-                aria-label="Search interviews"
-              />
-            </div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <select
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                className="input w-40"
-                aria-label="Filter by status"
-              >
-                {STATUS_FILTERS.map((f) => (
-                  <option key={f.value} value={f.value}>
-                    {f.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+      {/* Filter and Search Bar */}
+      <Card className="p-4">
+        <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+          <div className="max-w-md w-full">
+            <Input
+              placeholder="Search by title, candidate name, or email..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              leftIcon={<Search className="h-4 w-4" aria-hidden="true" />}
+              aria-label="Search interviews"
+            />
           </div>
-        </CardContent>
+
+          {/* Status Filter Pills (Matching Reference Image) */}
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0">
+            {STATUS_FILTERS.map((f) => (
+              <button
+                key={f.value}
+                type="button"
+                onClick={() => setStatusFilter(f.value)}
+                className={`px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-colors select-none ${
+                  statusFilter === f.value
+                    ? 'bg-[#2D211C] text-[#E09F80] border border-brand-500/25 shadow-xs font-semibold'
+                    : 'text-surface-600 hover:text-surface-900 dark:text-zinc-400 dark:hover:text-zinc-200 hover:bg-surface-100 dark:hover:bg-white/[0.03]'
+                }`}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+        </div>
       </Card>
 
-      <Card className="border-surface-200 dark:border-surface-800">
-        <CardContent className="p-0">
-          {isLoading ? (
-            <div className="p-4 space-y-3" aria-busy="true">
-              {[0, 1, 2, 3].map((i) => (
-                <div key={i} className="h-14 bg-surface-100 dark:bg-surface-800 rounded-lg animate-pulse" />
-              ))}
+      {/* Table Container */}
+      <div className="table-container">
+        {isLoading ? (
+          <div className="p-6 space-y-3" aria-busy="true">
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="h-12 bg-surface-100 dark:bg-white/[0.04] rounded-lg animate-pulse" />
+            ))}
+          </div>
+        ) : filteredInterviews.length === 0 ? (
+          <div className="py-16 px-4 text-center">
+            <div className="h-10 w-10 rounded-xl bg-surface-100 dark:bg-[#1a1d28] border border-surface-200 dark:border-white/[0.06] flex items-center justify-center mx-auto mb-3 text-surface-400 dark:text-zinc-500">
+              <Calendar className="h-5 w-5" aria-hidden="true" />
             </div>
-          ) : filteredInterviews.length === 0 ? (
-            <div className="py-14 px-4 text-center">
-              <Calendar className="h-10 w-10 text-surface-400 mx-auto mb-3" aria-hidden="true" />
-              {interviews.length === 0 ? (
-                <>
-                  <p className="text-surface-900 dark:text-surface-50 font-medium">No interviews yet</p>
-                  <p className="text-sm text-surface-500 dark:text-surface-400 mt-1">
-                    Create your first interview session to get started
-                  </p>
-                  <Button className="mt-4 gap-2" asChild>
-                    <Link to="/hr/interviews/new">
-                      <Plus className="h-4 w-4" aria-hidden="true" />
-                      Create Interview
-                    </Link>
-                  </Button>
-                </>
-              ) : (
-                <p className="text-surface-500 dark:text-surface-400 text-sm">
-                  No interviews match your search or filter criteria
-                </p>
-              )}
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-surface-200 dark:border-surface-800 text-left text-surface-500 dark:text-surface-400">
-                    <th scope="col" className="px-4 py-3 font-medium">Interview</th>
-                    <th scope="col" className="px-4 py-3 font-medium">Candidate</th>
-                    <th scope="col" className="px-4 py-3 font-medium">Schedule</th>
-                    <th scope="col" className="px-4 py-3 font-medium">Status</th>
-                    <th scope="col" className="px-4 py-3 font-medium">Invitation</th>
-                    <th scope="col" className="px-4 py-3 font-medium text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-surface-100 dark:divide-surface-800">
-                  {filteredInterviews.map((interview) => {
-                    const status = interviewStatusConfig(interview.status)
-                    const StatusIcon = status.icon
-                    const canInvite = interview.status === 'draft'
-                    return (
-                      <tr key={interview.id} className="hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors">
-                        <td className="px-4 py-3">
-                          <Link
-                            to={`/hr/interviews/${interview.id}`}
-                            className="font-medium text-surface-900 dark:text-surface-50 hover:text-brand-600 dark:hover:text-brand-400"
-                          >
-                            {interview.title}
-                          </Link>
-                          <p className="text-xs text-surface-400 dark:text-surface-500 mt-0.5">
-                            Created {formatInterviewDate(interview.created_at)}
-                          </p>
-                        </td>
-                        <td className="px-4 py-3">
-                          {interview.candidate ? (
-                            <>
-                              <p className="text-surface-900 dark:text-surface-50">{interview.candidate.name ?? 'Candidate'}</p>
-                              <p className="text-xs text-surface-500 dark:text-surface-400">{interview.candidate.email ?? ''}</p>
-                            </>
-                          ) : (
-                            <span className="text-surface-500 dark:text-surface-400">—</span>
-                          )}
-                        </td>
-                        <td className="px-4 py-3">
-                          <p className="flex items-center gap-1.5 text-surface-600 dark:text-surface-400">
-                            <Calendar className="h-3.5 w-3.5" aria-hidden="true" />
-                            {formatInterviewDate(interview.scheduled_start_at)}
-                          </p>
-                        </td>
-                        <td className="px-4 py-3">
-                          <Badge variant="neutral" className={`gap-1 ${status.className}`}>
-                            <StatusIcon className="h-3 w-3" aria-hidden="true" />
-                            {status.label}
-                          </Badge>
-                        </td>
-                        <td className="px-4 py-3">
-                          {interview.invite_reference ? (
-                            <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
-                              <Send className="h-3.5 w-3.5" aria-hidden="true" />
-                              Sent
-                            </span>
-                          ) : (
-                            <span className="flex items-center gap-1.5 text-surface-500 dark:text-surface-400">
-                              <Clock className="h-3.5 w-3.5" aria-hidden="true" />
-                              Not sent
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            {canInvite && (
-                              <Button variant="neutral" size="sm" asChild className="gap-1.5">
-                                <Link to={`/hr/interviews/${interview.id}`}>
-                                  <Send className="h-3.5 w-3.5" aria-hidden="true" />
-                                  Invite
-                                </Link>
-                              </Button>
-                            )}
-                            <Button variant="neutral" size="sm" asChild>
-                              <Link to={`/hr/interviews/${interview.id}`}>Details</Link>
-                            </Button>
+            <p className="text-sm font-medium text-surface-900 dark:text-zinc-200">
+              {interviews.length === 0 ? 'No interviews scheduled yet' : 'No sessions match your search criteria'}
+            </p>
+            <p className="text-xs text-surface-500 dark:text-zinc-400 mt-1 max-w-sm mx-auto">
+              {interviews.length === 0
+                ? 'Create your first interview session to configure candidate invites and reviewers.'
+                : 'Try adjusting your search terms or status filter.'}
+            </p>
+          </div>
+        ) : (
+          <table className="table">
+            <thead>
+              <tr>
+                <th scope="col">Session title</th>
+                <th scope="col">Candidate</th>
+                <th scope="col">Scheduled window</th>
+                <th scope="col">Status</th>
+                <th scope="col">Invite telemetry</th>
+                <th scope="col" className="text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredInterviews.map((interview) => {
+                const status = interviewStatusConfig(interview.status)
+                const canInvite = interview.status === 'draft'
+                const isLive = interview.status === 'in_progress'
+
+                return (
+                  <tr key={interview.id}>
+                    <td>
+                      <div>
+                        <Link
+                          to={`/hr/interviews/${interview.id}`}
+                          className="font-medium text-surface-900 dark:text-zinc-100 hover:text-brand-500 dark:hover:text-brand-400 transition-colors"
+                        >
+                          {interview.title}
+                        </Link>
+                        <p className="text-[11px] font-mono text-surface-400 dark:text-zinc-500 mt-0.5">
+                          ID: {interview.id.slice(0, 8)}...
+                        </p>
+                      </div>
+                    </td>
+                    <td>
+                      {interview.candidate ? (
+                        <div className="flex items-center gap-2.5">
+                          <Avatar name={interview.candidate.name} size="xs" />
+                          <div className="min-w-0">
+                            <p className="font-medium text-surface-900 dark:text-zinc-200 truncate">
+                              {interview.candidate.name ?? 'Candidate'}
+                            </p>
+                            <p className="text-[11px] font-mono text-surface-400 dark:text-zinc-500 truncate">
+                              {interview.candidate.email ?? ''}
+                            </p>
                           </div>
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-surface-400 dark:text-zinc-500 italic">Unassigned</span>
+                      )}
+                    </td>
+                    <td className="text-xs text-surface-600 dark:text-zinc-400 font-mono tabular-nums">
+                      <div className="flex items-center gap-1.5">
+                        <Clock className="h-3 w-3 text-surface-400 dark:text-zinc-500" />
+                        <span>{formatInterviewDate(interview.scheduled_start_at)}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <Badge
+                        variant={
+                          isLive
+                            ? 'danger'
+                            : interview.status === 'completed'
+                              ? 'success'
+                              : interview.status === 'scheduled' || interview.status === 'ready'
+                                ? 'info'
+                                : 'neutral'
+                        }
+                        dot
+                        className="text-[10px]"
+                      >
+                        {status.label}
+                      </Badge>
+                    </td>
+                    <td className="text-xs font-mono">
+                      {interview.invite_reference ? (
+                        <span className="inline-flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+                          <Send className="h-3 w-3" />
+                          Dispatched
+                        </span>
+                      ) : (
+                        <span className="text-surface-400 dark:text-zinc-500">
+                          Pending
+                        </span>
+                      )}
+                    </td>
+                    <td className="text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        {isLive && (
+                          <Button variant="danger" size="sm" asChild className="gap-1.5 text-xs py-1">
+                            <Link to={`/hr/interviews/${interview.id}/live`}>
+                              <Video className="h-3 w-3" />
+                              <span>Live Room</span>
+                            </Link>
+                          </Button>
+                        )}
+                        {canInvite && (
+                          <Button variant="outline" size="sm" asChild className="gap-1.5 text-xs py-1">
+                            <Link to={`/hr/interviews/${interview.id}`}>
+                              <Send className="h-3 w-3 text-brand-500" />
+                              <span>Invite</span>
+                            </Link>
+                          </Button>
+                        )}
+                        <Button variant="outline" size="sm" asChild className="text-xs py-1">
+                          <Link to={`/hr/interviews/${interview.id}`} className="gap-1">
+                            <span>Details</span>
+                            <ArrowRight className="h-3 w-3 opacity-60" />
+                          </Link>
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        )}
+      </div>
     </div>
   )
 }

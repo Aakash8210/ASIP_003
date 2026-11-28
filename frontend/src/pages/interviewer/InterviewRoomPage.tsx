@@ -5,7 +5,6 @@ import {
   ArrowLeft,
   Bell,
   Camera,
-  CameraOff,
   CheckCircle2,
   Clock,
   FileText,

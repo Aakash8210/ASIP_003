@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom'
-import { cn } from '@/lib/utils'
 import { Lock, ArrowLeft, Home, User } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/Card'
@@ -12,14 +11,12 @@ export function AccessDeniedPage() {
     <div className="min-h-screen bg-surface-50 dark:bg-surface-950 flex items-center justify-center p-4">
       <div className="w-full max-w-md text-center">
         <div className="mb-8">
-          <div className="relative h-16 w-16 rounded-2xl mx-auto mb-6">
-            <div className="absolute inset-0 bg-gradient-to-br from-danger-500 to-danger-700 rounded-2xl" />
-            <div className="absolute inset-1 bg-gradient-to-br from-danger-600 to-danger-800 rounded-2xl" />
-            <Lock className="relative h-8 w-8 text-white mx-auto mt-4" aria-hidden="true" />
+          <div className="h-14 w-14 rounded-2xl bg-danger-500/10 border border-danger-500/20 flex items-center justify-center mx-auto mb-5">
+            <Lock className="h-7 w-7 text-danger-500" aria-hidden="true" />
           </div>
-          <h1 className="text-3xl font-bold text-surface-900 dark:text-surface-50 mb-4">Access Denied</h1>
-          <p className="text-lg text-surface-600 dark:text-surface-400 mb-6">
-            You don't have permission to access this page. This area is restricted to specific roles.
+          <h1 className="text-2xl font-bold tracking-tight text-surface-900 dark:text-surface-50 mb-2">Access Denied</h1>
+          <p className="text-sm text-surface-600 dark:text-surface-400 max-w-sm mx-auto">
+            You don't have permission to access this page. This area is restricted to specific organizational roles.
           </p>
         </div>
 

@@ -2,15 +2,13 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import {
   ArrowLeft,
-  Calendar,
   CheckCircle,
   Clock,
   FileCheck,
-  ShieldCheck,
   User,
 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
+import { Card, CardContent } from '@/components/ui/Card'
 import { apiClient, CandidateInterview } from '@/lib/api'
 import { formatInterviewDate } from '@/pages/hr/interviewStatus'
 import { PilotFeedbackForm } from '@/components/feedback/PilotFeedbackForm'
@@ -22,7 +20,6 @@ import { PilotFeedbackForm } from '@/components/feedback/PilotFeedbackForm'
 export function IntervieweeCompletionPage() {
   const { id } = useParams<{ id: string }>()
   const [interview, setInterview] = useState<CandidateInterview | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     if (!id) return
@@ -33,9 +30,6 @@ export function IntervieweeCompletionPage() {
         if (isMounted) setInterview(res.interview)
       })
       .catch(() => {})
-      .finally(() => {
-        if (isMounted) setIsLoading(false)
-      })
     return () => {
       isMounted = false
     }

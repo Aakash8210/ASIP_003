@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { Mail, Lock, Eye, EyeOff, Monitor } from 'lucide-react'
+import { Mail, Lock, Eye, EyeOff } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/Card'
@@ -70,19 +70,22 @@ export function SignInPage() {
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-12">
     <div className="w-full max-w-md">
       <div className="text-center mb-8">
-        <Link to="/" className="inline-flex items-center gap-2 mb-6" aria-label="Home">
-          <div className="relative h-9 w-9 rounded-xl">
-            <div className="absolute inset-0 bg-gradient-to-br from-brand-500 to-brand-700 rounded-xl" />
-            <div className="absolute inset-1 bg-gradient-to-br from-brand-600 to-brand-800 rounded-xl" />
-            <Monitor className="relative h-5 w-5 text-white" aria-hidden="true" />
+        <Link to="/" className="inline-flex items-center gap-2.5 mb-6 group" aria-label="Home">
+          <div className="h-9 w-9 rounded-lg bg-surface-900 border border-white/10 flex items-center justify-center transition-colors group-hover:border-brand-500/40">
+            <div className="h-4 w-4 rounded-xs bg-brand-500" />
           </div>
-          <span className="text-heading-md font-bold text-surface-900 dark:text-surface-50">
-            InterviewGuard
-          </span>
+          <div className="text-left">
+            <div className="text-sm font-bold tracking-tight text-surface-900 dark:text-surface-50 leading-none">
+              AI Interview Integrity
+            </div>
+            <div className="text-[10px] font-mono tracking-wider text-surface-500 uppercase mt-0.5">
+              Platform
+            </div>
+          </div>
         </Link>
-        <h1 className="text-2xl font-bold text-surface-900 dark:text-surface-50 mb-2">Welcome back</h1>
-        <p className="text-surface-600 dark:text-surface-400">
-          Sign in to your account to continue
+        <h1 className="text-2xl font-bold tracking-tight text-surface-900 dark:text-surface-50 mb-2">Platform Console Sign In</h1>
+        <p className="text-surface-600 dark:text-surface-400 text-sm">
+          Access your role-scoped recruitment, review, or candidate workspace
         </p>
       </div>
 
